@@ -3,7 +3,6 @@
 หน้าบ้าน (React + Vite) ของระบบจองห้องคาราโอเกะ Gens Karaoke & Board Game สร้างจากดีไซน์ต้นฉบับ
 (`Gens Karaoke.dc.html`) ต่อกับ `gens-karaoke-backend` (Node.js + Express + PostgreSQL) ที่มีอยู่แล้ว
 
-test
 
 ## ติดตั้งและรัน
 
