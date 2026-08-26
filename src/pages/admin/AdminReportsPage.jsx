@@ -41,7 +41,7 @@ export default function AdminReportsPage() {
   }, [report]);
 
   return (
-    <div style={{ maxWidth: 1900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ maxWidth: 1080, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <Tabs items={TABS} value={period} onChange={setPeriod} />
 
       {error && <div className="field-error">{error}</div>}
@@ -49,18 +49,18 @@ export default function AdminReportsPage() {
 
       {report && (
         <>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <Card style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>รายได้รวม ({RANGE_LABEL[period]})</div>
-              <div className="num" style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--green-700)' }}>฿ {money(report.totals.total_revenue)}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+            <Card style={{ padding: '16px 18px' }}>
+              <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>รายได้รวม ({RANGE_LABEL[period]})</div>
+              <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--green-700)', marginTop: 4 }}>฿ {money(report.totals.total_revenue)}</div>
             </Card>
-            <Card style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>จำนวนการจอง</div>
-              <div className="num" style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--primary-700)' }}>{report.totals.total_bookings}</div>
+            <Card style={{ padding: '16px 18px' }}>
+              <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>จำนวนการจอง</div>
+              <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--primary-700)', marginTop: 4 }}>{report.totals.total_bookings}</div>
             </Card>
-            <Card style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>ยอดเฉลี่ย/รายการ</div>
-              <div className="num" style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--text-strong)' }}>฿ {money(report.totals.avg_ticket)}</div>
+            <Card style={{ padding: '16px 18px' }}>
+              <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ยอดเฉลี่ย/รายการ</div>
+              <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-strong)', marginTop: 4 }}>฿ {money(report.totals.avg_ticket)}</div>
             </Card>
           </div>
 
@@ -69,26 +69,26 @@ export default function AdminReportsPage() {
             <div className="chart-bars">
               {report.trend.map((t, i) => (
                 <div className="chart-bar-col" key={t.period}>
-                  <span className="num" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{money(t.revenue)}</span>
+                  <span className="num" style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>{money(t.revenue)}</span>
                   <div
                     className={`chart-bar${i === report.trend.length - 1 ? ' last' : ''}`}
-                    style={{ height: `${maxTrendValue ? Math.max(8, (Number(t.revenue) / maxTrendValue) * 220) : 8}px` }}
+                    style={{ height: `${maxTrendValue ? Math.max(8, (Number(t.revenue) / maxTrendValue) * 140) : 8}px` }}
                   />
-                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>{formatPeriodLabel(t.period, period)}</span>
+                  <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>{formatPeriodLabel(t.period, period)}</span>
                 </div>
               ))}
             </div>
           </Card>
 
           <Card title="รายได้แยกตามห้อง" pad={false}>
-            {!report.byRoom.length && <p style={{ color: 'var(--text-muted)', padding: 20 }}>ยังไม่มีข้อมูล</p>}
+            {!report.byRoom.length && <p style={{ color: 'var(--text-muted)', padding: 16 }}>ยังไม่มีข้อมูล</p>}
             {report.byRoom.map((rb) => (
               <div className="room-breakdown-row" key={rb.room_name}>
-                <span style={{ fontWeight: 600, color: 'var(--text-strong)', width: 182, flex: 'none' }}>{rb.room_name}</span>
+                <span style={{ fontWeight: 600, color: 'var(--text-strong)', minWidth: 90, flex: 'none', fontSize: 'var(--text-xs)' }}>{rb.room_name}</span>
                 <div className="room-breakdown-track">
                   <div className="room-breakdown-fill" style={{ width: `${maxRoomRevenue ? (Number(rb.revenue) / maxRoomRevenue) * 100 : 0}%` }} />
                 </div>
-                <span className="num" style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', width: 117, textAlign: 'right' }}>฿ {money(rb.revenue)}</span>
+                <span className="num" style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)', minWidth: 80, textAlign: 'right' }}>฿ {money(rb.revenue)}</span>
               </div>
             ))}
           </Card>

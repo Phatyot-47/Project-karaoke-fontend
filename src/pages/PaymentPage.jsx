@@ -89,17 +89,17 @@ export default function PaymentPage() {
 
   return (
     <div className="page-dark app-dark">
-      <header className="topbar" style={{ gap: 16, justifyContent: 'flex-start' }}>
+      <header className="topbar" style={{ gap: 12, justifyContent: 'flex-start' }}>
         <IconButton label="ย้อนกลับ" onClick={() => navigate(-1)}><ArrowLeft /></IconButton>
         <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>ยืนยันและชำระมัดจำ</span>
       </header>
 
-      <div className="container-sm" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="container-sm" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            {room && <div style={{ width: 88, height: 88, borderRadius: 13, flex: 'none', backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${resolveRoomImage(room)})` }} />}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {room && <div style={{ width: 64, height: 64, borderRadius: 8, flex: 'none', backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${resolveRoomImage(room)})` }} />}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, color: 'var(--text-strong)' }}>{room?.room_name || `ห้อง #${booking.room_id}`}</div>
+              <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{room?.room_name || `ห้อง #${booking.room_id}`}</div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
                 {formatDateTimeRange(booking.start_datetime, booking.end_datetime)}
               </div>
@@ -110,8 +110,8 @@ export default function PaymentPage() {
         {expired ? (
           <Card style={{ background: 'var(--red-50)', border: '1px solid var(--red-200)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--red-700)' }}>หมดเวลาชำระเงิน</div>
-              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--red-700)' }}>หมดเวลาชำระเงิน</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
                 คุณไม่ได้ชำระเงินภายใน 5 นาทีที่ระบบล็อกเวลาไว้ให้ ช่วงเวลานี้จึงถูกปล่อยกลับเป็นว่างแล้ว
                 กรุณาเลือกเวลาใหม่อีกครั้ง
               </div>
@@ -123,9 +123,9 @@ export default function PaymentPage() {
         ) : (
           <>
             <Card>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                     สแกนเพื่อจ่ายมัดจำ (PromptPay)
                   </div>
                   <div className="num" style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text-strong)', marginTop: 4 }}>
@@ -144,13 +144,13 @@ export default function PaymentPage() {
                 <div style={{ fontSize: 'var(--text-xs)', color: countdown <= 60 ? 'var(--danger-text)' : 'var(--text-subtle)' }}>
                   ระบบล็อกเวลานี้ไว้ให้อีก {countdownLabel} นาที — กรุณาชำระเงินก่อนหมดเวลา
                 </div>
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-body)' }}>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-body)' }}>
                     แนบสลิปการโอนเงิน <span style={{ color: 'var(--danger-text)' }}>*</span>
                   </div>
-                  <UploadSlot placeholder="ลากไฟล์สลิปมาวาง หรือคลิกเพื่อเลือก" onChange={setEvidence} height={182} />
+                  <UploadSlot placeholder="ลากไฟล์สลิปมาวาง หรือคลิกเพื่อเลือก" onChange={setEvidence} height={140} />
                   {!evidence && (
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-subtle)' }}>
+                    <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)' }}>
                       จำเป็นต้องแนบสลิปก่อนจึงจะยืนยันการชำระเงินได้
                     </span>
                   )}
@@ -163,23 +163,23 @@ export default function PaymentPage() {
             <Button variant="accent" size="lg" block iconLeft={<Check />} onClick={handleConfirmPayment} disabled={submitting || !evidence}>
               {submitting ? 'กำลังบันทึก...' : evidence ? 'ยืนยันการชำระเงิน' : 'กรุณาแนบสลิปก่อน'}
             </Button>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-subtle)', textAlign: 'center', lineHeight: 1.6 }}>
+            <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)', textAlign: 'center', lineHeight: 1.5 }}>
               ยกเลิกได้ล่วงหน้าก่อนเวลาเริ่ม 1 ชั่วโมง — มัดจำไม่สามารถขอคืนได้ทุกกรณี
             </div>
 
             {shop?.bank_account_no && (
               <Card style={{ background: 'var(--surface-sunken)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
                     กรณี QR ใช้งานไม่ได้ สามารถโอนเงินมัดจำเข้าบัญชีนี้แทนได้
                   </div>
-                  <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)' }}>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--text-strong)' }}>
                     {shop.bank_name || 'ธนาคาร (ยังไม่ได้ตั้งค่า)'}
                   </div>
                   <div className="num" style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>
                     {shop.bank_account_no}
                   </div>
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
                     ชื่อบัญชี: {shop.bank_account_name || '-'}
                   </div>
                 </div>

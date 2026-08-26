@@ -41,16 +41,16 @@ export default function HistoryPage() {
 
   return (
     <div className="container-md">
-      <h1 style={{ fontSize: 'var(--text-2xl)' }}>ประวัติการจอง</h1>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 6 }}>
+      <h1 style={{ fontSize: 'var(--text-xl)' }}>ประวัติการจอง</h1>
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 4 }}>
         ตรวจสอบและจัดการรายการจองห้องคาราโอเกะของคุณ
       </p>
 
       {error && <div className="field-error" style={{ marginTop: 16 }}>{error}</div>}
-      {loading && <p style={{ color: 'var(--text-muted)', marginTop: 24 }}>กำลังโหลด...</p>}
-      {!loading && !bookings.length && <p style={{ color: 'var(--text-muted)', marginTop: 24 }}>ยังไม่มีรายการจอง</p>}
+      {loading && <p style={{ color: 'var(--text-muted)', marginTop: 20 }}>กำลังโหลด...</p>}
+      {!loading && !bookings.length && <p style={{ color: 'var(--text-muted)', marginTop: 20 }}>ยังไม่มีรายการจอง</p>}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 20 }}>
         {bookings.map((b) => {
           const statusInfo = getBookingDisplayStatus(b);
           const canEdit = b.booking_status === 'pending';
@@ -58,33 +58,33 @@ export default function HistoryPage() {
           const isDone = b.booking_status === 'completed' || b.booking_status === 'cancelled';
           const isCanceling = cancelingId === b.booking_id;
           return (
-            <Card key={b.booking_id}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <Card key={b.booking_id} style={{ padding: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <div>
                   <Tag tone={statusInfo.tone} dot size="sm">{statusInfo.label}</Tag>
-                  <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text-strong)', marginTop: 8 }}>{b.room_name}</div>
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 4 }}>
+                  <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)', marginTop: 6 }}>{b.room_name}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
                     {formatDateTimeRange(b.start_datetime, b.end_datetime)} · {SIZE_CAPACITY_LABEL[b.size] || `ความจุ ${b.capacity || '-'} คน`}
                   </div>
                   {b.booking_status === 'cancelled' && b.cancel_reason && (
-                    <div style={{ marginTop: 10, fontSize: 'var(--text-xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '6px 10px' }}>
+                    <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '4px 8px' }}>
                       เหตุผลที่ยกเลิก: {b.cancel_reason}
                     </div>
                   )}
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>ยอดรวม</div>
-                  <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-strong)' }}>{money(b.price_total)} บาท</div>
+                  <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ยอดรวม</div>
+                  <div className="num" style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text-strong)' }}>{money(b.price_total)} บาท</div>
                 </div>
               </div>
 
               {isCanceling && (
-                <div style={{ marginTop: 12 }}>
+                <div style={{ marginTop: 10 }}>
                   <Input placeholder="ระบุเหตุผลที่ยกเลิก" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                 {isCanceling ? (
                   <>
                     <Button variant="outline" size="sm" onClick={() => { setCancelingId(null); setCancelReason(''); }}>ย้อนกลับ</Button>

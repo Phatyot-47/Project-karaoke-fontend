@@ -236,7 +236,7 @@ export default function AdminWalkInPage() {
       {error && <div className="field-error">{error}</div>}
 
       <Card title="สถานะห้องตอนนี้">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
           {rooms.map((r) => {
             const status = roomCurrentStatus.get(r.room_id) || {};
             const { busy: isBusy, fullyBooked } = status;
@@ -264,20 +264,21 @@ export default function AdminWalkInPage() {
                 style={{
                   background: palette.bg,
                   border: `1px solid ${palette.border}`,
-                  borderLeft: `5px solid ${palette.border}`,
-                  borderRadius: 10,
+                  borderLeft: `4px solid ${palette.border}`,
+                  borderRadius: 8,
                   cursor: 'pointer',
                   outline: isSelected ? '2px solid var(--primary-500)' : 'none',
                   outlineOffset: -2,
                   minWidth: 0,
                   flex: 'none',
+                  padding: '12px 14px',
                 }}
               >
-                <div className="label">{r.room_name}</div>
-                <div className="value" style={{ fontSize: 'var(--text-lg)', color: palette.text }}>
+                <div className="label" style={{ fontWeight: 600 }}>{r.room_name}</div>
+                <div className="value" style={{ fontSize: 'var(--text-md)', color: palette.text }}>
                   {label}
                 </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 6 }}>
+                <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', marginTop: 4 }}>
                   {detail}
                 </div>
               </div>
@@ -296,7 +297,7 @@ export default function AdminWalkInPage() {
         }
       >
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div style={{ width: 390 }}>
+          <div style={{ flex: '1 1 200px', minWidth: 160 }}>
             <Select label="ห้อง" value={roomId} onChange={(e) => setRoomId(e.target.value)}>
               <option value="" disabled>เลือกห้อง</option>
               {rooms.map((r) => {
@@ -310,21 +311,23 @@ export default function AdminWalkInPage() {
               })}
             </Select>
           </div>
-          <div style={{ flex: 1, minWidth: 180 }}>
+          <div style={{ flex: '1 1 160px', minWidth: 140 }}>
             <Input label="ชื่อลูกค้า" placeholder="เช่น คุณสมชาย" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
           </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
+          <div style={{ flex: '1 1 160px', minWidth: 140 }}>
             <Input label="เบอร์โทร (ถ้ามี)" placeholder="08x-xxx-xxxx" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
           </div>
-          <Button variant="outline" onClick={() => navigate('/admin/bookings')}>ยกเลิก</Button>
-          <Button
-            variant="accent"
-            iconLeft={<Check />}
-            onClick={submit}
-            disabled={submitting || !slotTimes.length || !roomId || !start || !end || lockedStartTimes.has(start)}
-          >
-            เพิ่มรายการจอง
-          </Button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', width: 'auto' }}>
+            <Button variant="outline" onClick={() => navigate('/admin/bookings')}>ยกเลิก</Button>
+            <Button
+              variant="accent"
+              iconLeft={<Check />}
+              onClick={submit}
+              disabled={submitting || !slotTimes.length || !roomId || !start || !end || lockedStartTimes.has(start)}
+            >
+              เพิ่มรายการจอง
+            </Button>
+          </div>
         </div>
 
         {!loading && shop && !slotTimes.length && (

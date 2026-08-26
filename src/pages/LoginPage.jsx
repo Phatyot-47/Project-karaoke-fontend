@@ -34,17 +34,17 @@ export default function LoginPage() {
 
   return (
     <div className="page-dark app-dark center-screen">
-      <Card style={{ width: 884, maxWidth: '100%', padding: 21 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, marginBottom: 16 }}>
-          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 135, height: 135, borderRadius: '50%', objectFit: 'cover' }} />
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-2xl)', color: 'var(--text-strong)' }}>เข้าสู่ระบบ</div>
-          <div style={{ fontSize: 'var(--text-lg)', color: 'var(--text-muted)', textAlign: 'center' }}>
+      <Card style={{ width: 420, maxWidth: '100%', padding: '28px 24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 72, height: 72, borderFade: 'none', borderRadius: '50%', objectFit: 'cover' }} />
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--text-strong)' }}>เข้าสู่ระบบ</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>
             เข้าสู่ระบบด้วยเบอร์โทรศัพท์ของคุณ
           </div>
         </div>
         <form
           onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
-          style={{ display: 'flex', flexDirection: 'column', gap: 29, marginTop: 31 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}
         >
           <Input
             label="เบอร์โทรศัพท์"
@@ -56,11 +56,11 @@ export default function LoginPage() {
           <Button type="submit" variant="accent" block disabled={loading}>
             {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
           </Button>
-          <div style={{ textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+          <div style={{ textAlign: 'center', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
             ยังไม่มีบัญชี? <Link to="/register" style={{ color: 'var(--primary-600)', fontWeight: 600 }}>สมัครสมาชิก</Link>
           </div>
-          <div style={{ textAlign: 'center', fontSize: 'var(--text-xs)' }}>
-            <Link to="/admin/login" style={{ color: 'var(--text-subtle)' }}>เข้าสู่ระบบสำหรับแอดมิน</Link>
+          <div style={{ textAlign: 'center', fontSize: 'var(--text-2xs)', borderTop: '1px solid var(--border-subtle)', paddingTop: 12, marginTop: 4 }}>
+            <Link to="/admin/login" style={{ color: 'var(--text-subtle)' }}>สำหรับพนักงาน / แอดมิน</Link>
           </div>
         </form>
       </Card>
