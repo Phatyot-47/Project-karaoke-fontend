@@ -35,15 +35,15 @@ export default function AdminLoginPage() {
 
   return (
     <div className="center-screen" style={{ background: 'var(--surface-app)' }}>
-      <Card style={{ width: 884, maxWidth: '100%', padding: 21 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, marginBottom: 16 }}>
-          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 135, height: 135, borderRadius: '50%', objectFit: 'cover' }} />
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-2xl)', color: 'var(--text-strong)' }}>เข้าสู่ระบบแอดมิน</div>
-          <div style={{ fontSize: 'var(--text-lg)', color: 'var(--text-muted)', textAlign: 'center' }}>สำหรับพนักงานร้าน Gens Karaoke</div>
+      <Card style={{ width: 420, maxWidth: '100%', padding: '28px 24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover' }} />
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--text-strong)' }}>เข้าสู่ระบบแอดมิน</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>สำหรับพนักงานร้าน Gens Karaoke</div>
         </div>
         <form
           onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
-          style={{ display: 'flex', flexDirection: 'column', gap: 29, marginTop: 31 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}
         >
           <Input label="Username" value={username} onChange={(e) => { setUsername(e.target.value); setError(''); }} />
           <Input label="Password" type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(''); }} />
@@ -51,7 +51,7 @@ export default function AdminLoginPage() {
           <Button type="submit" variant="primary" block disabled={loading}>
             {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
           </Button>
-          <div style={{ textAlign: 'center', fontSize: 'var(--text-xs)' }}>
+          <div style={{ textAlign: 'center', fontSize: 'var(--text-xs)', marginTop: 4 }}>
             <Link to="/login" style={{ color: 'var(--text-subtle)' }}>กลับหน้าลูกค้า</Link>
           </div>
         </form>

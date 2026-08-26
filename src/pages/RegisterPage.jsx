@@ -34,17 +34,17 @@ export default function RegisterPage() {
 
   return (
     <div className="page-dark app-dark center-screen">
-      <Card style={{ width: 884, maxWidth: '100%', padding: 21 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, marginBottom: 16 }}>
-          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 135, height: 135, borderRadius: '50%', objectFit: 'cover' }} />
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-2xl)', color: 'var(--text-strong)' }}>สมัครสมาชิก</div>
-          <div style={{ fontSize: 'var(--text-lg)', color: 'var(--text-muted)', textAlign: 'center' }}>
+      <Card style={{ width: 420, maxWidth: '100%', padding: '28px 24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover' }} />
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--text-strong)' }}>สมัครสมาชิก</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>
             กรอกชื่อและเบอร์โทรศัพท์เพื่อสมัครสมาชิก
           </div>
         </div>
         <form
           onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
-          style={{ display: 'flex', flexDirection: 'column', gap: 29, marginTop: 31 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}
         >
           <Input label="ชื่อ" placeholder="ชื่อ-นามสกุล" value={name} onChange={(e) => { setName(e.target.value); setError(''); }} />
           <Input label="เบอร์โทรศัพท์" placeholder="08x-xxx-xxxx" value={phone} onChange={(e) => { setPhone(e.target.value); setError(''); }} />
@@ -52,7 +52,7 @@ export default function RegisterPage() {
           <Button type="submit" variant="accent" block disabled={loading}>
             {loading ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}
           </Button>
-          <div style={{ textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+          <div style={{ textAlign: 'center', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
             มีบัญชีแล้ว? <Link to="/login" style={{ color: 'var(--primary-600)', fontWeight: 600 }}>เข้าสู่ระบบ</Link>
           </div>
         </form>

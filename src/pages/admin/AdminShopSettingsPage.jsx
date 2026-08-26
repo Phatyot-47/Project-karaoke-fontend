@@ -67,11 +67,11 @@ export default function AdminShopSettingsPage() {
   const sortedHours = [...hours].sort((a, b) => a.day_of_week - b.day_of_week);
 
   return (
-    <div style={{ maxWidth: 1900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
       {error && <div className="field-error">{error}</div>}
 
       <Card title="ข้อมูลร้าน">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="admin-form-2col">
           <div style={{ gridColumn: '1 / -1' }}>
             <Input label="ชื่อร้าน" value={form.name} onChange={setField('name')} />
           </div>
@@ -86,36 +86,36 @@ export default function AdminShopSettingsPage() {
       <Card title="เวลาเปิด-ปิดร้าน" subtitle="กำหนดเวลาเปิด-ปิดแยกแต่ละวันในสัปดาห์">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {sortedHours.map((d) => (
-            <div key={d.day_of_week} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span style={{ width: 117, fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)', flex: 'none' }}>
+            <div key={d.day_of_week} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ minWidth: 80, width: 90, fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-strong)', flex: 'none' }}>
                 {DAY_LABELS[d.day_of_week] ?? `วันที่ ${d.day_of_week}`}
               </span>
-              <div style={{ width: 221 }}>
+              <div style={{ flex: '1 1 110px', minWidth: 90 }}>
                 <Select value={d.open_hour} onChange={setHourField(d.day_of_week, 'open_hour')}>
                   {HOUR_OPTIONS.map((h) => <option key={h} value={h}>{h}:00</option>)}
                 </Select>
               </div>
               <span style={{ color: 'var(--text-muted)' }}>—</span>
-              <div style={{ width: 221 }}>
+              <div style={{ flex: '1 1 110px', minWidth: 90 }}>
                 <Select value={d.close_hour} onChange={setHourField(d.day_of_week, 'close_hour')}>
                   {HOUR_OPTIONS.map((h) => <option key={h} value={h}>{h}:00</option>)}
                 </Select>
               </div>
             </div>
           ))}
-          {!sortedHours.length && <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>ยังไม่มีข้อมูลเวลาเปิด-ปิด</p>}
+          {!sortedHours.length && <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>ยังไม่มีข้อมูลเวลาเปิด-ปิด</p>}
         </div>
       </Card>
 
       <Card title="พีคไทม์" subtitle="ช่วงเวลาที่คิดค่าบริการเพิ่ม">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="admin-form-2col">
           <Input label="เริ่มพีคไทม์เวลา (HH:MM)" value={form.peak_start_time || ''} onChange={setField('peak_start_time')} placeholder="18:00" />
           <Input label="ค่าบริการเพิ่ม (บาท/ชม.)" type="number" value={form.peak_surcharge || ''} onChange={setField('peak_surcharge')} />
         </div>
       </Card>
 
       <Card title="บัญชีธนาคารสำหรับรับเงิน" subtitle="ใช้แสดงในหน้าชำระมัดจำของลูกค้า">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="admin-form-2col">
           <Select label="ธนาคาร" value={form.bank_name || ''} onChange={setField('bank_name')}>
             {BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
           </Select>
@@ -124,20 +124,20 @@ export default function AdminShopSettingsPage() {
             <Input label="ชื่อบัญชี" value={form.bank_account_name || ''} onChange={setField('bank_account_name')} />
           </div>
         </div>
-        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-body)' }}>
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-body)' }}>
             รูป QR Code สำหรับรับชำระเงิน (PromptPay)
           </div>
-          <div style={{ width: '100%', maxWidth: 320, height: 320 }}>
+          <div style={{ width: '100%', maxWidth: 240, height: 240 }}>
             <UploadSlot
               placeholder="อัปโหลดรูป QR Code"
               value={form.qr_code_url || null}
               onChange={(url) => setForm((f) => ({ ...f, qr_code_url: url }))}
-              height={320}
+              height={240}
               cropAspectRatio={1}
             />
           </div>
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-subtle)' }}>
+          <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)' }}>
             รูปนี้จะไปแสดงในหน้าชำระมัดจำของลูกค้าแทนช่องว่างเปล่า
           </span>
         </div>
@@ -145,11 +145,11 @@ export default function AdminShopSettingsPage() {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
         {saved && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green-700)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
-            <Check style={{ width: 26, height: 26 }} /> บันทึกสำเร็จ
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--green-700)', fontSize: 'var(--text-xs)', fontWeight: 600 }}>
+            <Check style={{ width: 16, height: 16 }} /> บันทึกสำเร็จ
           </span>
         )}
-        <Button variant="primary" size="lg" onClick={handleSave} disabled={saving}>
+        <Button variant="primary" size="md" onClick={handleSave} disabled={saving}>
           {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
         </Button>
       </div>

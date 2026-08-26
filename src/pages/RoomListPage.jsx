@@ -35,16 +35,16 @@ export default function RoomListPage() {
 
   return (
     <div className="container-lg">
-      <h1 style={{ fontSize: 'var(--text-2xl)' }}>เลือกห้องคาราโอเกะ</h1>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 6 }}>
+      <h1 style={{ fontSize: 'var(--text-xl)' }}>เลือกห้องคาราโอเกะ</h1>
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 4 }}>
         เลือกห้องที่ว่าง แล้วจองเวลาได้ทันที
       </p>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 24, flexWrap: 'wrap' }}>
-        <div style={{ maxWidth: 420, flex: 1, minWidth: 286 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 18, flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 220px', minWidth: 180 }}>
           <Input placeholder="ค้นหาชื่อห้อง" icon={<Search />} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <div style={{ width: 390 }}>
+        <div style={{ flex: '0 1 180px', minWidth: 140 }}>
           <Select value={size} onChange={(e) => setSize(e.target.value)}>
             <option value="all">ขนาดห้อง: ทั้งหมด</option>
             <option value="S">S</option>
@@ -68,22 +68,22 @@ export default function RoomListPage() {
             <div className="room-photo" style={{ aspectRatio: ROOM_PHOTO_ASPECT_RATIO, backgroundImage: `url(${resolveRoomImage(room)})` }} />
             <div className="room-card-body">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                <span style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text-strong)' }}>{room.room_name}</span>
+                <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>{room.room_name}</span>
                 <Tag tone="neutral" size="sm">{SIZE_CAPACITY_LABEL[room.size] || `ความจุ ${room.capacity} คน`}</Tag>
               </div>
               {!room.is_active && <Tag tone="danger" dot size="sm">ปิดให้บริการชั่วคราว</Tag>}
               {roomNoteLines(room.description).length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {roomNoteLines(room.description).map((line, i) => (
                     <Tag key={i} tone="success" size="sm">{line}</Tag>
                   ))}
                 </div>
               )}
               <div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>ราคาเริ่มต้น</div>
-                <div className="num" style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--green-700)' }}>
+                <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ราคาเริ่มต้น</div>
+                <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--green-700)' }}>
                   {money(room.price_per_hour)} บาท
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 400 }}>/ชม.</span>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 400 }}>/ชม.</span>
                 </div>
               </div>
               <Button variant="accent" block disabled={!room.is_active} onClick={() => navigate(`/book/${room.room_id}`)}>

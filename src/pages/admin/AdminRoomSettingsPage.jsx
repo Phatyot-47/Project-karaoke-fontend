@@ -109,7 +109,7 @@ export default function AdminRoomSettingsPage() {
   if (loading) return <p style={{ color: 'var(--text-muted)' }}>กำลังโหลด...</p>;
 
   return (
-    <div style={{ maxWidth: 1900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(720px, 1fr) minmax(0, 2fr)', gap: 26, alignItems: 'start' }}>
+    <div className="admin-grid-split" style={{ maxWidth: 1200, margin: '0 auto' }}>
       <Card
         title={`ห้องทั้งหมด (${rooms.length} ห้อง)`}
         actions={<Button variant="primary" size="sm" iconLeft={<Plus />} onClick={handleAddRoom} disabled={adding}>เพิ่มห้อง</Button>}
@@ -125,7 +125,7 @@ export default function AdminRoomSettingsPage() {
               {r.room_name}
             </button>
           ))}
-          {!rooms.length && <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>ยังไม่มีห้อง กดปุ่ม "เพิ่มห้อง" เพื่อเริ่มต้น</p>}
+          {!rooms.length && <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>ยังไม่มีห้อง กดปุ่ม "เพิ่มห้อง" เพื่อเริ่มต้น</p>}
         </div>
       </Card>
 
@@ -137,7 +137,7 @@ export default function AdminRoomSettingsPage() {
         ) : (
         <>
         <Card title="ข้อมูลพื้นฐาน">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="admin-form-2col">
             <div style={{ gridColumn: '1 / -1' }}>
               <Input label="ชื่อห้อง" value={draft.room_name} onChange={setField('room_name')} />
             </div>
@@ -152,7 +152,7 @@ export default function AdminRoomSettingsPage() {
         </Card>
 
         <Card title="ราคา">
-          <div style={{ width: 286 }}>
+          <div style={{ maxWidth: 280, width: '100%' }}>
             <Input label="ราคาต่อชั่วโมง (บาท)" type="number" value={draft.price_per_hour} onChange={setField('price_per_hour')} />
           </div>
         </Card>
@@ -172,13 +172,13 @@ export default function AdminRoomSettingsPage() {
         </Card>
 
         <Card title="รูปภาพห้อง">
-          <div style={{ width: '100%', maxWidth: ROOM_PHOTO_WIDTH, height: ROOM_PHOTO_HEIGHT }}>
+          <div style={{ width: '100%', maxWidth: 480 }}>
             <UploadSlot
               key={selectedId}
               placeholder="อัปโหลดรูปห้อง"
               value={draft.image_url && draft.image_url.startsWith('data:') ? draft.image_url : resolveRoomImage(draft)}
               onChange={(url) => setDraft((d) => ({ ...d, image_url: url }))}
-              height={ROOM_PHOTO_HEIGHT}
+              height={200}
               cropAspectRatio={ROOM_PHOTO_ASPECT_RATIO}
             />
           </div>
@@ -187,10 +187,10 @@ export default function AdminRoomSettingsPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {!confirmingDelete ? (
-              <Button variant="danger" onClick={() => setConfirmingDelete(true)}>ลบห้องนี้</Button>
+              <Button variant="danger" size="sm" onClick={() => setConfirmingDelete(true)}>ลบห้องนี้</Button>
             ) : (
               <>
-                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--red-600)' }}>ยืนยันลบห้องนี้? ลบแล้วกู้คืนไม่ได้</span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--red-600)' }}>ยืนยันลบห้องนี้?</span>
                 <Button variant="outline" size="sm" onClick={() => setConfirmingDelete(false)}>ยกเลิก</Button>
                 <Button variant="danger" size="sm" onClick={handleDeleteRoom} disabled={deleting}>
                   {deleting ? 'กำลังลบ...' : 'ยืนยันลบ'}
@@ -200,11 +200,11 @@ export default function AdminRoomSettingsPage() {
           </div>
           <div style={{ flex: 1 }} />
           {saved && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green-700)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
-              <Check style={{ width: 26, height: 26 }} /> บันทึกสำเร็จ
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--green-700)', fontSize: 'var(--text-xs)', fontWeight: 600 }}>
+              <Check style={{ width: 16, height: 16 }} /> บันทึกสำเร็จ
             </span>
           )}
-          <Button variant="primary" size="lg" onClick={handleSave} disabled={saving}>
+          <Button variant="primary" size="md" onClick={handleSave} disabled={saving}>
             {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
           </Button>
         </div>

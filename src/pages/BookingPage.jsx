@@ -194,38 +194,38 @@ export default function BookingPage() {
 
   return (
     <div className="page-dark app-dark">
-      <header className="topbar" style={{ gap: 16, justifyContent: 'flex-start' }}>
+      <header className="topbar" style={{ gap: 12, justifyContent: 'flex-start' }}>
         <IconButton label="ย้อนกลับ" onClick={() => navigate('/')}><ArrowLeft /></IconButton>
         <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>จองห้อง: {room.room_name}</span>
       </header>
 
-      <div className="container-md" style={{ maxWidth: 2080, display: 'grid', gridTemplateColumns: '940px 1fr', gap: 44, alignItems: 'start' }}>
-        <Card pad={false} style={{ position: 'sticky', top: 31 }}>
+      <div className="container-md booking-layout">
+        <Card pad={false} style={{ position: 'sticky', top: 80 }}>
           <div className="room-photo" style={{ aspectRatio: ROOM_PHOTO_ASPECT_RATIO, backgroundImage: `url(${resolveRoomImage(room)})` }} />
-          <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <span style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text-strong)' }}>{room.room_name}</span>
+          <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>{room.room_name}</span>
             <span className="tag tag-neutral" style={{ width: 'fit-content' }}>{SIZE_CAPACITY_LABEL[room.size] || `ความจุ ${room.capacity} คน`}</span>
             {roomNoteLines(room.description).length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {roomNoteLines(room.description).map((line, i) => (
                   <span key={i} className="tag tag-success">{line}</span>
                 ))}
               </div>
             )}
-            <div style={{ borderTop: '1px solid var(--divider)', marginTop: 6, paddingTop: 16 }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>ราคา</div>
-              <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--green-700)' }}>
-                {money(room.price_per_hour)} บาท<span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 400 }}>/ชม.</span>
+            <div style={{ borderTop: '1px solid var(--divider)', marginTop: 4, paddingTop: 12 }}>
+              <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ราคา</div>
+              <div className="num" style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--green-700)' }}>
+                {money(room.price_per_hour)} บาท<span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 400 }}>/ชม.</span>
               </div>
             </div>
           </div>
         </Card>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-              <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>วันนี้ · {formatThaiDate(today)}</span>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>เปิดบริการ {shopHoursLabel}</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+              <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)' }}>วันนี้ · {formatThaiDate(today)}</span>
+              <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>เปิดบริการ {shopHoursLabel}</span>
             </div>
           </Card>
 
@@ -255,19 +255,19 @@ export default function BookingPage() {
           </Card>
 
           <Card>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>ช่วงเวลาที่เลือก</div>
-                  <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>{selectedRangeLabel}</div>
+                  <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ช่วงเวลาที่เลือก</div>
+                  <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)' }}>{selectedRangeLabel}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>ยอดรวมโดยประมาณ</div>
-                  <div className="num" style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text-strong)' }}>
+                  <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ยอดรวมโดยประมาณ</div>
+                  <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-strong)' }}>
                     {money(pricePreview.priceTotal)} บาท
                   </div>
                   {pricePreview.peakSurchargeTotal > 0 && (
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--amber-600)', marginTop: 2 }}>
+                    <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--amber-600)', marginTop: 2 }}>
                       รวมค่าพีคไทม์ +{money(pricePreview.peakSurchargeTotal)} บาท
                     </div>
                   )}
@@ -276,11 +276,11 @@ export default function BookingPage() {
               {rangeHasBooked && <div className="field-error">ช่วงเวลานี้มีบางส่วนถูกจองแล้ว กรุณาเลือกใหม่</div>}
               {!rangeHasBooked && rangeHasPast && <div className="field-error">ช่วงเวลานี้ผ่านไปแล้ว กรุณาเลือกเวลาอื่น</div>}
               {submitError && <div className="field-error">{submitError}</div>}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid var(--divider)', flexWrap: 'wrap', gap: 16 }}>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-subtle)', lineHeight: 1.6, maxWidth: 320 }}>
-                  ยกเลิกได้ล่วงหน้าก่อนเวลาเริ่ม 1 ชั่วโมง — มัดจำไม่สามารถขอคืนได้ทุกกรณี ยอดมัดจำจริงจะแสดงในหน้าถัดไป
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid var(--divider)', flexWrap: 'wrap', gap: 12 }}>
+                <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)', lineHeight: 1.5, maxWidth: 300 }}>
+                  ยกเลิกได้ล่วงหน้าก่อนเวลาเริ่ม 1 ชั่วโมง — มัดจำไม่สามารถขอคืนได้ทุกกรณี
                 </div>
-                <Button variant="accent" size="lg" disabled={confirmDisabled} onClick={handleConfirm} iconRight={<ArrowRight />}>
+                <Button variant="accent" size="md" disabled={confirmDisabled} onClick={handleConfirm} iconRight={<ArrowRight />}>
                   {submitting ? 'กำลังบันทึก...' : 'ยืนยันและชำระมัดจำ'}
                 </Button>
               </div>
