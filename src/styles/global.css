@@ -118,10 +118,16 @@ button { font-family: inherit; }
   background: var(--control-bg); color: var(--text-strong); font-size: var(--text-sm); padding: 0 14px;
   font-family: inherit; transition: border-color .15s ease, box-shadow .15s ease;
 }
+.field::placeholder { color: var(--text-subtle); opacity: 1; }
 .field:hover { border-color: var(--border-strong); }
 .field:focus { outline: none; border-color: var(--border-focus); box-shadow: var(--focus-ring); }
 .field:disabled { background: var(--control-disabled); color: var(--text-subtle); cursor: not-allowed; }
 .field-textarea { height: auto; min-height: 84px; padding: 10px 14px; line-height: 1.5; resize: vertical; }
+
+.app-dark select.field option {
+  background: #1e212b;
+  color: #f8fafc;
+}
 
 .field-hint { font-size: var(--text-xs); color: var(--text-subtle); }
 .field-error { font-size: var(--text-xs); color: var(--danger-text); font-weight: 500; }
