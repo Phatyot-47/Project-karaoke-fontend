@@ -47,7 +47,7 @@ export default function RegisterPage() {
           style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}
         >
           <Input label="ชื่อ" placeholder="ชื่อ-นามสกุล" value={name} onChange={(e) => { setName(e.target.value); setError(''); }} />
-          <Input label="เบอร์โทรศัพท์" placeholder="08x-xxx-xxxx" value={phone} onChange={(e) => { setPhone(e.target.value); setError(''); }} />
+          <Input label="เบอร์โทรศัพท์" placeholder="08x-xxx-xxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '')); setError(''); }} />
           {error && <div className="field-error">{error}</div>}
           <Button type="submit" variant="accent" block disabled={loading}>
             {loading ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}

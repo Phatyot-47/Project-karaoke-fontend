@@ -50,7 +50,7 @@ export default function LoginPage() {
             label="เบอร์โทรศัพท์"
             placeholder="08x-xxx-xxxx"
             value={phone}
-            onChange={(e) => { setPhone(e.target.value); setError(''); }}
+            onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '')); setError(''); }}
           />
           {error && <div className="field-error">{error}</div>}
           <Button type="submit" variant="accent" block disabled={loading}>
