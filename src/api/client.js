@@ -100,6 +100,11 @@ const api = {
   confirmBooking: (id) => request(`/admin/bookings/${id}/confirm`, { method: 'PATCH' }),
   rejectBooking: (id, reason) => request(`/admin/bookings/${id}/reject`, { method: 'PATCH', body: { reason } }),
   changeBookingRoom: (id, roomId) => request(`/admin/bookings/${id}/change-room`, { method: 'PATCH', body: { roomId } }),
+
+  // ---- แอดมิน: Check-in / ต่อเวลา / Check-out ----
+  checkIn: (id, adminUserId) => request(`/admin/bookings/${id}/check-in`, { method: 'PATCH', body: { adminUserId } }),
+  extendBooking: (id, minutes, adminUserId) => request(`/admin/bookings/${id}/extend`, { method: 'PATCH', body: { minutes, adminUserId } }),
+  checkOut: (id, adminUserId) => request(`/admin/bookings/${id}/check-out`, { method: 'PATCH', body: { adminUserId } }),
   createWalkInBooking: (payload) => request('/admin/bookings/walkin', { method: 'POST', body: payload }),
   getBookingHistory: () => request('/admin/bookings/history'),
 
