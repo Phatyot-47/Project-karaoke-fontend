@@ -109,8 +109,9 @@ const api = {
   getBookingHistory: () => request('/admin/bookings/history'),
 
   // ---- แอดมิน: ตรวจสอบสลิปการชำระเงิน ----
-  verifyPayment: (paymentId, approve, adminUserId) =>
-    request(`/admin/payments/${paymentId}/verify`, { method: 'PATCH', body: { approve, adminUserId } }),
+  // ปฏิเสธสลิป (approve = false) จะยกเลิกการจองนั้นทันทีพร้อม reason
+  verifyPayment: (paymentId, approve, adminUserId, reason) =>
+    request(`/admin/payments/${paymentId}/verify`, { method: 'PATCH', body: { approve, adminUserId, reason } }),
 
   // ---- แอดมิน: ตั้งค่าร้าน ----
   getShop: () => request('/admin/shop'),

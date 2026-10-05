@@ -10,6 +10,9 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { todayISODate, addMinutesToTime, addMinutesToDateTime, timeToMinutes, isSlotPastBangkok, formatTimeHM, DAY_LABELS, findTodayHours, buildHalfHourSlots } from '../../utils/format.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
+// วอล์คอินจองขั้นต่ำ 1 ชม. (2 ช่อง ช่องละ 30 นาที) — ต้องตรงกับ WALKIN_MIN_MINUTES ฝั่ง backend
+const WALKIN_MIN_SLOTS = 2;
+
 export default function AdminWalkInPage() {
   const { admin } = useAuth();
   const navigate = useNavigate();
@@ -89,27 +92,38 @@ export default function AdminWalkInPage() {
     return o === startOrder;
   };
 
-  // คลิกเลือกเวลาเริ่ม แล้วคลิกอีกครั้งเพื่อเลือกเวลาสิ้นสุด — แบบเดียวกับหน้าจองของลูกค้า (BookingPage)
+  // วอล์คอินต้องจองอย่างน้อย 1 ชม. (2 ช่อง) — คลิกครั้งแรก = เลือก 1 ชม. นับจากช่องนั้นทันที
+  // คลิกช่องหลังจากนั้น = ขยายช่วงไปถึงช่องที่คลิก / คลิกช่องเดิมซ้ำ = ยกเลิกการเลือก
+  const selectMinimum = (t) => {
+    const daySlots = roomDaySchedule.get(Number(roomId)) || [];
+    const i = order.get(t);
+    const needed = daySlots.slice(i, i + WALKIN_MIN_SLOTS);
+    if (needed.length < WALKIN_MIN_SLOTS || needed.some((s) => s.status || s.isPast)) {
+      setStart('');
+      setEnd('');
+      setFormError(`วอล์คอินต้องจองอย่างน้อย 1 ชั่วโมง — ช่วง ${t}–${addMinutesToTime(t, 60)} น. ไม่ว่างหรือเกินเวลาปิดร้าน`);
+      return;
+    }
+    setStart(t);
+    setEnd(addMinutesToTime(t, WALKIN_MIN_SLOTS * 30));
+  };
+
   const selectSlot = (time, disabled) => {
     if (disabled) return;
     setFormError('');
-    if (!start || end) {
-      setStart(time);
-      setEnd('');
-      return;
-    }
+    const isMinimumSelected = start && end === addMinutesToTime(start, WALKIN_MIN_SLOTS * 30);
+    if (!isMinimumSelected) { selectMinimum(time); return; }
     if (time === start) { setStart(''); setEnd(''); return; }
     const so = order.get(start);
     const eo = order.get(time);
-    if (eo > so) {
-      const daySlots = roomDaySchedule.get(Number(roomId)) || [];
-      const hasBlockedBetween = daySlots.some((s, i) => i > so && i <= eo && (s.status || s.isPast));
-      if (hasBlockedBetween) { setStart(time); setEnd(''); return; }
-      setEnd(addMinutesToTime(time, 30));
-    } else {
-      setStart(time);
-      setEnd('');
+    if (eo < so + WALKIN_MIN_SLOTS) {
+      if (eo < so) selectMinimum(time);
+      return; // ช่องที่คลิกอยู่ในช่วงขั้นต่ำที่เลือกไว้แล้ว
     }
+    const daySlots = roomDaySchedule.get(Number(roomId)) || [];
+    const hasBlockedBetween = daySlots.some((s, i) => i > so && i <= eo && (s.status || s.isPast));
+    if (hasBlockedBetween) { selectMinimum(time); return; }
+    setEnd(addMinutesToTime(time, 30));
   };
 
   // ต่อวันที่ + เวลาสิ้นสุดให้เป็น datetime จริง — ถ้าเวลาสิ้นสุด <= เวลาเริ่ม (เช่น ร้านเปิดถึงเที่ยงคืน
@@ -192,6 +206,8 @@ export default function AdminWalkInPage() {
     if (!roomId) { setFormError('กรุณาเลือกห้อง'); return; }
     if (!start || !end) { setFormError('กรุณาเลือกเวลาเริ่มและเวลาสิ้นสุด'); return; }
     if (lockedStartTimes.has(start)) { setFormError('เวลาที่เลือกผ่านไปแล้ว กรุณาเลือกเวลาใหม่'); return; }
+    const durationMinutes = (((timeToMinutes(end) - timeToMinutes(start)) % 1440) + 1440) % 1440 || 1440;
+    if (durationMinutes < WALKIN_MIN_SLOTS * 30) { setFormError('วอล์คอินต้องจองอย่างน้อย 1 ชั่วโมง'); return; }
     const avail = roomAvailability.get(Number(roomId));
     if (avail && avail.available === false) {
       setFormError('ห้องนี้ไม่ว่างในช่วงเวลาที่เลือก กรุณาเลือกห้องหรือเวลาอื่น');
@@ -329,7 +345,7 @@ export default function AdminWalkInPage() {
               เวลาว่างของห้องนี้ (เรียลไทม์)
             </span>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-              {start && end ? `ช่วงที่เลือก ${start}–${end}` : 'คลิกเลือกเวลาเริ่ม แล้วคลิกอีกครั้งเพื่อเลือกเวลาสิ้นสุด (ทีละ 30 นาที)'}
+              {start && end ? `ช่วงที่เลือก ${start}–${end}` : 'คลิกช่องเวลาเริ่มเพื่อจอง 1 ชม. (ขั้นต่ำ) แล้วคลิกช่องถัดไปถ้าต้องการขยายเวลา'}
             </span>
           </div>
           {!roomId && <p style={{ color: 'var(--text-muted)' }}>เลือกห้องก่อนเพื่อดูเวลาว่าง</p>}
