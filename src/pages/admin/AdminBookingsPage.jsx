@@ -8,7 +8,7 @@ import Select from '../../components/Select.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { formatDateTimeRange, money, isBookingAwaitingStart } from '../../utils/format.js';
+import { formatDateTimeRange, formatTimeHM, money } from '../../utils/format.js';
 import { resolveRoomImage } from '../../utils/roomImage.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
@@ -25,6 +25,9 @@ export default function AdminBookingsPage() {
   const [rooms, setRooms] = useState([]);
   const [movingId, setMovingId] = useState(null);
   const [moveRoomId, setMoveRoomId] = useState('');
+  // ต่อเวลา: จำนวนนาทีที่เลือกไว้ของแต่ละ booking (ค่าเริ่มต้น 30 นาที)
+  const [extendMinutes, setExtendMinutes] = useState({});
+  const [notice, setNotice] = useState('');
   // บังคับ re-render ทุก 30s ให้สถานะ "รอดำเนินการ"/"กำลังดำเนินการ" ของแต่ละแถวอัปเดตตามเวลาจริง
   useNowTick();
 
@@ -70,6 +73,37 @@ export default function AdminBookingsPage() {
     } catch (err) { setError(err.message); }
   };
 
+  // Check-in / ต่อเวลา / Check-out — แสดงผลลัพธ์สั้นๆ ใน notice แล้วโหลดรายการใหม่
+  const runSessionAction = async (action, successMessage) => {
+    setError('');
+    setNotice('');
+    try {
+      const result = await action();
+      setNotice(successMessage(result));
+      load();
+    } catch (err) { setError(err.message); }
+  };
+
+  const handleCheckIn = (b) => runSessionAction(
+    () => api.checkIn(b.booking_id, admin.user_id),
+    () => `Check-in ${b.room_name} แล้ว`
+  );
+
+  const handleExtend = (b) => {
+    const minutes = extendMinutes[b.booking_id] || 30;
+    return runSessionAction(
+      () => api.extendBooking(b.booking_id, minutes, admin.user_id),
+      (ext) => `ต่อเวลา ${b.room_name} ${minutes} นาที ถึง ${formatTimeHM(ext.new_end_datetime)} น. (+${money(ext.extra_amount)} บาท)`
+    );
+  };
+
+  const handleCheckOut = (b) => runSessionAction(
+    () => api.checkOut(b.booking_id, admin.user_id),
+    (s) => (Number(s.overtime_amount) > 0
+      ? `Check-out ${b.room_name} แล้ว — ออกช้า ${s.minutes_late} นาที คิดค่าเกินเวลา ${money(s.overtime_amount)} บาท`
+      : `Check-out ${b.room_name} แล้ว`)
+  );
+
   const submitReject = async (id) => {
     try {
       await api.rejectBooking(id, rejectReason.trim() || 'ไม่ระบุเหตุ');
@@ -101,6 +135,7 @@ export default function AdminBookingsPage() {
       </div>
 
       {error && <div className="field-error">{error}</div>}
+      {notice && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--green-700)' }}>{notice}</div>}
 
       <Card
         title="รายการจองวันนี้"
@@ -112,7 +147,7 @@ export default function AdminBookingsPage() {
         {!loading && !bookings.length && <p style={{ color: 'var(--text-muted)', padding: 16 }}>ยังไม่มีรายการจองวันนี้</p>}
         {bookings.map((b) => {
           const isWalkIn = b.booking_source === 'admin_walkin';
-          const isAwaitingStart = b.booking_status === 'confirmed' && isBookingAwaitingStart(b);
+          const inSession = b.session_status === 'in_progress';
           return (
             <div className="booking-row" key={b.booking_id}>
               <div className="booking-photo" style={{ backgroundImage: `url(${resolveRoomImage(b)})` }} />
@@ -130,6 +165,14 @@ export default function AdminBookingsPage() {
                 {b.booking_status === 'cancelled' && b.cancel_reason && (
                   <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '4px 8px' }}>
                     เหตุผลที่ยกเลิก: {b.cancel_reason}
+                  </div>
+                )}
+                {b.session_id && (
+                  <div style={{ marginTop: 6, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
+                    เข้า {formatTimeHM(b.checkin_time)} น.
+                    {b.checkout_time && ` · ออก ${formatTimeHM(b.checkout_time)} น.`}
+                    {Number(b.extended_minutes) > 0 && ` · ต่อเวลา ${b.extended_minutes} นาที (+${money(b.extension_amount)} บาท)`}
+                    {Number(b.overtime_amount) > 0 && ` · ค่าเกินเวลา ${money(b.overtime_amount)} บาท`}
                   </div>
                 )}
                 {b.note && (
@@ -192,8 +235,27 @@ export default function AdminBookingsPage() {
                 {(b.booking_status === 'pending' || b.booking_status === 'confirmed') && movingId !== b.booking_id && rejectingId !== b.booking_id && (
                   <Button variant="outline" size="sm" onClick={() => startMove(b)}>ย้ายห้อง</Button>
                 )}
-                {b.booking_status === 'confirmed' && isAwaitingStart && <Tag tone="warning" dot>รอดำเนินการ</Tag>}
-                {b.booking_status === 'confirmed' && !isAwaitingStart && <Tag tone="info" dot>กำลังดำเนินการ</Tag>}
+                {b.booking_status === 'confirmed' && !b.session_id && (
+                  <>
+                    <Tag tone="warning" dot>รอ Check-in</Tag>
+                    <Button variant="accent" size="sm" onClick={() => handleCheckIn(b)}>Check-in</Button>
+                  </>
+                )}
+                {b.booking_status === 'confirmed' && inSession && (
+                  <>
+                    <Tag tone="info" dot>กำลังใช้ห้อง</Tag>
+                    <div style={{ width: 110 }}>
+                      <Select
+                        value={extendMinutes[b.booking_id] || 30}
+                        onChange={(e) => setExtendMinutes((m) => ({ ...m, [b.booking_id]: Number(e.target.value) }))}
+                      >
+                        {[30, 60, 90, 120].map((m) => <option key={m} value={m}>+{m} นาที</option>)}
+                      </Select>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleExtend(b)}>ต่อเวลา</Button>
+                    <Button variant="primary" size="sm" onClick={() => handleCheckOut(b)}>Check-out</Button>
+                  </>
+                )}
                 {b.booking_status === 'completed' && <Tag tone="success" dot>เสร็จสมบูรณ์</Tag>}
                 {b.booking_status === 'cancelled' && <Tag tone="danger" dot>ยกเลิกแล้ว</Tag>}
               </div>
