@@ -6,7 +6,7 @@ import Button from '../../components/Button.jsx';
 import UploadSlot from '../../components/UploadSlot.jsx';
 import { Check, Plus } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
-import { resolveRoomImage, ROOM_PHOTO_WIDTH, ROOM_PHOTO_HEIGHT, ROOM_PHOTO_ASPECT_RATIO } from '../../utils/roomImage.js';
+import { resolveRoomImage, ROOM_PHOTO_ASPECT_RATIO } from '../../utils/roomImage.js';
 
 export default function AdminRoomSettingsPage() {
   const [rooms, setRooms] = useState([]);

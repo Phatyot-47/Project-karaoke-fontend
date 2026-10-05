@@ -1,5 +1,5 @@
 // ไฟล์นี้รวม API call ทั้งหมดของ frontend ไว้ที่เดียว
-// ทุก request ผ่านฟังก์ชัน request() หรือ uploadFile() ซึ่งจัดการ error handling ไว้แล้ว
+// ทุก request ผ่านฟังก์ชัน request() หรือ uploadFile() ซึ่งใช้ parseResponse() จัดการ error ร่วมกัน
 
 // BASE_URL อ่านจาก environment variable — กำหนดใน .env (VITE_API_BASE_URL)
 // ถ้าไม่ตั้งค่าไว้ จะใช้ localhost:4000/api เป็น fallback สำหรับ development
@@ -29,7 +29,15 @@ async function request(path, { method = 'GET', body, params } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  // พยายาม parse JSON — บาง endpoint อาจตอบกลับมาโดยไม่มี body (เช่น 204 No Content)
+  return parseResponse(res, 'เกิดข้อผิดพลาด');
+}
+
+/**
+ * อ่าน body เป็น JSON (ถ้ามี) แล้วโยน Error พร้อม .status และ .data เมื่อ response ไม่ ok
+ * fallbackMessage ใช้เมื่อ backend ไม่ได้ส่ง { error } กลับมา
+ */
+async function parseResponse(res, fallbackMessage) {
+  // บาง endpoint อาจตอบกลับมาโดยไม่มี body (เช่น 204 No Content)
   let data = null;
   try {
     data = await res.json();
@@ -37,10 +45,8 @@ async function request(path, { method = 'GET', body, params } = {}) {
     /* ไม่มี body หรือไม่ใช่ JSON */
   }
 
-  // ถ้า response ไม่ ok → โยน Error พร้อมข้อความจาก backend (ถ้ามี)
   if (!res.ok) {
-    const message = (data && data.error) || `เกิดข้อผิดพลาด (HTTP ${res.status})`;
-    const err = new Error(message);
+    const err = new Error((data && data.error) || `${fallbackMessage} (HTTP ${res.status})`);
     err.status = res.status;
     err.data = data;
     throw err;
@@ -59,24 +65,11 @@ async function uploadFile(file) {
   formData.append('file', file);
 
   const res = await fetch(`${BASE_URL}/uploads`, { method: 'POST', body: formData });
-
-  let data = null;
-  try {
-    data = await res.json();
-  } catch {
-    /* ไม่มี body หรือไม่ใช่ JSON */
-  }
-
-  if (!res.ok) {
-    const message = (data && data.error) || `อัปโหลดไฟล์ไม่สำเร็จ (HTTP ${res.status})`;
-    throw new Error(message);
-  }
-
-  return data;
+  return parseResponse(res, 'อัปโหลดไฟล์ไม่สำเร็จ');
 }
 
-// ออบเจกต์รวม API method ทั้งหมด — import { api } from './api/client.js' หรือ import api from './api/client.js'
-export const api = {
+// ออบเจกต์รวม API method ทั้งหมด — import api from './api/client.js'
+const api = {
   // ---- อัปโหลดไฟล์ ----
   uploadFile,
 

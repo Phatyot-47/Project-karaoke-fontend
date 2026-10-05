@@ -73,22 +73,26 @@ export function timeToMinutes(time) {
 const BANGKOK_OFFSET_MS = 7 * 60 * 60 * 1000;
 
 // grace period (นาที) สำหรับล็อกเวลาจอง — ช่วงเวลาที่ "ผ่านไปแล้ว" แต่ยังจองได้อีก N นาที
-export const PAST_SLOT_GRACE_MINUTES = 15;
+const PAST_SLOT_GRACE_MINUTES = 15;
 
 /**
- * คืนเวลา "ปัจจุบันตามเวลาไทย" โดยไม่พึ่ง timezone ที่ตั้งไว้ในเครื่อง
+ * แปลง epoch (ms) เป็นวันที่/นาทีของวัน "ตามเวลาไทย" โดยไม่พึ่ง timezone ที่ตั้งไว้ในเครื่อง
  *
- * วิธีการ: Date.now() เป็น UTC epoch เสมอ → บวก 7 ชม. → อ่านด้วย getUTC*
+ * วิธีการ: epoch เป็น UTC เสมอ → บวก 7 ชม. → อ่านด้วย getUTC*
  * ได้ตัวเลขเวลาไทยตรงๆ ไม่ว่าเครื่อง/เบราว์เซอร์จะตั้ง timezone อะไรไว้
  *
  * @returns {{ dateISO: string, minutesOfDay: number }}
  */
-function bangkokNowParts() {
-  const d = new Date(Date.now() + BANGKOK_OFFSET_MS);
+function bangkokParts(epochMs) {
+  const d = new Date(epochMs + BANGKOK_OFFSET_MS);
   return {
     dateISO: `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`,
     minutesOfDay: d.getUTCHours() * 60 + d.getUTCMinutes(),
   };
+}
+
+function bangkokNowParts() {
+  return bangkokParts(Date.now());
 }
 
 /**
@@ -132,7 +136,7 @@ export function roomNoteLines(description) {
 }
 
 // Map สถานะการจอง → label ภาษาไทย + tone สีของ Tag component
-export const BOOKING_STATUS_LABEL = {
+const BOOKING_STATUS_LABEL = {
   pending:   { label: 'รอดำเนินการ',      tone: 'warning' },
   confirmed: { label: 'กำลังดำเนินการ',   tone: 'info'    },
   completed: { label: 'เสร็จสมบูรณ์',     tone: 'success' },
@@ -168,9 +172,8 @@ export function isBookingAwaitingStart(booking) {
   if (Number.isNaN(startMs)) return true; // parse ไม่สำเร็จ → safe fallback
 
   // แปลง UTC → Bangkok time แล้วเปรียบเทียบกับเวลาปัจจุบัน (graceMinutes = 0 เพราะต้องการ exact boundary)
-  const d = new Date(startMs + BANGKOK_OFFSET_MS);
-  const dateISO = `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
-  const time = `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`;
+  const { dateISO, minutesOfDay } = bangkokParts(startMs);
+  const time = `${pad2(Math.floor(minutesOfDay / 60))}:${pad2(minutesOfDay % 60)}`;
   return !isSlotPastBangkok(dateISO, time, 0);
 }
 
@@ -185,3 +188,19 @@ export function getBookingDisplayStatus(booking) {
 
 // ชื่อวันในสัปดาห์ภาษาไทย — index ตรงกับ Date.getDay() (0 = อาทิตย์)
 export const DAY_LABELS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+
+/** หาเวลาเปิด-ปิดร้านของ "วันนี้" จาก shop.hours (ไม่เจอวันนี้ใช้แถวแรก, ไม่มีข้อมูลเลยคืน null) */
+export function findTodayHours(hours) {
+  if (!hours?.length) return null;
+  const dow = new Date().getDay();
+  return hours.find((h) => Number(h.day_of_week) === dow) || hours[0];
+}
+
+/** สร้างรายการช่วงเวลาทุก 30 นาทีระหว่างชั่วโมงเปิด-ปิด เช่น (18, 20) → ["18:00","18:30","19:00","19:30"] */
+export function buildHalfHourSlots(openHour, closeHour) {
+  const times = [];
+  for (let h = openHour; h < closeHour; h++) {
+    times.push(`${pad2(h)}:00`, `${pad2(h)}:30`);
+  }
+  return times;
+}

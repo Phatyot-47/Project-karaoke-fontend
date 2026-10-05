@@ -7,7 +7,7 @@ import Select from '../../components/Select.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { todayISODate, addMinutesToTime, addMinutesToDateTime, timeToMinutes, isSlotPastBangkok, formatTimeHM, DAY_LABELS } from '../../utils/format.js';
+import { todayISODate, addMinutesToTime, addMinutesToDateTime, timeToMinutes, isSlotPastBangkok, formatTimeHM, DAY_LABELS, findTodayHours, buildHalfHourSlots } from '../../utils/format.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
 export default function AdminWalkInPage() {
@@ -51,23 +51,12 @@ export default function AdminWalkInPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // เวลาเปิด-ปิดร้านของ "วันนี้" ตาม day_of_week (0=อาทิตย์...6=เสาร์) จากการตั้งค่าร้าน (ตั้งค่าร้าน > เวลาเปิด-ปิด)
-  const todayHours = useMemo(() => {
-    if (!shop?.hours?.length) return null;
-    const dow = new Date().getDay();
-    return shop.hours.find((h) => Number(h.day_of_week) === dow) || shop.hours[0];
-  }, [shop]);
+  const todayHours = useMemo(() => findTodayHours(shop?.hours), [shop]);
 
   // ช่วงเวลาที่เลือกได้ (ทุกครึ่งชม.) เฉพาะภายในเวลาเปิด-ปิดร้านวันนี้เท่านั้น — เดียวกับที่หน้าจองของลูกค้าใช้
   const slotTimes = useMemo(() => {
     if (!todayHours) return [];
-    const open = Number(todayHours.open_hour ?? 0);
-    const close = Number(todayHours.close_hour ?? 24);
-    const times = [];
-    for (let h = open; h < close; h++) {
-      times.push(`${String(h).padStart(2, '0')}:00`);
-      times.push(`${String(h).padStart(2, '0')}:30`);
-    }
-    return times;
+    return buildHalfHourSlots(Number(todayHours.open_hour ?? 0), Number(todayHours.close_hour ?? 24));
   }, [todayHours]);
 
   const endOptions = useMemo(() => slotTimes.map((t) => addMinutesToTime(t, 30)), [slotTimes]);

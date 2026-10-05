@@ -8,7 +8,8 @@ import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveRoomImage, SIZE_CAPACITY_LABEL, ROOM_PHOTO_ASPECT_RATIO } from '../utils/roomImage.js';
 import { calculateBookingPrice } from '../utils/pricing.js';
-import { todayISODate, formatThaiDate, addMinutesToTime, addMinutesToDateTime, timeToMinutes, money, roomNoteLines, DAY_LABELS, isSlotPastBangkok } from '../utils/format.js';
+import { todayISODate, formatThaiDate, addMinutesToTime, addMinutesToDateTime, money, roomNoteLines, DAY_LABELS, isSlotPastBangkok, findTodayHours, buildHalfHourSlots } from '../utils/format.js';
+import useNowTick from '../hooks/useNowTick.js';
 
 export default function BookingPage() {
   const { roomId } = useParams();
@@ -24,14 +25,9 @@ export default function BookingPage() {
   const [selectedEnd, setSelectedEnd] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [nowTick, setNowTick] = useState(0);
+  const nowTick = useNowTick();
 
   const today = todayISODate();
-
-  useEffect(() => {
-    const id = setInterval(() => setNowTick((t) => t + 1), 30000);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (!customer) { navigate('/login'); return; }
@@ -50,22 +46,12 @@ export default function BookingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
-  const todayHours = useMemo(() => {
-    if (!shop?.hours?.length) return { open_hour: 0, close_hour: 24 };
-    const dow = new Date().getDay();
-    return shop.hours.find((h) => Number(h.day_of_week) === dow) || shop.hours[0];
-  }, [shop]);
+  const todayHours = useMemo(() => findTodayHours(shop?.hours) || { open_hour: 0, close_hour: 24 }, [shop]);
 
-  const slotTimes = useMemo(() => {
-    const open = Number(todayHours.open_hour ?? 0);
-    const close = Number(todayHours.close_hour ?? 24);
-    const times = [];
-    for (let h = open; h < close; h++) {
-      times.push(`${String(h).padStart(2, '0')}:00`);
-      times.push(`${String(h).padStart(2, '0')}:30`);
-    }
-    return times;
-  }, [todayHours]);
+  const slotTimes = useMemo(
+    () => buildHalfHourSlots(Number(todayHours.open_hour ?? 0), Number(todayHours.close_hour ?? 24)),
+    [todayHours]
+  );
 
   const order = useMemo(() => new Map(slotTimes.map((t, i) => [t, i])), [slotTimes]);
 
