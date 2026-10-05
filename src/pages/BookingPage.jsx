@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import Card from '../components/Card.jsx';
 import Button from '../components/Button.jsx';
 import IconButton from '../components/IconButton.jsx';
@@ -15,14 +15,20 @@ export default function BookingPage() {
   const { roomId } = useParams();
   const { customer } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [room, setRoom] = useState(null);
   const [shop, setShop] = useState(null);
   const [availability, setAvailability] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [selectedStart, setSelectedStart] = useState(null);
-  const [selectedEnd, setSelectedEnd] = useState(null);
+  // ถ้ามาจากการค้นหาห้องว่างในหน้าเลือกห้อง (state.start + state.durationSlots) ให้เลือกช่วงเวลานั้นไว้ให้เลย
+  const preset = location.state;
+  const [selectedStart, setSelectedStart] = useState(preset?.start || null);
+  const [selectedEnd, setSelectedEnd] = useState(
+    preset?.start && preset.durationSlots > 1 ? addMinutesToTime(preset.start, (preset.durationSlots - 1) * 30) : null
+  );
+  const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const nowTick = useNowTick();
@@ -148,6 +154,7 @@ export default function BookingPage() {
         startDatetime,
         endDatetime,
         guestCount: room.capacity || null,
+        note: note.trim() || undefined,
       });
       navigate(`/pay/${booking.booking_id}`, { state: { booking, room } });
     } catch (err) {
@@ -190,7 +197,10 @@ export default function BookingPage() {
           <div className="room-photo" style={{ aspectRatio: ROOM_PHOTO_ASPECT_RATIO, backgroundImage: `url(${resolveRoomImage(room)})` }} />
           <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>{room.room_name}</span>
-            <span className="tag tag-neutral" style={{ width: 'fit-content' }}>{SIZE_CAPACITY_LABEL[room.size] || `ความจุ ${room.capacity} คน`}</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <span className="tag tag-neutral">{SIZE_CAPACITY_LABEL[room.size] || `ความจุ ${room.capacity} คน`}</span>
+              {room.theme && <span className="tag tag-info">ธีม: {room.theme}</span>}
+            </div>
             {roomNoteLines(room.description).length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {roomNoteLines(room.description).map((line, i) => (
@@ -258,6 +268,17 @@ export default function BookingPage() {
                     </div>
                   )}
                 </div>
+              </div>
+              <div className="field-wrap">
+                <label className="field-label" htmlFor="booking-note">หมายเหตุถึงร้าน (ถ้ามี)</label>
+                <textarea
+                  id="booking-note"
+                  className="field field-textarea"
+                  placeholder="เช่น จัดวันเกิด, ขอไมค์เพิ่ม"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  maxLength={300}
+                />
               </div>
               {rangeHasBooked && <div className="field-error">ช่วงเวลานี้มีบางส่วนถูกจองแล้ว กรุณาเลือกใหม่</div>}
               {!rangeHasBooked && rangeHasPast && <div className="field-error">ช่วงเวลานี้ผ่านไปแล้ว กรุณาเลือกเวลาอื่น</div>}
