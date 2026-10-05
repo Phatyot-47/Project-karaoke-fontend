@@ -4,6 +4,7 @@ import Card from '../../components/Card.jsx';
 import Button from '../../components/Button.jsx';
 import Tag from '../../components/Tag.jsx';
 import Input from '../../components/Input.jsx';
+import Select from '../../components/Select.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -20,6 +21,10 @@ export default function AdminBookingsPage() {
   const [error, setError] = useState('');
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  // ย้ายห้อง: rooms = ห้องทั้งหมดไว้ให้เลือก, movingId = booking ที่กำลังเลือกห้องใหม่
+  const [rooms, setRooms] = useState([]);
+  const [movingId, setMovingId] = useState(null);
+  const [moveRoomId, setMoveRoomId] = useState('');
   // บังคับ re-render ทุก 30s ให้สถานะ "รอดำเนินการ"/"กำลังดำเนินการ" ของแต่ละแถวอัปเดตตามเวลาจริง
   useNowTick();
 
@@ -36,12 +41,33 @@ export default function AdminBookingsPage() {
 
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    api.listAdminRooms().then(setRooms).catch(() => {});
+  }, []);
+
   const handleConfirm = async (id) => {
     try { await api.confirmBooking(id); load(); } catch (err) { setError(err.message); }
   };
 
   const handleVerifyPayment = async (paymentId, approve) => {
     try { await api.verifyPayment(paymentId, approve, admin.user_id); load(); } catch (err) { setError(err.message); }
+  };
+
+  const startMove = (b) => {
+    setMovingId(b.booking_id);
+    setMoveRoomId('');
+    setRejectingId(null);
+  };
+
+  const submitMove = async (id) => {
+    if (!moveRoomId) { setError('กรุณาเลือกห้องที่จะย้ายไป'); return; }
+    try {
+      await api.changeBookingRoom(id, Number(moveRoomId));
+      setMovingId(null);
+      setMoveRoomId('');
+      setError('');
+      load();
+    } catch (err) { setError(err.message); }
   };
 
   const submitReject = async (id) => {
@@ -106,6 +132,25 @@ export default function AdminBookingsPage() {
                     เหตุผลที่ยกเลิก: {b.cancel_reason}
                   </div>
                 )}
+                {b.note && (
+                  <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', whiteSpace: 'pre-line' }}>
+                    หมายเหตุ: {b.note}
+                  </div>
+                )}
+                {movingId === b.booking_id && (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'flex-end', gap: 6, flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 200px', minWidth: 160 }}>
+                      <Select label="ย้ายไปห้อง (ช่วงเวลาและราคาเดิม)" value={moveRoomId} onChange={(e) => setMoveRoomId(e.target.value)}>
+                        <option value="" disabled>เลือกห้อง</option>
+                        {rooms.filter((r) => r.is_active && r.room_id !== b.room_id).map((r) => (
+                          <option key={r.room_id} value={r.room_id}>{r.room_name}</option>
+                        ))}
+                      </Select>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setMovingId(null)}>ย้อนกลับ</Button>
+                    <Button variant="primary" size="sm" onClick={() => submitMove(b.booking_id)}>ยืนยันย้ายห้อง</Button>
+                  </div>
+                )}
                 {b.evidence_url && (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     <img
@@ -140,9 +185,12 @@ export default function AdminBookingsPage() {
                 {b.booking_status === 'pending' && rejectingId !== b.booking_id && (
                   <>
                     <Tag tone="warning" dot>รอดำเนินการ</Tag>
-                    <Button variant="outline" size="sm" onClick={() => setRejectingId(b.booking_id)}>ปฏิเสธ</Button>
+                    <Button variant="outline" size="sm" onClick={() => { setRejectingId(b.booking_id); setMovingId(null); }}>ปฏิเสธ</Button>
                     <Button variant="accent" size="sm" iconLeft={<Check />} onClick={() => handleConfirm(b.booking_id)}>ยืนยัน</Button>
                   </>
+                )}
+                {(b.booking_status === 'pending' || b.booking_status === 'confirmed') && movingId !== b.booking_id && rejectingId !== b.booking_id && (
+                  <Button variant="outline" size="sm" onClick={() => startMove(b)}>ย้ายห้อง</Button>
                 )}
                 {b.booking_status === 'confirmed' && isAwaitingStart && <Tag tone="warning" dot>รอดำเนินการ</Tag>}
                 {b.booking_status === 'confirmed' && !isAwaitingStart && <Tag tone="info" dot>กำลังดำเนินการ</Tag>}

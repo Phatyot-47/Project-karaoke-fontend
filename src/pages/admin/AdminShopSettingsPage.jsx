@@ -48,6 +48,7 @@ export default function AdminShopSettingsPage() {
         qrCodeUrl: form.qr_code_url,
         peakStartTime: form.peak_start_time,
         peakSurcharge: form.peak_surcharge,
+        floorPlanUrl: form.floor_plan_url,
       });
       if (hours.length) {
         await api.updateShopHours(hours.map((h) => ({ dayOfWeek: h.day_of_week, openHour: h.open_hour, closeHour: h.close_hour })));
@@ -80,6 +81,17 @@ export default function AdminShopSettingsPage() {
           <div style={{ gridColumn: '1 / -1' }}>
             <Input label="ที่อยู่ร้าน" value={form.address || ''} onChange={setField('address')} />
           </div>
+        </div>
+      </Card>
+
+      <Card title="แผนผังห้องของร้าน" subtitle="แสดงในหน้าเลือกห้องของลูกค้า (ปุ่ม &quot;ดูแผนผังห้อง&quot;)">
+        <div style={{ width: '100%', maxWidth: 480 }}>
+          <UploadSlot
+            placeholder="อัปโหลดรูปแผนผังห้อง"
+            value={form.floor_plan_url || null}
+            onChange={(url) => setForm((f) => ({ ...f, floor_plan_url: url }))}
+            height={240}
+          />
         </div>
       </Card>
 

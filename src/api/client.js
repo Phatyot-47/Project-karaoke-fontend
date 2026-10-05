@@ -78,8 +78,12 @@ const api = {
   loginCustomer: (phone) => request('/auth/login', { method: 'POST', body: { phone } }),
   loginAdmin: (username, password) => request('/auth/admin-login', { method: 'POST', body: { username, password } }),
 
+  // ---- ข้อมูลส่วนตัวลูกค้า ----
+  updateProfile: (userId, name, phone) => request(`/users/${userId}`, { method: 'PATCH', body: { name, phone } }),
+
   // ---- ห้อง (ฝั่งลูกค้า) ----
-  listRooms: (size) => request('/rooms', { params: { size } }),
+  // start/end (ไม่บังคับ) = ช่วงเวลาที่ค้นหา — ถ้าส่งมา แต่ละห้องจะมี is_available บอกว่าว่างทั้งช่วงหรือไม่
+  listRooms: (size, start, end) => request('/rooms', { params: { size, start, end } }),
   getRoom: (id) => request(`/rooms/${id}`),
   getRoomAvailability: (id, date) => request(`/rooms/${id}/availability`, { params: { date } }),
 
@@ -95,6 +99,7 @@ const api = {
   getTodayBookings: () => request('/admin/bookings/today'),
   confirmBooking: (id) => request(`/admin/bookings/${id}/confirm`, { method: 'PATCH' }),
   rejectBooking: (id, reason) => request(`/admin/bookings/${id}/reject`, { method: 'PATCH', body: { reason } }),
+  changeBookingRoom: (id, roomId) => request(`/admin/bookings/${id}/change-room`, { method: 'PATCH', body: { roomId } }),
   createWalkInBooking: (payload) => request('/admin/bookings/walkin', { method: 'POST', body: payload }),
   getBookingHistory: () => request('/admin/bookings/history'),
 

@@ -1,6 +1,6 @@
 // ไฟล์กำหนด routing ทั้งหมดของแอป แบ่งเป็น 3 กลุ่มหลัก:
 //   1. ลูกค้า: หน้า auth (ไม่ต้องล็อกอิน)       → /login, /register
-//   2. ลูกค้า: หน้าที่ต้องล็อกอิน (ผ่าน CustomerLayout) → /, /history
+//   2. ลูกค้า: หน้าที่ต้องล็อกอิน (ผ่าน CustomerLayout) → /, /history, /profile
 //      และหน้าที่เข้าถึงได้โดยตรง (ไม่อยู่ใน CustomerLayout) → /book/:id, /pay/:id, /success
 //   3. แอดมิน: ล็อกอิน + ระบบจัดการร้าน (ผ่าน AdminLayout) → /admin/*
 //
@@ -16,6 +16,7 @@ import BookingPage from './pages/BookingPage.jsx';
 import PaymentPage from './pages/PaymentPage.jsx';
 import SuccessPage from './pages/SuccessPage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
 
 import AdminLoginPage from './pages/admin/AdminLoginPage.jsx';
 import AdminBookingsPage from './pages/admin/AdminBookingsPage.jsx';
@@ -36,6 +37,7 @@ export default function App() {
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<RoomListPage />} />
         <Route path="/history" element={<HistoryPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Route>
 
       {/* หน้าจองและชำระเงิน — อยู่นอก CustomerLayout เพื่อซ่อน topbar/footer */}

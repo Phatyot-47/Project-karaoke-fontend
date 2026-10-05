@@ -66,6 +66,11 @@ export default function HistoryPage() {
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
                     {formatDateTimeRange(b.start_datetime, b.end_datetime)} · {SIZE_CAPACITY_LABEL[b.size] || `ความจุ ${b.capacity || '-'} คน`}
                   </div>
+                  {b.note && (
+                    <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', whiteSpace: 'pre-line' }}>
+                      หมายเหตุ: {b.note}
+                    </div>
+                  )}
                   {b.booking_status === 'cancelled' && b.cancel_reason && (
                     <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '4px 8px' }}>
                       เหตุผลที่ยกเลิก: {b.cancel_reason}

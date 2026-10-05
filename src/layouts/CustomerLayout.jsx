@@ -6,7 +6,7 @@ import { LogOut } from '../components/Icons.jsx';
 /**
  * Layout หลักสำหรับหน้าลูกค้า — ทำหน้าที่:
  * 1. Guard: redirect ไป /login ถ้ายังไม่ล็อกอิน (พร้อมส่ง state.from ไว้ให้หน้า login redirect กลับมาได้)
- * 2. Topbar: brand logo + navigation (เลือกห้อง / ประวัติการจอง) + ปุ่ม logout
+ * 2. Topbar: brand logo + navigation (เลือกห้อง / ประวัติการจอง / ข้อมูลส่วนตัว) + ปุ่ม logout
  * 3. <Outlet />: render หน้าลูกค้าตาม route ที่ match (RoomListPage / HistoryPage)
  * 4. Footer: ข้อมูลติดต่อร้าน
  */
@@ -36,6 +36,9 @@ export default function CustomerLayout() {
           </NavLink>
           <NavLink to="/history" className={({ isActive }) => `topbar-nav-item${isActive ? ' active' : ''}`}>
             ประวัติการจอง
+          </NavLink>
+          <NavLink to="/profile" className={({ isActive }) => `topbar-nav-item${isActive ? ' active' : ''}`}>
+            ข้อมูลส่วนตัว
           </NavLink>
         </nav>
 

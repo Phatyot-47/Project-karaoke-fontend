@@ -94,6 +94,7 @@ export default function AdminRoomSettingsPage() {
         imageUrl: draft.image_url,
         isActive: draft.is_active,
         description: draft.description ?? '',
+        theme: draft.theme ?? '',
       });
       setRooms((rs) => rs.map((r) => (r.room_id === updated.room_id ? updated : r)));
       setDraft(updated);
@@ -148,6 +149,15 @@ export default function AdminRoomSettingsPage() {
               <option value="XL">XL — ใหญ่พิเศษ</option>
             </Select>
             <Input label="ความจุ (คน)" type="number" value={draft.capacity} onChange={setField('capacity')} />
+            <Input label="ธีมห้อง" placeholder="เช่น One Piece, สงกรานต์" value={draft.theme ?? ''} onChange={setField('theme')} />
+            <Select
+              label="สถานะห้อง"
+              value={draft.is_active ? 'open' : 'closed'}
+              onChange={(e) => setDraft((d) => ({ ...d, is_active: e.target.value === 'open' }))}
+            >
+              <option value="open">เปิดให้จอง</option>
+              <option value="closed">ปิดให้บริการชั่วคราว</option>
+            </Select>
           </div>
         </Card>
 
