@@ -21,6 +21,9 @@ export default function AdminBookingsPage() {
   const [error, setError] = useState('');
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  // ปฏิเสธสลิป = ยกเลิกการจองด้วย จึงให้ระบุเหตุผลและกดยืนยันอีกครั้งก่อน
+  const [rejectingSlipId, setRejectingSlipId] = useState(null);
+  const [slipReason, setSlipReason] = useState('');
   // ย้ายห้อง: rooms = ห้องทั้งหมดไว้ให้เลือก, movingId = booking ที่กำลังเลือกห้องใหม่
   const [rooms, setRooms] = useState([]);
   const [movingId, setMovingId] = useState(null);
@@ -52,8 +55,13 @@ export default function AdminBookingsPage() {
     try { await api.confirmBooking(id); load(); } catch (err) { setError(err.message); }
   };
 
-  const handleVerifyPayment = async (paymentId, approve) => {
-    try { await api.verifyPayment(paymentId, approve, admin.user_id); load(); } catch (err) { setError(err.message); }
+  const handleVerifyPayment = async (paymentId, approve, reason) => {
+    try {
+      await api.verifyPayment(paymentId, approve, admin.user_id, reason);
+      setRejectingSlipId(null);
+      setSlipReason('');
+      load();
+    } catch (err) { setError(err.message); }
   };
 
   const startMove = (b) => {
@@ -201,12 +209,22 @@ export default function AdminBookingsPage() {
                       alt="สลิปเงินมัดจำ"
                       style={{ width: 120, height: 120, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border-default)', background: '#fff' }}
                     />
-                    {b.payment_status === 'pending' && (
+                    {b.payment_status === 'pending' && rejectingSlipId !== b.payment_id && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ตรวจสอบสลิปเงินมัดจำ</span>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          <Button variant="danger" size="sm" onClick={() => handleVerifyPayment(b.payment_id, false)}>ปฏิเสธสลิป</Button>
+                          <Button variant="danger" size="sm" onClick={() => { setRejectingSlipId(b.payment_id); setSlipReason(''); }}>ปฏิเสธสลิป</Button>
                           <Button variant="accent" size="sm" iconLeft={<Check />} onClick={() => handleVerifyPayment(b.payment_id, true)}>อนุมัติสลิป</Button>
+                        </div>
+                      </div>
+                    )}
+                    {b.payment_status === 'pending' && rejectingSlipId === b.payment_id && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: '1 1 240px' }}>
+                        <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--red-600)' }}>ปฏิเสธสลิปแล้วการจองนี้จะถูกยกเลิกทันที</span>
+                        <Input placeholder="เหตุผล (จะแจ้งลูกค้า) เช่น ยอดเงินไม่ตรง" value={slipReason} onChange={(e) => setSlipReason(e.target.value)} />
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          <Button variant="outline" size="sm" onClick={() => setRejectingSlipId(null)}>ย้อนกลับ</Button>
+                          <Button variant="danger" size="sm" onClick={() => handleVerifyPayment(b.payment_id, false, slipReason.trim())}>ยืนยันปฏิเสธสลิป</Button>
                         </div>
                       </div>
                     )}
