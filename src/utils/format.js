@@ -144,44 +144,39 @@ const BOOKING_STATUS_LABEL = {
   no_show:   { label: 'ไม่มาใช้บริการ',   tone: 'danger'  },
 };
 
-/**
- * ตรวจสอบว่า booking ที่ confirmed แล้ว แต่ยังไม่ถึงเวลาเริ่มใช้จริง (start_datetime) หรือเปล่า
- * ถ้าใช่ → ให้ถือว่า "รอดำเนินการ" ยังอยู่ ไม่ใช่ "กำลังดำเนินการ"
- *
- * ⚠️ หมายเหตุสำคัญเรื่อง timezone:
- * booking.start_datetime จาก API เป็น UTC ISO string จริง (ผ่าน DB → pg → JSON.stringify)
- * ไม่ใช่สตริง Bangkok wall-clock แบบ naive เหมือนตอนสร้าง booking
- * (ยืนยันจริงจาก DB: "2026-08-09 23:30:00" → "2026-08-09T16:30:00.000Z" ใน API)
- * ต้อง parse เป็น Date แล้วแปลงเป็นเวลาไทยด้วยเทคนิคเดียวกับ bangkokNowParts() เท่านั้น
- * ห้าม split('T') ตรงๆ เหมือนสตริงที่แอปสร้างเอง เพราะจะผิดตามจำนวนชั่วโมง offset ของเซิร์ฟเวอร์
- *
- * ก่อน Date.parse ต้องเช็คก่อนว่ามี Z/offset ต่อท้ายจริง ไม่งั้น Date.parse จะตีความเป็น
- * เวลาเครื่อง/เซิร์ฟเวอร์ ซึ่งย้อนกลับไปเป็น bug แบบเดียวกับที่เพิ่งแก้ไป แค่มาจากรูปแบบอื่น
- */
-const UTC_INSTANT_RE = /(?:Z|[+-]\d{2}:?\d{2})$/;
+// สถานะย่อยของ booking ที่ confirmed แล้ว — ดูจากรอบใช้บริการจริง (service_session) แบบเดียวกับหน้าอนุมัติการจอง
+const CHECKIN_STATUS_LABEL = {
+  waiting: { label: 'รอ Check-in',  tone: 'warning' },
+  in_use:  { label: 'กำลังใช้ห้อง', tone: 'info'    },
+};
 
+const NAIVE_DATETIME_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/;
+
+/**
+ * ตรวจสอบว่า booking ที่ confirmed แล้ว ยังไม่ถึงเวลาเริ่มใช้จริง (start_datetime) หรือเปล่า
+ *
+ * booking.start_datetime จาก API เป็นเวลาไทยแบบ naive "YYYY-MM-DDTHH:MM:SS" (ไม่มี Z/offset)
+ * เพราะ backend ตั้ง type parser ให้คืนค่าดิบจากคอลัมน์ TIMESTAMP ตรงๆ (ดู backend src/db.js)
+ * จึงแยกวันที่/เวลาจากสตริงแล้วเทียบกับเวลาไทยปัจจุบันเลย — ห้าม new Date(str) เพราะจะตีความ
+ * ตาม timezone ของเครื่องผู้ใช้ (เดิมฟังก์ชันนี้รอสตริงที่ลงท้ายด้วย Z ซึ่ง API ไม่ได้ส่งแล้ว
+ * จึงตอบ true เสมอ ทำให้ booking ที่ยืนยันแล้วค้างป้าย "รอดำเนินการ" ตลอด)
+ */
 export function isBookingAwaitingStart(booking) {
   if (!booking || booking.booking_status !== 'confirmed') return false;
-
-  const startDatetime = booking.start_datetime;
-
-  // ถ้าสตริงไม่มี timezone marker → ไม่สามารถ parse เป็น UTC ได้อย่างถูกต้อง → ถือว่ายังรออยู่
-  if (typeof startDatetime !== 'string' || !UTC_INSTANT_RE.test(startDatetime)) return true;
-
-  const startMs = Date.parse(startDatetime);
-  if (Number.isNaN(startMs)) return true; // parse ไม่สำเร็จ → safe fallback
-
-  // แปลง UTC → Bangkok time แล้วเปรียบเทียบกับเวลาปัจจุบัน (graceMinutes = 0 เพราะต้องการ exact boundary)
-  const { dateISO, minutesOfDay } = bangkokParts(startMs);
-  const time = `${pad2(Math.floor(minutesOfDay / 60))}:${pad2(minutesOfDay % 60)}`;
-  return !isSlotPastBangkok(dateISO, time, 0);
+  const match = typeof booking.start_datetime === 'string' && booking.start_datetime.match(NAIVE_DATETIME_RE);
+  if (!match) return true; // รูปแบบไม่ตรง → ถือว่ายังรออยู่ (safe fallback)
+  return !isSlotPastBangkok(match[1], match[2], 0);
 }
 
 /**
  * คืน status display object ({ label, tone }) สำหรับแสดงใน Tag
- * ถ้า booking confirmed แต่ยังไม่ถึงเวลา → แสดงเป็น "รอดำเนินการ" (ไม่ใช่ "กำลังดำเนินการ")
+ * booking ที่ confirmed: ถ้า API ส่งข้อมูลรอบใช้บริการมาด้วย (session_status) ใช้สถานะ Check-in จริง
+ * ("รอ Check-in" / "กำลังใช้ห้อง") ไม่งั้นดูจากเวลา — ยังไม่ถึงเวลาเริ่มแสดง "รอดำเนินการ"
  */
 export function getBookingDisplayStatus(booking) {
+  if (booking?.booking_status === 'confirmed' && 'session_status' in booking) {
+    return booking.session_status === 'in_progress' ? CHECKIN_STATUS_LABEL.in_use : CHECKIN_STATUS_LABEL.waiting;
+  }
   if (isBookingAwaitingStart(booking)) return BOOKING_STATUS_LABEL.pending;
   return BOOKING_STATUS_LABEL[booking?.booking_status] || BOOKING_STATUS_LABEL.pending;
 }
