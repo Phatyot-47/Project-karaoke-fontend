@@ -8,7 +8,7 @@ import Select from '../../components/Select.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { formatDateTimeRange, formatTimeHM, money } from '../../utils/format.js';
+import { formatDateTimeRange, formatTimeHM, formatThaiDate, money } from '../../utils/format.js';
 import { resolveRoomImage } from '../../utils/roomImage.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
@@ -114,12 +114,148 @@ export default function AdminBookingsPage() {
 
   const submitReject = async (id) => {
     try {
-      await api.rejectBooking(id, rejectReason.trim() || 'ไม่ระบุเหตุ');
+      await api.rejectBooking(id, rejectReason.trim() || 'ร้านยกเลิกการจอง');
       setRejectingId(null);
       setRejectReason('');
       load();
     } catch (err) { setError(err.message); }
   };
+
+  const renderRow = (b) => {
+    const isWalkIn = b.booking_source === 'admin_walkin';
+    const inSession = b.session_status === 'in_progress';
+    // ค้างจากวันก่อน: ยืนยัน / ย้ายห้อง / Check-in ไม่ได้แล้ว เหลือแค่ตรวจสลิปหรือยกเลิก
+    const overdue = b.is_overdue;
+    const canCancel = b.booking_status === 'pending' || (b.booking_status === 'confirmed' && !b.session_id);
+    return (
+      <div className="booking-row" key={b.booking_id}>
+        <div className="booking-photo" style={{ backgroundImage: `url(${resolveRoomImage(b)})` }} />
+        <div style={{ flex: 1, minWidth: 180 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{b.room_name}</span>
+            <span className="num" style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--green-700)' }}>{money(b.price_total)} บาท</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 4, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
+            <span>{formatDateTimeRange(b.start_datetime, b.end_datetime)}</span>
+            <span>ลูกค้า: {b.customer_name || 'ไม่ระบุ'}</span>
+            {isWalkIn && <Tag tone="info" size="sm">วอล์คอิน</Tag>}
+            {overdue && <Tag tone="danger" size="sm">ค้างจากวันที่ {formatThaiDate(b.booking_date)}</Tag>}
+            {b.deposit_status && <Tag tone={b.deposit_status === 'paid' ? 'success' : b.deposit_status === 'pending_verify' ? 'warning' : 'neutral'} size="sm">มัดจำ: {b.deposit_status}</Tag>}
+          </div>
+          {b.booking_status === 'cancelled' && b.cancel_reason && (
+            <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '4px 8px' }}>
+              เหตุผลที่ยกเลิก: {b.cancel_reason}
+            </div>
+          )}
+          {b.session_id && (
+            <div style={{ marginTop: 6, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
+              เข้า {formatTimeHM(b.checkin_time)} น.
+              {b.checkout_time && ` · ออก ${formatTimeHM(b.checkout_time)} น.`}
+              {Number(b.extended_minutes) > 0 && ` · ต่อเวลา ${b.extended_minutes} นาที (+${money(b.extension_amount)} บาท)`}
+              {Number(b.overtime_amount) > 0 && ` · ค่าเกินเวลา ${money(b.overtime_amount)} บาท`}
+            </div>
+          )}
+          {b.note && (
+            <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', whiteSpace: 'pre-line' }}>
+              หมายเหตุ: {b.note}
+            </div>
+          )}
+          {movingId === b.booking_id && (
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'flex-end', gap: 6, flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 200px', minWidth: 160 }}>
+                <Select label="ย้ายไปห้อง (ช่วงเวลาและราคาเดิม)" value={moveRoomId} onChange={(e) => setMoveRoomId(e.target.value)}>
+                  <option value="" disabled>เลือกห้อง</option>
+                  {rooms.filter((r) => r.is_active && r.room_id !== b.room_id).map((r) => (
+                    <option key={r.room_id} value={r.room_id}>{r.room_name}</option>
+                  ))}
+                </Select>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setMovingId(null)}>ย้อนกลับ</Button>
+              <Button variant="primary" size="sm" onClick={() => submitMove(b.booking_id)}>ยืนยันย้ายห้อง</Button>
+            </div>
+          )}
+          {b.evidence_url && (
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <img
+                src={b.evidence_url}
+                alt="สลิปเงินมัดจำ"
+                style={{ width: 120, height: 120, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border-default)', background: '#fff' }}
+              />
+              {b.payment_status === 'pending' && rejectingSlipId !== b.payment_id && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ตรวจสอบสลิปเงินมัดจำ</span>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <Button variant="danger" size="sm" onClick={() => { setRejectingSlipId(b.payment_id); setSlipReason(''); }}>ปฏิเสธสลิป</Button>
+                    <Button variant="accent" size="sm" iconLeft={<Check />} onClick={() => handleVerifyPayment(b.payment_id, true)}>อนุมัติสลิป</Button>
+                  </div>
+                </div>
+              )}
+              {b.payment_status === 'pending' && rejectingSlipId === b.payment_id && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: '1 1 240px' }}>
+                  <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--red-600)' }}>ปฏิเสธสลิปแล้วการจองนี้จะถูกยกเลิกทันที</span>
+                  <Input placeholder="เหตุผล (จะแจ้งลูกค้า) เช่น ยอดเงินไม่ตรง" value={slipReason} onChange={(e) => setSlipReason(e.target.value)} />
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <Button variant="outline" size="sm" onClick={() => setRejectingSlipId(null)}>ย้อนกลับ</Button>
+                    <Button variant="danger" size="sm" onClick={() => handleVerifyPayment(b.payment_id, false, slipReason.trim())}>ยืนยันปฏิเสธสลิป</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {rejectingId === b.booking_id && (
+            <div style={{ marginTop: 8 }}>
+              <Input placeholder="ระบุเหตุผลที่ยกเลิก (จะแจ้งลูกค้า)" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
+            </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {canCancel && rejectingId === b.booking_id && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => { setRejectingId(null); setRejectReason(''); }}>ย้อนกลับ</Button>
+              <Button variant="danger" size="sm" onClick={() => submitReject(b.booking_id)}>ยืนยันยกเลิก</Button>
+            </>
+          )}
+          {b.booking_status === 'pending' && rejectingId !== b.booking_id && (
+            <>
+              <Tag tone="warning" dot>รอดำเนินการ</Tag>
+              <Button variant="outline" size="sm" onClick={() => { setRejectingId(b.booking_id); setMovingId(null); }}>ปฏิเสธ</Button>
+              {!overdue && <Button variant="accent" size="sm" iconLeft={<Check />} onClick={() => handleConfirm(b.booking_id)}>ยืนยัน</Button>}
+            </>
+          )}
+          {!overdue && (b.booking_status === 'pending' || b.booking_status === 'confirmed') && movingId !== b.booking_id && rejectingId !== b.booking_id && (
+            <Button variant="outline" size="sm" onClick={() => startMove(b)}>ย้ายห้อง</Button>
+          )}
+          {b.booking_status === 'confirmed' && !b.session_id && rejectingId !== b.booking_id && (
+            <>
+              <Tag tone="warning" dot>{overdue ? 'ไม่มา Check-in' : 'รอ Check-in'}</Tag>
+              <Button variant="outline" size="sm" onClick={() => { setRejectingId(b.booking_id); setMovingId(null); }}>ยกเลิกการจอง</Button>
+              {!overdue && <Button variant="accent" size="sm" onClick={() => handleCheckIn(b)}>Check-in</Button>}
+            </>
+          )}
+          {b.booking_status === 'confirmed' && inSession && (
+            <>
+              <Tag tone="info" dot>กำลังใช้ห้อง</Tag>
+              <div style={{ width: 110 }}>
+                <Select
+                  value={extendMinutes[b.booking_id] || 30}
+                  onChange={(e) => setExtendMinutes((m) => ({ ...m, [b.booking_id]: Number(e.target.value) }))}
+                >
+                  {[30, 60, 90, 120].map((m) => <option key={m} value={m}>+{m} นาที</option>)}
+                </Select>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => handleExtend(b)}>ต่อเวลา</Button>
+              <Button variant="primary" size="sm" onClick={() => handleCheckOut(b)}>Check-out</Button>
+            </>
+          )}
+          {b.booking_status === 'completed' && <Tag tone="success" dot>เสร็จสมบูรณ์</Tag>}
+          {b.booking_status === 'cancelled' && <Tag tone="danger" dot>ยกเลิกแล้ว</Tag>}
+        </div>
+      </div>
+    );
+  };
+
+  const overdueBookings = bookings.filter((b) => b.is_overdue);
+  const todayBookings = bookings.filter((b) => !b.is_overdue);
 
   return (
     <div style={{ maxWidth: 1080, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -145,6 +281,16 @@ export default function AdminBookingsPage() {
       {error && <div className="field-error">{error}</div>}
       {notice && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--green-700)' }}>{notice}</div>}
 
+      {overdueBookings.length > 0 && (
+        <Card
+          title={`ค้างจากวันก่อน (${overdueBookings.length})`}
+          subtitle="สลิปที่ยังไม่ได้ตรวจ หรือยืนยันแล้วแต่ลูกค้าไม่มา Check-in — ตรวจสลิปหรือยกเลิกพร้อมเหตุผล"
+          pad={false}
+        >
+          {overdueBookings.map(renderRow)}
+        </Card>
+      )}
+
       <Card
         title="รายการจองวันนี้"
         subtitle="รอการยืนยันจากคุณ"
@@ -152,134 +298,8 @@ export default function AdminBookingsPage() {
         actions={<Button variant="primary" size="sm" onClick={() => navigate('/admin/walkin')}>จองวอล์คอิน</Button>}
       >
         {loading && <p style={{ color: 'var(--text-muted)', padding: 16 }}>กำลังโหลด...</p>}
-        {!loading && !bookings.length && <p style={{ color: 'var(--text-muted)', padding: 16 }}>ยังไม่มีรายการจองวันนี้</p>}
-        {bookings.map((b) => {
-          const isWalkIn = b.booking_source === 'admin_walkin';
-          const inSession = b.session_status === 'in_progress';
-          return (
-            <div className="booking-row" key={b.booking_id}>
-              <div className="booking-photo" style={{ backgroundImage: `url(${resolveRoomImage(b)})` }} />
-              <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{b.room_name}</span>
-                  <span className="num" style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--green-700)' }}>{money(b.price_total)} บาท</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 4, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
-                  <span>{formatDateTimeRange(b.start_datetime, b.end_datetime)}</span>
-                  <span>ลูกค้า: {b.customer_name || 'ไม่ระบุ'}</span>
-                  {isWalkIn && <Tag tone="info" size="sm">วอล์คอิน</Tag>}
-                  {b.deposit_status && <Tag tone={b.deposit_status === 'paid' ? 'success' : b.deposit_status === 'pending_verify' ? 'warning' : 'neutral'} size="sm">มัดจำ: {b.deposit_status}</Tag>}
-                </div>
-                {b.booking_status === 'cancelled' && b.cancel_reason && (
-                  <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '4px 8px' }}>
-                    เหตุผลที่ยกเลิก: {b.cancel_reason}
-                  </div>
-                )}
-                {b.session_id && (
-                  <div style={{ marginTop: 6, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
-                    เข้า {formatTimeHM(b.checkin_time)} น.
-                    {b.checkout_time && ` · ออก ${formatTimeHM(b.checkout_time)} น.`}
-                    {Number(b.extended_minutes) > 0 && ` · ต่อเวลา ${b.extended_minutes} นาที (+${money(b.extension_amount)} บาท)`}
-                    {Number(b.overtime_amount) > 0 && ` · ค่าเกินเวลา ${money(b.overtime_amount)} บาท`}
-                  </div>
-                )}
-                {b.note && (
-                  <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', whiteSpace: 'pre-line' }}>
-                    หมายเหตุ: {b.note}
-                  </div>
-                )}
-                {movingId === b.booking_id && (
-                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'flex-end', gap: 6, flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 200px', minWidth: 160 }}>
-                      <Select label="ย้ายไปห้อง (ช่วงเวลาและราคาเดิม)" value={moveRoomId} onChange={(e) => setMoveRoomId(e.target.value)}>
-                        <option value="" disabled>เลือกห้อง</option>
-                        {rooms.filter((r) => r.is_active && r.room_id !== b.room_id).map((r) => (
-                          <option key={r.room_id} value={r.room_id}>{r.room_name}</option>
-                        ))}
-                      </Select>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => setMovingId(null)}>ย้อนกลับ</Button>
-                    <Button variant="primary" size="sm" onClick={() => submitMove(b.booking_id)}>ยืนยันย้ายห้อง</Button>
-                  </div>
-                )}
-                {b.evidence_url && (
-                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <img
-                      src={b.evidence_url}
-                      alt="สลิปเงินมัดจำ"
-                      style={{ width: 120, height: 120, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border-default)', background: '#fff' }}
-                    />
-                    {b.payment_status === 'pending' && rejectingSlipId !== b.payment_id && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ตรวจสอบสลิปเงินมัดจำ</span>
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          <Button variant="danger" size="sm" onClick={() => { setRejectingSlipId(b.payment_id); setSlipReason(''); }}>ปฏิเสธสลิป</Button>
-                          <Button variant="accent" size="sm" iconLeft={<Check />} onClick={() => handleVerifyPayment(b.payment_id, true)}>อนุมัติสลิป</Button>
-                        </div>
-                      </div>
-                    )}
-                    {b.payment_status === 'pending' && rejectingSlipId === b.payment_id && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: '1 1 240px' }}>
-                        <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--red-600)' }}>ปฏิเสธสลิปแล้วการจองนี้จะถูกยกเลิกทันที</span>
-                        <Input placeholder="เหตุผล (จะแจ้งลูกค้า) เช่น ยอดเงินไม่ตรง" value={slipReason} onChange={(e) => setSlipReason(e.target.value)} />
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          <Button variant="outline" size="sm" onClick={() => setRejectingSlipId(null)}>ย้อนกลับ</Button>
-                          <Button variant="danger" size="sm" onClick={() => handleVerifyPayment(b.payment_id, false, slipReason.trim())}>ยืนยันปฏิเสธสลิป</Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {rejectingId === b.booking_id && (
-                  <div style={{ marginTop: 8 }}>
-                    <Input placeholder="ระบุเหตุผลที่ปฏิเสธ (จะแจ้งลูกค้า)" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
-                  </div>
-                )}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                {b.booking_status === 'pending' && rejectingId === b.booking_id && (
-                  <>
-                    <Button variant="outline" size="sm" onClick={() => { setRejectingId(null); setRejectReason(''); }}>ย้อนกลับ</Button>
-                    <Button variant="danger" size="sm" onClick={() => submitReject(b.booking_id)}>ยืนยันยกเลิก</Button>
-                  </>
-                )}
-                {b.booking_status === 'pending' && rejectingId !== b.booking_id && (
-                  <>
-                    <Tag tone="warning" dot>รอดำเนินการ</Tag>
-                    <Button variant="outline" size="sm" onClick={() => { setRejectingId(b.booking_id); setMovingId(null); }}>ปฏิเสธ</Button>
-                    <Button variant="accent" size="sm" iconLeft={<Check />} onClick={() => handleConfirm(b.booking_id)}>ยืนยัน</Button>
-                  </>
-                )}
-                {(b.booking_status === 'pending' || b.booking_status === 'confirmed') && movingId !== b.booking_id && rejectingId !== b.booking_id && (
-                  <Button variant="outline" size="sm" onClick={() => startMove(b)}>ย้ายห้อง</Button>
-                )}
-                {b.booking_status === 'confirmed' && !b.session_id && (
-                  <>
-                    <Tag tone="warning" dot>รอ Check-in</Tag>
-                    <Button variant="accent" size="sm" onClick={() => handleCheckIn(b)}>Check-in</Button>
-                  </>
-                )}
-                {b.booking_status === 'confirmed' && inSession && (
-                  <>
-                    <Tag tone="info" dot>กำลังใช้ห้อง</Tag>
-                    <div style={{ width: 110 }}>
-                      <Select
-                        value={extendMinutes[b.booking_id] || 30}
-                        onChange={(e) => setExtendMinutes((m) => ({ ...m, [b.booking_id]: Number(e.target.value) }))}
-                      >
-                        {[30, 60, 90, 120].map((m) => <option key={m} value={m}>+{m} นาที</option>)}
-                      </Select>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => handleExtend(b)}>ต่อเวลา</Button>
-                    <Button variant="primary" size="sm" onClick={() => handleCheckOut(b)}>Check-out</Button>
-                  </>
-                )}
-                {b.booking_status === 'completed' && <Tag tone="success" dot>เสร็จสมบูรณ์</Tag>}
-                {b.booking_status === 'cancelled' && <Tag tone="danger" dot>ยกเลิกแล้ว</Tag>}
-              </div>
-            </div>
-          );
-        })}
+        {!loading && !todayBookings.length && <p style={{ color: 'var(--text-muted)', padding: 16 }}>ยังไม่มีรายการจองวันนี้</p>}
+        {todayBookings.map(renderRow)}
       </Card>
     </div>
   );

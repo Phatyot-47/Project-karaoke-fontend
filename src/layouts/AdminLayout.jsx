@@ -43,7 +43,7 @@ export default function AdminLayout() {
   useEffect(() => {
     let alive = true;
     api.getTodayBookings()
-      .then((data) => { if (alive) setPendingCount(Number(data?.stats?.pending_count || 0)); })
+      .then((data) => { if (alive) setPendingCount(Number(data?.stats?.pending_count || 0) + Number(data?.stats?.overdue_count || 0)); })
       .catch(() => {}); // ไม่แสดง error ถ้าโหลด badge ไม่สำเร็จ — ไม่ critical
     return () => { alive = false; };
   }, [location.pathname]);
