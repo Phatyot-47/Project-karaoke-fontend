@@ -89,6 +89,7 @@ const api = {
 
   // ---- การจอง (ฝั่งลูกค้า) ----
   createBooking: (payload) => request('/bookings', { method: 'POST', body: payload }),
+  getBooking: (id) => request(`/bookings/${id}`),
   listCustomerBookings: (customerId) => request(`/bookings/customer/${customerId}`),
   cancelBooking: (id, reason) => request(`/bookings/${id}/cancel`, { method: 'PATCH', body: { reason } }),
 

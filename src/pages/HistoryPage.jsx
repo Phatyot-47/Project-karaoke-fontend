@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card.jsx';
 import Tag from '../components/Tag.jsx';
 import Button from '../components/Button.jsx';
@@ -11,6 +12,7 @@ import useNowTick from '../hooks/useNowTick.js';
 
 export default function HistoryPage() {
   const { customer } = useAuth();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,6 +56,8 @@ export default function HistoryPage() {
         {bookings.map((b) => {
           const statusInfo = getBookingDisplayStatus(b);
           const canEdit = b.booking_status === 'pending';
+          // ยังไม่ได้ส่งสลิป (และยังไม่หมดเวลาชำระ ซึ่ง backend จะยกเลิกให้เอง) → กลับไปหน้าชำระมัดจำต่อได้
+          const canPay = b.booking_status === 'pending' && b.deposit_status === 'unpaid';
           const canCancel = b.booking_status === 'pending' || b.booking_status === 'confirmed';
           const isDone = b.booking_status === 'completed' || b.booking_status === 'cancelled';
           const isCanceling = cancelingId === b.booking_id;
@@ -97,6 +101,7 @@ export default function HistoryPage() {
                   </>
                 ) : (
                   <>
+                    {canPay && <Button variant="accent" size="sm" onClick={() => navigate(`/pay/${b.booking_id}`)}>ชำระมัดจำ</Button>}
                     {canEdit && <Button variant="outline" size="sm" disabled>แก้ไข</Button>}
                     {canCancel && <Button variant="outline" size="sm" onClick={() => setCancelingId(b.booking_id)}>ยกเลิก</Button>}
                     {isDone && <Button variant="subtle" size="sm" disabled>สิ้นสุดแล้ว</Button>}

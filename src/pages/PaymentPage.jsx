@@ -32,33 +32,60 @@ export default function PaymentPage() {
   const [countdown, setCountdown] = useState(() => secondsLeft(location.state?.booking));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [expired, setExpired] = useState(false);
-  const timerRef = useRef(null);
+  // timer อ่าน booking จาก ref แล้วคำนวณเวลาที่เหลือจาก created_at ทุกวินาที (ไม่ลบทีละ 1 จากค่าเดิม)
+  // จึงถูกต้องแม้หน้าเพิ่งโหลด booking ทีหลัง หรือแท็บถูกพักไว้นาน
+  const bookingRef = useRef(booking);
 
   useEffect(() => {
     if (!customer) { navigate('/login'); return; }
-    if (!booking) {
-      // รีเฟรชหน้ามาโดยไม่มี state ต่อ — ยังพอใช้ได้เพราะไม่มี endpoint ดึง booking เดี่ยวจาก id
-      // ต้องย้อนกลับไปเริ่มจองใหม่
-      navigate('/history');
-      return;
-    }
-    if (!room) {
-      api.getRoom(booking.room_id).then(setRoom).catch(() => {});
-    }
-    api.getShop().then(setShop).catch(() => {});
-    timerRef.current = setInterval(() => {
-      setCountdown((c) => {
-        const next = Math.max(0, c - 1);
-        if (next === 0) setExpired(true);
-        return next;
-      });
+    let alive = true;
+    // มาจากหน้าจองจะมี booking ใน state อยู่แล้ว / รีเฟรชหรือกดชำระต่อจากหน้าประวัติ ให้โหลดจาก server
+    (booking ? Promise.resolve(booking) : api.getBooking(bookingId))
+      .then((b) => {
+        if (!alive) return;
+        if (b.customer_id !== customer.user_id) { setLoadError('ไม่พบรายการจองนี้'); return; }
+        if (b.booking_status !== 'pending' || b.deposit_status !== 'unpaid') {
+          setLoadError(b.deposit_status !== 'unpaid'
+            ? 'รายการนี้ส่งสลิปการชำระเงินไปแล้ว กรุณารอร้านตรวจสอบ'
+            : 'รายการนี้ไม่อยู่ในสถานะรอชำระมัดจำแล้ว (อาจหมดเวลาชำระหรือถูกยกเลิก)');
+          return;
+        }
+        bookingRef.current = b;
+        setBooking(b);
+        const left = secondsLeft(b);
+        setCountdown(left);
+        if (left === 0) setExpired(true);
+        if (!room) api.getRoom(b.room_id).then((r) => { if (alive) setRoom(r); }).catch(() => {});
+      })
+      .catch((err) => { if (alive) setLoadError(err.message); });
+    api.getShop().then((s) => { if (alive) setShop(s); }).catch(() => {});
+    const timer = setInterval(() => {
+      if (!bookingRef.current) return;
+      const left = secondsLeft(bookingRef.current);
+      setCountdown(left);
+      if (left === 0) setExpired(true);
     }, 1000);
-    return () => clearInterval(timerRef.current);
+    return () => { alive = false; clearInterval(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!booking) return null;
+  if (loadError) {
+    return (
+      <div className="page-dark app-dark center-screen">
+        <Card style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-body)' }}>{loadError}</div>
+            <Button variant="primary" onClick={() => navigate('/history', { replace: true })}>ไปหน้าประวัติการจอง</Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+  if (!booking) {
+    return <div className="page-dark app-dark container-sm"><p style={{ color: 'var(--text-muted)' }}>กำลังโหลด...</p></div>;
+  }
 
   const countdownLabel = `${pad2(Math.floor(countdown / 60))}:${pad2(countdown % 60)}`;
 
@@ -73,15 +100,14 @@ export default function PaymentPage() {
     try {
       const payment = await api.createPayment({
         bookingId: booking.booking_id,
-        amount: booking.deposit_required,
         method: 'qrcode',
-        evidenceUrl: evidence || null,
+        evidenceUrl: evidence,
       });
-      clearInterval(timerRef.current);
+      bookingRef.current = null; // หยุดนับถอยหลัง
       navigate('/success', { state: { booking, room, payment } });
     } catch (err) {
       setError(err.message);
-      if (err.status === 409) setExpired(true);
+      if (err.status === 409 && /หมดเวลา/.test(err.message)) setExpired(true);
     } finally {
       setSubmitting(false);
     }
