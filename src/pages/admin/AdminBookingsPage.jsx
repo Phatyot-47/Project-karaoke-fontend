@@ -8,7 +8,7 @@ import Select from '../../components/Select.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { formatDateTimeRange, formatTimeHM, formatThaiDate, money } from '../../utils/format.js';
+import { formatDateTimeRange, formatTimeHM, formatThaiDate, formatBookedAt, money } from '../../utils/format.js';
 import { resolveRoomImage } from '../../utils/roomImage.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
@@ -140,7 +140,7 @@ export default function AdminBookingsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 4, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
             <span>{formatDateTimeRange(b.start_datetime, b.end_datetime)}</span>
             <span>ลูกค้า: {b.customer_name || 'ไม่ระบุ'}</span>
-            <span>จองเมื่อ {formatTimeHM(b.created_at)} น.</span>
+            <span>จองเมื่อ {formatBookedAt(b.created_at)} น.</span>
             {isWalkIn && <Tag tone="info" size="sm">วอล์คอิน</Tag>}
             {overdue && <Tag tone="danger" size="sm">ค้างจากวันที่ {formatThaiDate(b.booking_date)}</Tag>}
             {b.deposit_status && <Tag tone={b.deposit_status === 'paid' ? 'success' : b.deposit_status === 'pending_verify' ? 'warning' : 'neutral'} size="sm">มัดจำ: {b.deposit_status}</Tag>}
