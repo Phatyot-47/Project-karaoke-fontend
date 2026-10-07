@@ -44,7 +44,7 @@ export default function CustomerLayout() {
 
         {/* ปุ่ม logout — แสดงชื่อลูกค้าปัจจุบัน */}
         <button type="button" className="user-pill" onClick={logoutCustomer} title="ออกจากระบบ">
-          <Avatar name={customer.name} size="sm" />
+          <Avatar name={customer.name} src={customer.avatar_url} size="sm" />
           <span>คุณ {customer.name}</span>
           <LogOut style={{ width: 14, height: 14, color: 'var(--text-subtle)', marginLeft: 2 }} />
         </button>
