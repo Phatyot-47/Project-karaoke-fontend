@@ -7,13 +7,27 @@ import UploadSlot from '../../components/UploadSlot.jsx';
 import SavedNotice from '../../components/SavedNotice.jsx';
 import useSavedFlag from '../../hooks/useSavedFlag.js';
 import api from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { DAY_LABELS } from '../../utils/format.js';
 
 const HOUR_OPTIONS = Array.from({ length: 25 }, (_, i) => i);
 const BANKS = ['กรุงไทย', 'กสิกรไทย', 'ไทยพาณิชย์', 'กรุงเทพ', 'ทหารไทยธนชาต', 'ออมสิน'];
 
+// นโยบายจาก API → ค่าที่ใช้ในฟอร์ม (ช่องตัวเลขเป็นสตริงทั้งหมด ช่องว่าง = ไม่กำหนด)
+const toPolicyForm = (p) => ({
+  depositPercent: p ? String(Number(p.deposit_percent)) : '20',
+  cancelHoursBefore: p?.cancel_hours_before == null ? '1' : String(p.cancel_hours_before),
+  allowEditBeforeHours: p?.allow_edit_before_hours == null ? '' : String(p.allow_edit_before_hours),
+  refundPolicyDesc: p?.refund_policy_desc || '',
+  noShowPolicyDesc: p?.no_show_policy_desc || '',
+});
+
 export default function AdminShopSettingsPage() {
+  const { admin } = useAuth();
   const [form, setForm] = useState(null);
+  // นโยบายมัดจำ/ยกเลิก (ขอบเขตข้อ 2.3) — savedPolicy ไว้เทียบว่ามีการแก้ไขไหม (ไม่แก้ = ไม่สร้างฉบับใหม่)
+  const [policy, setPolicy] = useState(toPolicyForm(null));
+  const [savedPolicy, setSavedPolicy] = useState(toPolicyForm(null));
   const [hours, setHours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,12 +36,19 @@ export default function AdminShopSettingsPage() {
 
   useEffect(() => {
     api.getShop()
-      .then((data) => { setForm(data); setHours(data.hours || []); })
+      .then((data) => {
+        setForm(data);
+        setHours(data.hours || []);
+        setPolicy(toPolicyForm(data.policy));
+        setSavedPolicy(toPolicyForm(data.policy));
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
   const setField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const setPolicyField = (field) => (e) => setPolicy((p) => ({ ...p, [field]: e.target.value }));
 
   const setHourField = (dayOfWeek, field) => (e) => {
     const value = Number(e.target.value);
@@ -51,6 +72,10 @@ export default function AdminShopSettingsPage() {
         peakSurcharge: form.peak_surcharge,
         floorPlanUrl: form.floor_plan_url,
       });
+      if (JSON.stringify(policy) !== JSON.stringify(savedPolicy)) {
+        const newPolicy = await api.updatePolicy({ ...policy, adminUserId: admin.user_id });
+        setSavedPolicy(toPolicyForm(newPolicy));
+      }
       if (hours.length) {
         await api.updateShopHours(hours.map((h) => ({ dayOfWeek: h.day_of_week, openHour: h.open_hour, closeHour: h.close_hour })));
       }
@@ -116,6 +141,27 @@ export default function AdminShopSettingsPage() {
             </div>
           ))}
           {!sortedHours.length && <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>ยังไม่มีข้อมูลเวลาเปิด-ปิด</p>}
+        </div>
+      </Card>
+
+      <Card title="นโยบายมัดจำและการยกเลิก" subtitle="มีผลกับการจองใหม่ — การจองที่ทำไปแล้วใช้นโยบาย ณ ตอนที่จอง">
+        <div className="admin-form-2col">
+          <Input label="มัดจำ (% ของยอดรวม)" type="number" value={policy.depositPercent} onChange={setPolicyField('depositPercent')} />
+          <Input label="ยกเลิกได้ล่วงหน้า (ชั่วโมง)" type="number" value={policy.cancelHoursBefore} onChange={setPolicyField('cancelHoursBefore')} />
+          <Input
+            label="แก้ไขการจองได้ล่วงหน้า (ชั่วโมง)"
+            type="number"
+            value={policy.allowEditBeforeHours}
+            onChange={setPolicyField('allowEditBeforeHours')}
+            hint="เว้นว่าง = ใช้ค่าเดียวกับการยกเลิก"
+          />
+          <div />
+          <div style={{ gridColumn: '1 / -1' }}>
+            <Input label="นโยบายการคืนเงินมัดจำ" value={policy.refundPolicyDesc} onChange={setPolicyField('refundPolicyDesc')} placeholder="เช่น มัดจำไม่สามารถขอคืนได้ทุกกรณี" />
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <Input label="นโยบายกรณีไม่มาใช้บริการ (No-show)" value={policy.noShowPolicyDesc} onChange={setPolicyField('noShowPolicyDesc')} placeholder="เช่น ไม่มาตามเวลาที่จอง ร้านไม่คืนเงินมัดจำ" />
+          </div>
         </div>
       </Card>
 

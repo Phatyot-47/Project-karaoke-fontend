@@ -12,12 +12,13 @@ export function BookingNote({ note }) {
   );
 }
 
-/** กล่องสีแดง "เหตุผลที่ยกเลิก" — แสดงเฉพาะรายการที่ถูกยกเลิกและมีเหตุผล */
+/** กล่องสีแดงเหตุผล — รายการที่ถูกยกเลิก หรือบันทึกว่าไม่มาใช้บริการ (No-show) */
 export function CancelReason({ booking }) {
-  if (booking.booking_status !== 'cancelled' || !booking.cancel_reason) return null;
+  const label = { cancelled: 'เหตุผลที่ยกเลิก', no_show: 'ไม่มาใช้บริการ' }[booking.booking_status];
+  if (!label || !booking.cancel_reason) return null;
   return (
     <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '4px 8px' }}>
-      เหตุผลที่ยกเลิก: {booking.cancel_reason}
+      {label}: {booking.cancel_reason}
     </div>
   );
 }

@@ -8,12 +8,16 @@ import { ArrowLeft, Check } from '../components/Icons.jsx';
 import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveRoomImage } from '../utils/roomImage.js';
-import { formatDateTimeRange, money, pad2 } from '../utils/format.js';
+import { formatDateTimeRange, money, pad2, cancellationNote } from '../utils/format.js';
 
 // ต้องตรงกับ HOLD_MINUTES ฝั่ง backend (utils/expireBookings.js) — เวลาที่ระบบล็อกเวลานี้ไว้ให้
 const HOLD_SECONDS = 5 * 60;
 
+// ชำระส่วนต่างมัดจำ (หลังลูกค้าแก้ไขการจอง) = เคยส่งสลิปมาแล้ว ช่วงเวลาจองไว้แล้ว จึงไม่มีเวลานับถอยหลัง
+const isTopUp = (booking) => Number(booking?.paid_amount || 0) > 0;
+
 function secondsLeft(booking) {
+  if (isTopUp(booking)) return HOLD_SECONDS;
   const createdAt = booking?.created_at ? new Date(booking.created_at).getTime() : Date.now();
   const elapsed = Math.floor((Date.now() - createdAt) / 1000);
   return Math.max(0, HOLD_SECONDS - elapsed);
@@ -87,6 +91,8 @@ export default function PaymentPage() {
     return <div className="page-dark app-dark container-sm"><p style={{ color: 'var(--text-muted)' }}>กำลังโหลด...</p></div>;
   }
 
+  const topUp = isTopUp(booking);
+  const amountDue = Number(booking.deposit_required) - Number(booking.paid_amount || 0);
   const countdownLabel = `${pad2(Math.floor(countdown / 60))}:${pad2(countdown % 60)}`;
 
   const handleConfirmPayment = async () => {
@@ -117,7 +123,7 @@ export default function PaymentPage() {
     <div className="page-dark app-dark">
       <header className="topbar" style={{ gap: 12, justifyContent: 'flex-start' }}>
         <IconButton label="ย้อนกลับ" onClick={() => navigate(-1)}><ArrowLeft /></IconButton>
-        <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>ยืนยันและชำระมัดจำ</span>
+        <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>{topUp ? 'ชำระส่วนต่างมัดจำ' : 'ยืนยันและชำระมัดจำ'}</span>
       </header>
 
       <div className="container-sm" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -152,10 +158,10 @@ export default function PaymentPage() {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                    สแกนเพื่อจ่ายมัดจำ (PromptPay)
+                    {topUp ? 'สแกนเพื่อจ่ายส่วนต่างมัดจำ (PromptPay)' : 'สแกนเพื่อจ่ายมัดจำ (PromptPay)'}
                   </div>
                   <div className="num" style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text-strong)', marginTop: 4 }}>
-                    ฿ {money(booking.deposit_required)}
+                    ฿ {money(amountDue)}
                   </div>
                 </div>
                 <div className="qr-box">
@@ -167,9 +173,15 @@ export default function PaymentPage() {
                     </span>
                   )}
                 </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: countdown <= 60 ? 'var(--danger-text)' : 'var(--text-subtle)' }}>
-                  ระบบล็อกเวลานี้ไว้ให้อีก {countdownLabel} นาที — กรุณาชำระเงินก่อนหมดเวลา
-                </div>
+                {topUp ? (
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-subtle)', textAlign: 'center' }}>
+                    มัดจำใหม่ {money(booking.deposit_required)} บาท − ชำระแล้ว {money(booking.paid_amount)} บาท — ร้านจะยืนยันการจองอีกครั้งหลังตรวจสลิป
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 'var(--text-xs)', color: countdown <= 60 ? 'var(--danger-text)' : 'var(--text-subtle)' }}>
+                    ระบบล็อกเวลานี้ไว้ให้อีก {countdownLabel} นาที — กรุณาชำระเงินก่อนหมดเวลา
+                  </div>
+                )}
                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-body)' }}>
                     แนบสลิปการโอนเงิน <span style={{ color: 'var(--danger-text)' }}>*</span>
@@ -190,7 +202,7 @@ export default function PaymentPage() {
               {submitting ? 'กำลังบันทึก...' : evidence ? 'ยืนยันการชำระเงิน' : 'กรุณาแนบสลิปก่อน'}
             </Button>
             <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)', textAlign: 'center', lineHeight: 1.5 }}>
-              ยกเลิกได้ล่วงหน้าก่อนเวลาเริ่ม 1 ชั่วโมง — มัดจำไม่สามารถขอคืนได้ทุกกรณี
+              {cancellationNote(shop?.policy)}
             </div>
 
             {shop?.bank_account_no && (

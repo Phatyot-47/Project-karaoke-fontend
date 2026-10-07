@@ -198,6 +198,15 @@ export function getBookingDisplayStatus(booking) {
   return BOOKING_STATUS_LABEL[booking?.booking_status] || BOOKING_STATUS_LABEL.pending;
 }
 
+/**
+ * ข้อความเงื่อนไขการยกเลิกจากนโยบายร้านปัจจุบัน (shop.policy จาก GET /admin/shop)
+ * เช่น "ยกเลิกได้ล่วงหน้าก่อนเวลาเริ่ม 1 ชั่วโมง — มัดจำไม่สามารถขอคืนได้ทุกกรณี"
+ */
+export function cancellationNote(policy) {
+  const hours = policy?.cancel_hours_before ?? 1;
+  return `ยกเลิกได้ล่วงหน้าก่อนเวลาเริ่ม ${hours} ชั่วโมง — ${policy?.refund_policy_desc || 'มัดจำไม่สามารถขอคืนได้ทุกกรณี'}`;
+}
+
 // ชื่อวันในสัปดาห์ภาษาไทย — index ตรงกับ Date.getDay() (0 = อาทิตย์)
 export const DAY_LABELS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 

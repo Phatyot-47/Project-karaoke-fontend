@@ -1,18 +1,34 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import Card from '../components/Card.jsx';
 import Button from '../components/Button.jsx';
+import Select from '../components/Select.jsx';
 import IconButton from '../components/IconButton.jsx';
 import { ArrowLeft, ArrowRight } from '../components/Icons.jsx';
 import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveRoomImage, SIZE_CAPACITY_LABEL, ROOM_PHOTO_ASPECT_RATIO } from '../utils/roomImage.js';
 import { calculateBookingPrice } from '../utils/pricing.js';
-import { todayISODate, formatThaiDate, addMinutesToTime, addMinutesToDateTime, money, roomNoteLines, DAY_LABELS, isSlotPastBangkok, findTodayHours, buildHalfHourSlots } from '../utils/format.js';
+import { todayISODate, formatThaiDate, formatDateTimeRange, cancellationNote, addMinutesToTime, addMinutesToDateTime, money, roomNoteLines, DAY_LABELS, isSlotPastBangkok, findTodayHours, buildHalfHourSlots } from '../utils/format.js';
 import useNowTick from '../hooks/useNowTick.js';
 
+// ช่วงเวลา (สตริงเวลาไทย naive) → ช่องเริ่ม "HH:MM" + จำนวนช่อง 30 นาที
+function toSelection(startDatetime, endDatetime) {
+  const toMin = (dt) => Number(dt.slice(11, 13)) * 60 + Number(dt.slice(14, 16));
+  let minutes = toMin(endDatetime) - toMin(startDatetime);
+  if (minutes <= 0) minutes += 24 * 60; // ช่วงสุดท้ายของวันที่จบ 00:00
+  return { start: startDatetime.slice(11, 16), durationSlots: minutes / 30 };
+}
+
+/**
+ * หน้าจองห้อง — /book/:roomId
+ * โหมดแก้ไข /book/:roomId?edit=<bookingId>: ลูกค้าเปลี่ยนห้อง/เวลาของการจองที่ชำระมัดจำแล้ว (ภายในวันเดิม)
+ * ใช้มัดจำที่จ่ายแล้วเป็นฐาน ถ้ามัดจำของห้อง/เวลาใหม่สูงกว่าต้องจ่ายส่วนต่าง (ไปหน้าชำระเงินต่อ)
+ */
 export default function BookingPage() {
   const { roomId } = useParams();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
   const { customer } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,6 +45,9 @@ export default function BookingPage() {
     preset?.start && preset.durationSlots > 1 ? addMinutesToTime(preset.start, (preset.durationSlots - 1) * 30) : null
   );
   const [note, setNote] = useState('');
+  // โหมดแก้ไข: การจองเดิม + รายการห้องให้เลือกเปลี่ยน
+  const [editing, setEditing] = useState(null);
+  const [rooms, setRooms] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const nowTick = useNowTick();
@@ -39,18 +58,30 @@ export default function BookingPage() {
     if (!customer) { navigate('/login'); return; }
     let alive = true;
     setLoading(true);
-    Promise.all([api.getRoom(roomId), api.getShop(), api.getRoomAvailability(roomId, today)])
-      .then(([roomData, shopData, availData]) => {
+    Promise.all([
+      api.getRoom(roomId), api.getShop(), api.getRoomAvailability(roomId, today),
+      editId ? api.getBooking(editId) : null, editId ? api.listRooms() : [],
+    ])
+      .then(([roomData, shopData, availData, booking, roomList]) => {
         if (!alive) return;
         setRoom(roomData);
         setShop(shopData);
         setAvailability(availData);
+        if (!editId) return;
+        if (booking.customer_id !== customer.user_id) { setLoadError('ไม่พบรายการจองนี้'); return; }
+        setEditing(booking);
+        setRooms(roomList);
+        // ช่วงเวลาที่เลือกไว้: ที่เพิ่งเลือกก่อนสลับห้อง (state) หรือเวลาเดิมของการจองถ้าเป็นห้องเดิม
+        const sel = location.state?.start ? location.state
+          : booking.room_id === Number(roomId) ? toSelection(booking.start_datetime, booking.end_datetime) : null;
+        setSelectedStart(sel?.start || null);
+        setSelectedEnd(sel && sel.durationSlots > 1 ? addMinutesToTime(sel.start, (sel.durationSlots - 1) * 30) : null);
       })
       .catch((err) => { if (alive) setLoadError(err.message); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId]);
+  }, [roomId, editId]);
 
   const todayHours = useMemo(() => findTodayHours(shop?.hours) || { open_hour: 0, close_hour: 24 }, [shop]);
 
@@ -63,7 +94,8 @@ export default function BookingPage() {
 
   const bookedTimes = useMemo(() => {
     const set = new Set();
-    availability.forEach((b) => {
+    // โหมดแก้ไข: ช่วงเวลาของการจองตัวเองไม่นับว่าถูกจอง (เลือกเวลาเดิมหรือขยับทับเวลาเดิมได้)
+    availability.filter((b) => String(b.booking_id) !== editId).forEach((b) => {
       const start = new Date(b.start_datetime);
       const end = new Date(b.end_datetime);
       slotTimes.forEach((t) => {
@@ -139,7 +171,40 @@ export default function BookingPage() {
     });
   }, [selectedStart, slotCount, room, shop, today]);
 
+  // โหมดแก้ไข: มัดจำใหม่ = % ตามนโยบายของราคาใหม่ / จ่ายเพิ่มเฉพาะส่วนที่เกินยอดที่ชำระแล้ว (ไม่คืนเงิน)
+  const paidAmount = Number(editing?.paid_amount || 0);
+  const newDeposit = editing ? Math.round((pricePreview.priceTotal * Number(editing.deposit_percent)) / 100) : 0;
+  const topUp = Math.max(0, newDeposit - paidAmount);
+
   const confirmDisabled = !selectedStart || rangeHasBooked || rangeHasPast || submitting;
+
+  const changeRoom = (newRoomId) => {
+    navigate(`/book/${newRoomId}?edit=${editId}`, {
+      replace: true,
+      state: selectedStart ? { start: selectedStart, durationSlots: slotCount } : null,
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (confirmDisabled) return;
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const startDatetime = `${today}T${selectedStart}:00`;
+      const result = await api.editBooking(editId, {
+        customerId: customer.user_id,
+        roomId: Number(roomId),
+        startDatetime,
+        endDatetime: addMinutesToDateTime(startDatetime, slotCount * 30),
+      });
+      navigate(result.topup_due > 0 ? `/pay/${editId}` : '/history', { replace: true });
+    } catch (err) {
+      setSubmitError(err.message);
+      api.getRoomAvailability(roomId, today).then(setAvailability).catch(() => {});
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleConfirm = async () => {
     if (confirmDisabled) return;
@@ -188,8 +253,10 @@ export default function BookingPage() {
   return (
     <div className="page-dark app-dark">
       <header className="topbar" style={{ gap: 12, justifyContent: 'flex-start' }}>
-        <IconButton label="ย้อนกลับ" onClick={() => navigate('/')}><ArrowLeft /></IconButton>
-        <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>จองห้อง: {room.room_name}</span>
+        <IconButton label="ย้อนกลับ" onClick={() => navigate(editing ? '/history' : '/')}><ArrowLeft /></IconButton>
+        <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>
+          {editing ? 'แก้ไขการจอง' : 'จองห้อง'}: {room.room_name}
+        </span>
       </header>
 
       <div className="container-md booking-layout">
@@ -224,6 +291,16 @@ export default function BookingPage() {
               <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>เปิดบริการ {shopHoursLabel}</span>
             </div>
           </Card>
+
+          {editing && (
+            <Card title="เปลี่ยนห้อง" subtitle={`การจองเดิม: ${editing.room_name} ${formatDateTimeRange(editing.start_datetime, editing.end_datetime)}`}>
+              <Select value={roomId} onChange={(e) => changeRoom(e.target.value)}>
+                {rooms.map((r) => (
+                  <option key={r.room_id} value={r.room_id}>{r.room_name} ({money(r.price_per_hour)} บาท/ชม.)</option>
+                ))}
+              </Select>
+            </Card>
+          )}
 
           <Card title="เลือกเวลา" subtitle="คลิกเลือกเวลาเริ่ม แล้วคลิกอีกครั้งเพื่อเลือกเวลาสิ้นสุด (ทีละ 30 นาที)">
             <div className="slot-grid">
@@ -269,8 +346,15 @@ export default function BookingPage() {
                   )}
                 </div>
               </div>
-              <div className="field-wrap">
-                <label className="field-label" htmlFor="booking-note">หมายเหตุถึงร้าน (ถ้ามี)</label>
+              {editing && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, fontSize: 'var(--text-xs)', color: 'var(--text-body)', background: 'var(--surface-sunken)', borderRadius: 8, padding: 12 }}>
+                  <div>มัดจำใหม่ ({Number(editing.deposit_percent)}%)<div className="num" style={{ fontWeight: 700 }}>{money(Math.max(newDeposit, paidAmount))} บาท</div></div>
+                  <div>ชำระแล้ว<div className="num" style={{ fontWeight: 700 }}>{money(paidAmount)} บาท</div></div>
+                  <div>ต้องชำระเพิ่ม<div className="num" style={{ fontWeight: 700, color: topUp > 0 ? 'var(--amber-600)' : 'var(--green-700)' }}>{money(topUp)} บาท</div></div>
+                </div>
+              )}
+              {!editing && <div className="field-wrap">
+              <label className="field-label" htmlFor="booking-note">หมายเหตุถึงร้าน (ถ้ามี)</label>
                 <textarea
                   id="booking-note"
                   className="field field-textarea"
@@ -278,17 +362,19 @@ export default function BookingPage() {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   maxLength={300}
-                />
-              </div>
+                  />
+                  </div>}
               {rangeHasBooked && <div className="field-error">ช่วงเวลานี้มีบางส่วนถูกจองแล้ว กรุณาเลือกใหม่</div>}
               {!rangeHasBooked && rangeHasPast && <div className="field-error">ช่วงเวลานี้ผ่านไปแล้ว กรุณาเลือกเวลาอื่น</div>}
               {submitError && <div className="field-error">{submitError}</div>}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid var(--divider)', flexWrap: 'wrap', gap: 12 }}>
                 <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)', lineHeight: 1.5, maxWidth: 300 }}>
-                  ยกเลิกได้ล่วงหน้าก่อนเวลาเริ่ม 1 ชั่วโมง — มัดจำไม่สามารถขอคืนได้ทุกกรณี
+                  {editing
+                    ? 'มัดจำที่ชำระแล้วนำมาหักได้ ถ้ามัดจำใหม่ต่ำกว่าเดิมไม่คืนเงิน — การจองที่ต้องจ่ายเพิ่มจะรอร้านยืนยันอีกครั้ง'
+                    : cancellationNote(shop?.policy)}
                 </div>
-                <Button variant="accent" size="md" disabled={confirmDisabled} onClick={handleConfirm} iconRight={<ArrowRight />}>
-                  {submitting ? 'กำลังบันทึก...' : 'ยืนยันและชำระมัดจำ'}
+                <Button variant="accent" size="md" disabled={confirmDisabled} onClick={editing ? handleSaveEdit : handleConfirm} iconRight={<ArrowRight />}>
+                  {submitting ? 'กำลังบันทึก...' : editing ? (topUp > 0 ? `บันทึกและชำระเพิ่ม ${money(topUp)} บาท` : 'บันทึกการแก้ไข') : 'ยืนยันและชำระมัดจำ'}
                 </Button>
               </div>
             </div>
