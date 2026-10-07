@@ -18,6 +18,9 @@ const THAI_MONTHS = [
   'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
 ];
 
+// ชื่อเดือนภาษาไทยแบบย่อ — index 0 = ม.ค.
+const THAI_MONTHS_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
 /**
  * แปลงวันที่ ISO ("YYYY-MM-DD") เป็นรูปแบบไทย (เช่น "9 สิงหาคม 2569")
  * บวก 543 เพื่อแปลง ค.ศ. → พ.ศ.
@@ -67,6 +70,20 @@ export function addMinutesToTime(time, minutes) {
 export function timeToMinutes(time) {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
+}
+
+/**
+ * เวลาที่กดจอง (booking.created_at แบบ naive "YYYY-MM-DDTHH:MM:SS" เวลาไทย) สำหรับแสดง "จองเมื่อ ..."
+ * จองวันนี้ → "14:20" / จองวันอื่น → "6 ต.ค. 14:20" (รายการค้างจากวันก่อนจะได้ไม่ดูเหมือนเพิ่งจอง)
+ * แยกจากสตริงตรงๆ ไม่ผ่าน new Date() เพื่อไม่ให้ขึ้นกับ timezone ของเครื่อง
+ */
+export function formatBookedAt(createdAt) {
+  if (typeof createdAt !== 'string' || createdAt.length < 16) return '-';
+  const dateISO = createdAt.slice(0, 10);
+  const time = createdAt.slice(11, 16);
+  if (dateISO === bangkokNowParts().dateISO) return time;
+  const [, m, d] = dateISO.split('-').map(Number);
+  return `${d} ${THAI_MONTHS_SHORT[m - 1]} ${time}`;
 }
 
 // offset เวลาไทย (UTC+7) เป็น milliseconds — ใช้ shift Date เป็นเวลาไทย
