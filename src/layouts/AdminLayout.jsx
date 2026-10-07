@@ -35,15 +35,19 @@ export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // จำนวนรายการที่รอดำเนินการ — แสดงเป็น badge บน nav item "อนุมัติการจอง"
+  // จำนวนรายการที่รอดำเนินการ (รอยืนยันวันนี้ + ค้างจากวันก่อน) — แสดงเป็น badge บน nav item "อนุมัติการจอง"
   const [pendingCount, setPendingCount] = useState(0);
+  const updateBadgeFromStats = (stats) => {
+    setPendingCount(Number(stats?.pending_count || 0) + Number(stats?.overdue_count || 0));
+  };
 
-  // โหลด pending count ทุกครั้งที่เปลี่ยนหน้า — ให้ badge อัปเดตเสมอ
+  // โหลด pending count ทุกครั้งที่เปลี่ยนหน้า + หน้าอนุมัติการจองส่ง stats ล่าสุดมาอัปเดตผ่าน Outlet context
+  // ทุกครั้งที่โหลดรายการใหม่ (หลังยืนยัน/ปฏิเสธ/ยกเลิก) — เดิมอัปเดตแค่ตอนเปลี่ยนหน้า badge จึงค้างเลขเก่า
   // ใช้ alive flag ป้องกัน setState หลัง component unmount (React warning)
   useEffect(() => {
     let alive = true;
     api.getTodayBookings()
-      .then((data) => { if (alive) setPendingCount(Number(data?.stats?.pending_count || 0) + Number(data?.stats?.overdue_count || 0)); })
+      .then((data) => { if (alive) updateBadgeFromStats(data?.stats); })
       .catch(() => {}); // ไม่แสดง error ถ้าโหลด badge ไม่สำเร็จ — ไม่ critical
     return () => { alive = false; };
   }, [location.pathname]);
@@ -146,7 +150,7 @@ export default function AdminLayout() {
           </button>
         </header>
         <main className="admin-main">
-          <Outlet />
+          <Outlet context={{ updateBadgeFromStats }} />
         </main>
       </div>
     </div>
