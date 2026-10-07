@@ -5,6 +5,7 @@ import Button from '../../components/Button.jsx';
 import Tag from '../../components/Tag.jsx';
 import Input from '../../components/Input.jsx';
 import Select from '../../components/Select.jsx';
+import { BookingNote, CancelReason, SlipImage } from '../../components/BookingDetails.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -145,11 +146,7 @@ export default function AdminBookingsPage() {
             {overdue && <Tag tone="danger" size="sm">ค้างจากวันที่ {formatThaiDate(b.booking_date)}</Tag>}
             {b.deposit_status && <Tag tone={b.deposit_status === 'paid' ? 'success' : b.deposit_status === 'pending_verify' ? 'warning' : 'neutral'} size="sm">มัดจำ: {b.deposit_status}</Tag>}
           </div>
-          {b.booking_status === 'cancelled' && b.cancel_reason && (
-            <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '4px 8px' }}>
-              เหตุผลที่ยกเลิก: {b.cancel_reason}
-            </div>
-          )}
+          <CancelReason booking={b} />
           {b.session_id && (
             <div style={{ marginTop: 6, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
               เข้า {formatTimeHM(b.checkin_time)} น.
@@ -158,11 +155,7 @@ export default function AdminBookingsPage() {
               {Number(b.overtime_amount) > 0 && ` · ค่าเกินเวลา ${money(b.overtime_amount)} บาท`}
             </div>
           )}
-          {b.note && (
-            <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', whiteSpace: 'pre-line' }}>
-              หมายเหตุ: {b.note}
-            </div>
-          )}
+          <BookingNote note={b.note} />
           {movingId === b.booking_id && (
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'flex-end', gap: 6, flexWrap: 'wrap' }}>
               <div style={{ flex: '1 1 200px', minWidth: 160 }}>
@@ -179,11 +172,7 @@ export default function AdminBookingsPage() {
           )}
           {b.evidence_url && (
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <img
-                src={b.evidence_url}
-                alt="สลิปเงินมัดจำ"
-                style={{ width: 120, height: 120, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border-default)', background: '#fff' }}
-              />
+              <SlipImage src={b.evidence_url} />
               {b.payment_status === 'pending' && rejectingSlipId !== b.payment_id && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ตรวจสอบสลิปเงินมัดจำ</span>

@@ -4,6 +4,7 @@ import Card from '../components/Card.jsx';
 import Tag from '../components/Tag.jsx';
 import Button from '../components/Button.jsx';
 import Input from '../components/Input.jsx';
+import { BookingNote, CancelReason } from '../components/BookingDetails.jsx';
 import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getBookingDisplayStatus, formatDateTimeRange, money } from '../utils/format.js';
@@ -70,16 +71,8 @@ export default function HistoryPage() {
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
                     {formatDateTimeRange(b.start_datetime, b.end_datetime)} · {SIZE_CAPACITY_LABEL[b.size] || `ความจุ ${b.capacity || '-'} คน`}
                   </div>
-                  {b.note && (
-                    <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', whiteSpace: 'pre-line' }}>
-                      หมายเหตุ: {b.note}
-                    </div>
-                  )}
-                  {b.booking_status === 'cancelled' && b.cancel_reason && (
-                    <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '4px 8px' }}>
-                      เหตุผลที่ยกเลิก: {b.cancel_reason}
-                    </div>
-                  )}
+                  <BookingNote note={b.note} />
+                  <CancelReason booking={b} />
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ยอดรวม</div>

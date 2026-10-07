@@ -54,6 +54,6 @@ export const SIZE_CAPACITY_LABEL = {
  * เพื่อให้รูปที่แอดมิน crop ไว้ตรงกับสิ่งที่ลูกค้าเห็นจริงเสมอ
  * ⚠️ แก้ที่นี่ที่เดียวถ้าต้องการเปลี่ยนสัดส่วน
  */
-export const ROOM_PHOTO_WIDTH = 494;
-export const ROOM_PHOTO_HEIGHT = 312;
+const ROOM_PHOTO_WIDTH = 494;
+const ROOM_PHOTO_HEIGHT = 312;
 export const ROOM_PHOTO_ASPECT_RATIO = ROOM_PHOTO_WIDTH / ROOM_PHOTO_HEIGHT;

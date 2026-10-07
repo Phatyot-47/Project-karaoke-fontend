@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Card from '../components/Card.jsx';
 import Button from '../components/Button.jsx';
 import { Check } from '../components/Icons.jsx';
@@ -9,10 +9,8 @@ export default function SuccessPage() {
   const navigate = useNavigate();
   const { booking, room } = location.state || {};
 
-  if (!booking) {
-    navigate('/', { replace: true });
-    return null;
-  }
+  // เปิดหน้านี้ตรงๆ (ไม่ได้มาจากหน้าชำระเงิน) → กลับหน้าหลัก
+  if (!booking) return <Navigate to="/" replace />;
 
   return (
     <div className="page-dark app-dark center-screen">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Card from '../../components/Card.jsx';
 import Tag from '../../components/Tag.jsx';
+import { SlipImage } from '../../components/BookingDetails.jsx';
 import api from '../../api/client.js';
 import { getBookingDisplayStatus, formatDateTimeRange, money } from '../../utils/format.js';
 import { resolveRoomImage } from '../../utils/roomImage.js';
@@ -38,11 +39,7 @@ export default function AdminHistoryPage() {
                 </div>
                 {b.evidence_url && (
                   <div style={{ marginTop: 8 }}>
-                    <img
-                      src={b.evidence_url}
-                      alt="สลิปเงินมัดจำ"
-                      style={{ width: 120, height: 120, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border-default)', background: '#fff' }}
-                    />
+                    <SlipImage src={b.evidence_url} />
                   </div>
                 )}
               </div>

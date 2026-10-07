@@ -36,7 +36,7 @@ export default function LoginPage() {
     <div className="page-dark app-dark center-screen">
       <Card style={{ width: 420, maxWidth: '100%', padding: '28px 24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 72, height: 72, borderFade: 'none', borderRadius: '50%', objectFit: 'cover' }} />
+          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover' }} />
           <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--text-strong)' }}>เข้าสู่ระบบ</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>
             เข้าสู่ระบบด้วยเบอร์โทรศัพท์ของคุณ

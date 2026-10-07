@@ -178,7 +178,7 @@ const NAIVE_DATETIME_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/;
  * ตาม timezone ของเครื่องผู้ใช้ (เดิมฟังก์ชันนี้รอสตริงที่ลงท้ายด้วย Z ซึ่ง API ไม่ได้ส่งแล้ว
  * จึงตอบ true เสมอ ทำให้ booking ที่ยืนยันแล้วค้างป้าย "รอดำเนินการ" ตลอด)
  */
-export function isBookingAwaitingStart(booking) {
+function isBookingAwaitingStart(booking) {
   if (!booking || booking.booking_status !== 'confirmed') return false;
   const match = typeof booking.start_datetime === 'string' && booking.start_datetime.match(NAIVE_DATETIME_RE);
   if (!match) return true; // รูปแบบไม่ตรง → ถือว่ายังรออยู่ (safe fallback)

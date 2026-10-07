@@ -4,7 +4,8 @@ import Input from '../components/Input.jsx';
 import Button from '../components/Button.jsx';
 import Avatar from '../components/Avatar.jsx';
 import UploadSlot from '../components/UploadSlot.jsx';
-import { Check } from '../components/Icons.jsx';
+import SavedNotice from '../components/SavedNotice.jsx';
+import useSavedFlag from '../hooks/useSavedFlag.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../api/client.js';
 
@@ -19,7 +20,7 @@ export default function ProfilePage() {
   const [uploadKey, setUploadKey] = useState(0);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saved, flashSaved } = useSavedFlag();
 
   const handleSubmit = async () => {
     if (!name.trim() || phone.trim().length < 9) {
@@ -31,8 +32,7 @@ export default function ProfilePage() {
     try {
       const user = await api.updateProfile(customer.user_id, name.trim(), phone.trim(), avatarUrl);
       loginCustomer({ ...customer, ...user });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      flashSaved();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -77,11 +77,7 @@ export default function ProfilePage() {
           <Input label="เบอร์โทรศัพท์" placeholder="08x-xxx-xxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '')); setError(''); }} />
           {error && <div className="field-error">{error}</div>}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
-            {saved && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--green-700)', fontSize: 'var(--text-xs)', fontWeight: 600 }}>
-                <Check style={{ width: 16, height: 16 }} /> บันทึกสำเร็จ
-              </span>
-            )}
+            <SavedNotice show={saved} />
             <Button type="submit" variant="accent" disabled={saving}>
               {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
             </Button>
