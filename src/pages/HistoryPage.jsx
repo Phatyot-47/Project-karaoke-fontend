@@ -56,11 +56,13 @@ export default function HistoryPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 20 }}>
         {bookings.map((b) => {
           const statusInfo = getBookingDisplayStatus(b);
-          const canEdit = b.booking_status === 'pending';
+          // แก้ไข (เปลี่ยนห้อง/เวลา) ได้เมื่อส่งสลิปมัดจำแล้ว ยังไม่ Check-in — เงื่อนไขเวลาล่วงหน้า backend เป็นคนตรวจ
+          const paidAmount = Number(b.paid_amount || 0);
+          const canEdit = ['pending', 'confirmed'].includes(b.booking_status) && paidAmount > 0 && !b.session_status;
           // ยังไม่ได้ส่งสลิป (และยังไม่หมดเวลาชำระ ซึ่ง backend จะยกเลิกให้เอง) → กลับไปหน้าชำระมัดจำต่อได้
           const canPay = b.booking_status === 'pending' && b.deposit_status === 'unpaid';
           const canCancel = b.booking_status === 'pending' || b.booking_status === 'confirmed';
-          const isDone = b.booking_status === 'completed' || b.booking_status === 'cancelled';
+          const isDone = ['completed', 'cancelled', 'no_show'].includes(b.booking_status);
           const isCanceling = cancelingId === b.booking_id;
           return (
             <Card key={b.booking_id} style={{ padding: 18 }}>
@@ -94,8 +96,12 @@ export default function HistoryPage() {
                   </>
                 ) : (
                   <>
-                    {canPay && <Button variant="accent" size="sm" onClick={() => navigate(`/pay/${b.booking_id}`)}>ชำระมัดจำ</Button>}
-                    {canEdit && <Button variant="outline" size="sm" disabled>แก้ไข</Button>}
+                    {canPay && (
+                      <Button variant="accent" size="sm" onClick={() => navigate(`/pay/${b.booking_id}`)}>
+                        {paidAmount > 0 ? `ชำระส่วนต่างมัดจำ ${money(Number(b.deposit_required) - paidAmount)} บาท` : 'ชำระมัดจำ'}
+                      </Button>
+                    )}
+                    {canEdit && <Button variant="outline" size="sm" onClick={() => navigate(`/book/${b.room_id}?edit=${b.booking_id}`)}>แก้ไข</Button>}
                     {canCancel && <Button variant="outline" size="sm" onClick={() => setCancelingId(b.booking_id)}>ยกเลิก</Button>}
                     {isDone && <Button variant="subtle" size="sm" disabled>สิ้นสุดแล้ว</Button>}
                   </>

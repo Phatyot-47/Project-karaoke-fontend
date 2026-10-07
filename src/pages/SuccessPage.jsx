@@ -1,13 +1,20 @@
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import api from '../api/client.js';
 import Card from '../components/Card.jsx';
 import Button from '../components/Button.jsx';
 import { Check } from '../components/Icons.jsx';
-import { formatDateTimeRange, money } from '../utils/format.js';
+import { formatDateTimeRange, money, cancellationNote } from '../utils/format.js';
 
 export default function SuccessPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { booking, room } = location.state || {};
+  const { booking, room, payment } = location.state || {};
+  const [policy, setPolicy] = useState(null);
+
+  useEffect(() => {
+    api.getShop().then((shop) => setPolicy(shop.policy)).catch(() => {});
+  }, []);
 
   // เปิดหน้านี้ตรงๆ (ไม่ได้มาจากหน้าชำระเงิน) → กลับหน้าหลัก
   if (!booking) return <Navigate to="/" replace />;
@@ -27,10 +34,10 @@ export default function SuccessPage() {
         <Card style={{ width: '100%', background: 'var(--green-50)', border: '1px solid var(--green-200)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-body)' }}>ชำระมัดจำแล้ว</span>
-            <span className="num" style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--green-700)' }}>{money(booking.deposit_required)} บาท</span>
+            <span className="num" style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--green-700)' }}>{money(payment?.amount ?? booking.deposit_required)} บาท</span>
           </div>
           <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)', marginTop: 8, textAlign: 'left' }}>
-            กำลังรอการยืนยันจากทางร้าน · ยกเลิกได้ก่อนเวลาเริ่ม 1 ชั่วโมง (มัดจำไม่คืนทุกกรณี)
+            กำลังรอการยืนยันจากทางร้าน · {cancellationNote(policy)}
           </div>
         </Card>
         <Button variant="primary" size="lg" block onClick={() => navigate('/')}>กลับหน้าหลัก</Button>

@@ -92,6 +92,8 @@ const api = {
   getBooking: (id) => request(`/bookings/${id}`),
   listCustomerBookings: (customerId) => request(`/bookings/customer/${customerId}`),
   cancelBooking: (id, reason) => request(`/bookings/${id}/cancel`, { method: 'PATCH', body: { reason } }),
+  // เปลี่ยนห้อง/เวลา — ผลลัพธ์มี topup_due = มัดจำส่วนต่างที่ต้องจ่ายเพิ่ม (0 = ไม่ต้องจ่าย)
+  editBooking: (id, payload) => request(`/bookings/${id}/edit`, { method: 'PATCH', body: payload }),
 
   // ---- การชำระเงิน ----
   createPayment: (payload) => request('/payments', { method: 'POST', body: payload }),
@@ -100,6 +102,7 @@ const api = {
   getTodayBookings: () => request('/admin/bookings/today'),
   confirmBooking: (id) => request(`/admin/bookings/${id}/confirm`, { method: 'PATCH' }),
   rejectBooking: (id, reason) => request(`/admin/bookings/${id}/reject`, { method: 'PATCH', body: { reason } }),
+  markNoShow: (id, reason) => request(`/admin/bookings/${id}/no-show`, { method: 'PATCH', body: { reason } }),
   changeBookingRoom: (id, roomId) => request(`/admin/bookings/${id}/change-room`, { method: 'PATCH', body: { roomId } }),
 
   // ---- แอดมิน: Check-in / ต่อเวลา / Check-out ----
@@ -117,6 +120,7 @@ const api = {
   // ---- แอดมิน: ตั้งค่าร้าน ----
   getShop: () => request('/admin/shop'),
   updateShop: (payload) => request('/admin/shop', { method: 'PATCH', body: payload }),
+  updatePolicy: (payload) => request('/admin/policy', { method: 'PATCH', body: payload }),
   updateShopHours: (hours) => request('/admin/shop/hours', { method: 'PATCH', body: { hours } }),
 
   // ---- แอดมิน: จัดการห้อง ----

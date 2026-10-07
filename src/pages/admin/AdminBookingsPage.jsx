@@ -9,7 +9,7 @@ import { BookingNote, CancelReason, SlipImage } from '../../components/BookingDe
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { formatDateTimeRange, formatTimeHM, formatThaiDate, formatBookedAt, money } from '../../utils/format.js';
+import { formatDateTimeRange, formatTimeHM, formatThaiDate, formatBookedAt, isSlotPastBangkok, money } from '../../utils/format.js';
 import { resolveRoomImage } from '../../utils/roomImage.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
@@ -115,6 +115,11 @@ export default function AdminBookingsPage() {
       : `Check-out ${b.room_name} แล้ว`)
   );
 
+  const handleNoShow = (b) => runSessionAction(
+    () => api.markNoShow(b.booking_id),
+    () => `บันทึก ${b.room_name} เป็น "ไม่มาใช้บริการ" แล้ว — ปล่อยช่วงเวลาคืน มัดจำไม่คืนตามนโยบาย`
+  );
+
   const submitReject = async (id) => {
     try {
       await api.rejectBooking(id, rejectReason.trim() || 'ร้านยกเลิกการจอง');
@@ -130,6 +135,8 @@ export default function AdminBookingsPage() {
     // ค้างจากวันก่อน: ยืนยัน / ย้ายห้อง / Check-in ไม่ได้แล้ว เหลือแค่ตรวจสลิปหรือยกเลิก
     const overdue = b.is_overdue;
     const canCancel = b.booking_status === 'pending' || (b.booking_status === 'confirmed' && !b.session_id);
+    // เลยเวลาเริ่มแล้วยังไม่ Check-in → บันทึก "ไม่มาใช้บริการ" (No-show) ได้
+    const startPassed = isSlotPastBangkok(b.start_datetime.slice(0, 10), b.start_datetime.slice(11, 16), 0);
     return (
       <div className="booking-row" key={b.booking_id}>
         <div className="booking-photo" style={{ backgroundImage: `url(${resolveRoomImage(b)})` }} />
@@ -144,7 +151,10 @@ export default function AdminBookingsPage() {
             <span>จองเมื่อ {formatBookedAt(b.created_at)} น.</span>
             {isWalkIn && <Tag tone="info" size="sm">วอล์คอิน</Tag>}
             {overdue && <Tag tone="danger" size="sm">ค้างจากวันที่ {formatThaiDate(b.booking_date)}</Tag>}
-            {b.deposit_status && <Tag tone={b.deposit_status === 'paid' ? 'success' : b.deposit_status === 'pending_verify' ? 'warning' : 'neutral'} size="sm">มัดจำ: {b.deposit_status}</Tag>}
+            {b.note?.includes('[ลูกค้าแก้ไข') && <Tag tone="warning" size="sm">ลูกค้าแก้ไขการจอง</Tag>}
+            {b.deposit_status === 'unpaid' && Number(b.paid_amount) > 0
+              ? <Tag tone="warning" size="sm">รอชำระส่วนต่างมัดจำ {money(Number(b.deposit_required) - Number(b.paid_amount))} บาท</Tag>
+              : b.deposit_status && <Tag tone={b.deposit_status === 'paid' ? 'success' : b.deposit_status === 'pending_verify' ? 'warning' : 'neutral'} size="sm">มัดจำ: {b.deposit_status}</Tag>}
           </div>
           <CancelReason booking={b} />
           {b.session_id && (
@@ -172,7 +182,7 @@ export default function AdminBookingsPage() {
           )}
           {b.evidence_url && (
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <SlipImage src={b.evidence_url} />
+              {(b.slip_urls || [b.evidence_url]).map((url) => <SlipImage key={url} src={url} />)}
               {b.payment_status === 'pending' && rejectingSlipId !== b.payment_id && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ตรวจสอบสลิปเงินมัดจำ</span>
@@ -221,6 +231,7 @@ export default function AdminBookingsPage() {
             <>
               <Tag tone="warning" dot>{overdue ? 'ไม่มา Check-in' : 'รอ Check-in'}</Tag>
               <Button variant="outline" size="sm" onClick={() => { setRejectingId(b.booking_id); setMovingId(null); }}>ยกเลิกการจอง</Button>
+              {startPassed && <Button variant="danger" size="sm" onClick={() => handleNoShow(b)}>ไม่มาใช้บริการ</Button>}
               {!overdue && <Button variant="accent" size="sm" onClick={() => handleCheckIn(b)}>Check-in</Button>}
             </>
           )}
@@ -241,6 +252,7 @@ export default function AdminBookingsPage() {
           )}
           {b.booking_status === 'completed' && <Tag tone="success" dot>เสร็จสมบูรณ์</Tag>}
           {b.booking_status === 'cancelled' && <Tag tone="danger" dot>ยกเลิกแล้ว</Tag>}
+          {b.booking_status === 'no_show' && <Tag tone="danger" dot>ไม่มาใช้บริการ</Tag>}
         </div>
       </div>
     );
