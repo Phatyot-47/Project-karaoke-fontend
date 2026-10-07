@@ -74,6 +74,8 @@ export default function RoomListPage() {
     [rooms, search]
   );
 
+  // ระหว่างโหลดผลค้นหาช่วงเวลาใหม่ ข้อมูลห้องชุดเดิมยังไม่มี is_available → ถือว่า "ยังไม่รู้" ไม่ใช่ "ไม่ว่าง"
+  const searching = Boolean(range) && (loading || rooms.some((r) => r.is_available === undefined));
   const availableCount = range ? filteredRooms.filter((r) => r.is_available).length : filteredRooms.length;
 
   const bookRoom = (room) => {
@@ -120,7 +122,7 @@ export default function RoomListPage() {
         )}
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-          {range
+          {searching ? 'กำลังตรวจสอบห้องว่าง...' : range
             ? `ว่าง ${availableCount} จาก ${filteredRooms.length} ห้อง (${searchStart}–${addMinutesToTime(searchStart, durationSlots * 30)} น.)`
             : `แสดง ${filteredRooms.length} ห้อง`}
         </span>
@@ -137,7 +139,7 @@ export default function RoomListPage() {
 
       <div className="room-grid">
         {filteredRooms.map((room) => {
-          const unavailable = range && !room.is_available;
+          const unavailable = range && room.is_available === false;
           return (
             <Card key={room.room_id} pad={false}>
               <div className="room-photo" style={{ aspectRatio: ROOM_PHOTO_ASPECT_RATIO, backgroundImage: `url(${resolveRoomImage(room)})` }} />
@@ -148,7 +150,7 @@ export default function RoomListPage() {
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {room.theme && <Tag tone="info" size="sm">ธีม: {room.theme}</Tag>}
-                  {range && (room.is_available
+                  {range && room.is_available !== undefined && (room.is_available
                     ? <Tag tone="success" dot size="sm">ว่างช่วงเวลานี้</Tag>
                     : <Tag tone="danger" dot size="sm">ไม่ว่างช่วงเวลานี้</Tag>)}
                 </div>

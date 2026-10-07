@@ -39,7 +39,7 @@ export default function AdminHistoryPage() {
                 </div>
                 {b.evidence_url && (
                   <div style={{ marginTop: 8 }}>
-                    {(b.slip_urls || [b.evidence_url]).map((url) => <SlipImage key={url} src={url} />)}
+                    {(b.slip_urls || [b.evidence_url]).map((url, i) => <SlipImage key={`${i}-${url}`} src={url} />)}
                   </div>
                 )}
               </div>

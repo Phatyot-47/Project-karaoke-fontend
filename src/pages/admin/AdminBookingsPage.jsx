@@ -182,7 +182,7 @@ export default function AdminBookingsPage() {
           )}
           {b.evidence_url && (
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              {(b.slip_urls || [b.evidence_url]).map((url) => <SlipImage key={url} src={url} />)}
+              {(b.slip_urls || [b.evidence_url]).map((url, i) => <SlipImage key={`${i}-${url}`} src={url} />)}
               {b.payment_status === 'pending' && rejectingSlipId !== b.payment_id && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ตรวจสอบสลิปเงินมัดจำ</span>
