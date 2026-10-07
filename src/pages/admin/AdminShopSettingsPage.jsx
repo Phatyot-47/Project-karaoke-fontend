@@ -7,7 +7,6 @@ import UploadSlot from '../../components/UploadSlot.jsx';
 import SavedNotice from '../../components/SavedNotice.jsx';
 import useSavedFlag from '../../hooks/useSavedFlag.js';
 import api from '../../api/client.js';
-import { useAuth } from '../../context/AuthContext.jsx';
 import { DAY_LABELS } from '../../utils/format.js';
 
 const HOUR_OPTIONS = Array.from({ length: 25 }, (_, i) => i);
@@ -23,7 +22,6 @@ const toPolicyForm = (p) => ({
 });
 
 export default function AdminShopSettingsPage() {
-  const { admin } = useAuth();
   const [form, setForm] = useState(null);
   // นโยบายมัดจำ/ยกเลิก (ขอบเขตข้อ 2.3) — savedPolicy ไว้เทียบว่ามีการแก้ไขไหม (ไม่แก้ = ไม่สร้างฉบับใหม่)
   const [policy, setPolicy] = useState(toPolicyForm(null));
@@ -73,7 +71,7 @@ export default function AdminShopSettingsPage() {
         floorPlanUrl: form.floor_plan_url,
       });
       if (JSON.stringify(policy) !== JSON.stringify(savedPolicy)) {
-        const newPolicy = await api.updatePolicy({ ...policy, adminUserId: admin.user_id });
+        const newPolicy = await api.updatePolicy(policy);
         setSavedPolicy(toPolicyForm(newPolicy));
       }
       if (hours.length) {

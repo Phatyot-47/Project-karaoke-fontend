@@ -5,6 +5,25 @@
 // ถ้าไม่ตั้งค่าไว้ จะใช้ localhost:4000/api เป็น fallback สำหรับ development
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
+// token เข้าสู่ระบบเก็บอยู่ในข้อมูลผู้ใช้ใน localStorage (ดู AuthContext) — แยกลูกค้า/แอดมิน
+// เลือกตามหน้าที่เปิดอยู่: หน้า /admin/* ใช้ token แอดมิน นอกนั้นใช้ token ลูกค้า
+const SESSIONS = {
+  customer: { key: 'gens_karaoke_customer', loginPath: '/login' },
+  admin: { key: 'gens_karaoke_admin', loginPath: '/admin/login' },
+};
+
+function currentSession() {
+  const session = window.location.pathname.startsWith('/admin') ? SESSIONS.admin : SESSIONS.customer;
+  let token = null;
+  try { token = JSON.parse(localStorage.getItem(session.key))?.token || null; } catch { /* ข้อมูลเสีย = ไม่มี token */ }
+  return { ...session, token };
+}
+
+function authHeaders() {
+  const { token } = currentSession();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 /**
  * ฟังก์ชัน HTTP helper ทั่วไป
  * - รองรับ query params ผ่าน options.params (กรองค่าว่าง/null/undefined ออกอัตโนมัติ)
@@ -25,7 +44,7 @@ async function request(path, { method = 'GET', body, params } = {}) {
   const res = await fetch(url, {
     method,
     // ตั้ง Content-Type เฉพาะเมื่อมี body — ถ้าไม่ตั้ง browser จะไม่ส่ง header นี้ (ถูกต้องสำหรับ GET)
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: { ...authHeaders(), ...(body && { 'Content-Type': 'application/json' }) },
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -36,6 +55,8 @@ async function request(path, { method = 'GET', body, params } = {}) {
  * อ่าน body เป็น JSON (ถ้ามี) แล้วโยน Error พร้อม .status และ .data เมื่อ response ไม่ ok
  * fallbackMessage ใช้เมื่อ backend ไม่ได้ส่ง { error } กลับมา
  */
+let redirectingToLogin = false;
+
 async function parseResponse(res, fallbackMessage) {
   // บาง endpoint อาจตอบกลับมาโดยไม่มี body (เช่น 204 No Content)
   let data = null;
@@ -43,6 +64,18 @@ async function parseResponse(res, fallbackMessage) {
     data = await res.json();
   } catch {
     /* ไม่มี body หรือไม่ใช่ JSON */
+  }
+
+  // 401 = ยังไม่ล็อกอิน / token หมดอายุ → ล้างเซสชันแล้วพาไปหน้าเข้าสู่ระบบ
+  // (ยกเว้นตอนอยู่หน้าเข้าสู่ระบบเอง ซึ่ง 401 หมายถึงรหัสผ่านผิด)
+  // หลาย request อาจได้ 401 พร้อมกัน → redirect ครั้งเดียวพอ
+  if (res.status === 401 && !redirectingToLogin) {
+    const session = currentSession();
+    if (window.location.pathname !== session.loginPath && !window.location.pathname.startsWith('/register')) {
+      redirectingToLogin = true;
+      localStorage.removeItem(session.key);
+      window.location.replace(session.loginPath);
+    }
   }
 
   if (!res.ok) {
@@ -64,7 +97,7 @@ async function uploadFile(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const res = await fetch(`${BASE_URL}/uploads`, { method: 'POST', body: formData });
+  const res = await fetch(`${BASE_URL}/uploads`, { method: 'POST', headers: authHeaders(), body: formData });
   return parseResponse(res, 'อัปโหลดไฟล์ไม่สำเร็จ');
 }
 
@@ -74,12 +107,16 @@ const api = {
   uploadFile,
 
   // ---- auth: ลงทะเบียน/ล็อกอินลูกค้า + ล็อกอินแอดมิน ----
-  registerCustomer: (name, phone) => request('/auth/register', { method: 'POST', body: { name, phone } }),
-  loginCustomer: (phone) => request('/auth/login', { method: 'POST', body: { phone } }),
+  // ผลลัพธ์ = ข้อมูลผู้ใช้ + token / login บัญชีเดิมที่ยังไม่มีรหัสผ่านจะได้ error.data.code = 'PASSWORD_NOT_SET'
+  registerCustomer: (name, phone, password) => request('/auth/register', { method: 'POST', body: { name, phone, password } }),
+  loginCustomer: (phone, password) => request('/auth/login', { method: 'POST', body: { phone, password } }),
+  setFirstPassword: (phone, name, password) => request('/auth/set-password', { method: 'POST', body: { phone, name, password } }),
   loginAdmin: (username, password) => request('/auth/admin-login', { method: 'POST', body: { username, password } }),
 
   // ---- ข้อมูลส่วนตัวลูกค้า ----
   updateProfile: (userId, name, phone, avatarUrl) => request(`/users/${userId}`, { method: 'PATCH', body: { name, phone, avatarUrl } }),
+  changePassword: (userId, currentPassword, newPassword) =>
+    request(`/users/${userId}/password`, { method: 'PATCH', body: { currentPassword, newPassword } }),
 
   // ---- ห้อง (ฝั่งลูกค้า) ----
   // start/end (ไม่บังคับ) = ช่วงเวลาที่ค้นหา — ถ้าส่งมา แต่ละห้องจะมี is_available บอกว่าว่างทั้งช่วงหรือไม่
@@ -106,19 +143,19 @@ const api = {
   changeBookingRoom: (id, roomId) => request(`/admin/bookings/${id}/change-room`, { method: 'PATCH', body: { roomId } }),
 
   // ---- แอดมิน: Check-in / ต่อเวลา / Check-out ----
-  checkIn: (id, adminUserId) => request(`/admin/bookings/${id}/check-in`, { method: 'PATCH', body: { adminUserId } }),
-  extendBooking: (id, minutes, adminUserId) => request(`/admin/bookings/${id}/extend`, { method: 'PATCH', body: { minutes, adminUserId } }),
-  checkOut: (id, adminUserId) => request(`/admin/bookings/${id}/check-out`, { method: 'PATCH', body: { adminUserId } }),
+  checkIn: (id) => request(`/admin/bookings/${id}/check-in`, { method: 'PATCH' }),
+  extendBooking: (id, minutes) => request(`/admin/bookings/${id}/extend`, { method: 'PATCH', body: { minutes } }),
+  checkOut: (id) => request(`/admin/bookings/${id}/check-out`, { method: 'PATCH' }),
   createWalkInBooking: (payload) => request('/admin/bookings/walkin', { method: 'POST', body: payload }),
   getBookingHistory: () => request('/admin/bookings/history'),
 
   // ---- แอดมิน: ตรวจสอบสลิปการชำระเงิน ----
   // ปฏิเสธสลิป (approve = false) จะยกเลิกการจองนั้นทันทีพร้อม reason
-  verifyPayment: (paymentId, approve, adminUserId, reason) =>
-    request(`/admin/payments/${paymentId}/verify`, { method: 'PATCH', body: { approve, adminUserId, reason } }),
+  verifyPayment: (paymentId, approve, reason) =>
+    request(`/admin/payments/${paymentId}/verify`, { method: 'PATCH', body: { approve, reason } }),
 
   // ---- แอดมิน: ตั้งค่าร้าน ----
-  getShop: () => request('/admin/shop'),
+  getShop: () => request('/shop'), // ข้อมูลร้านแบบสาธารณะ ใช้ทั้งฝั่งลูกค้าและแอดมิน
   updateShop: (payload) => request('/admin/shop', { method: 'PATCH', body: payload }),
   updatePolicy: (payload) => request('/admin/policy', { method: 'PATCH', body: payload }),
   updateShopHours: (hours) => request('/admin/shop/hours', { method: 'PATCH', body: { hours } }),

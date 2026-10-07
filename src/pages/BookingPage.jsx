@@ -192,7 +192,6 @@ export default function BookingPage() {
     try {
       const startDatetime = `${today}T${selectedStart}:00`;
       const result = await api.editBooking(editId, {
-        customerId: customer.user_id,
         roomId: Number(roomId),
         startDatetime,
         endDatetime: addMinutesToDateTime(startDatetime, slotCount * 30),
@@ -214,7 +213,6 @@ export default function BookingPage() {
       const startDatetime = `${today}T${selectedStart}:00`;
       const endDatetime = addMinutesToDateTime(startDatetime, slotCount * 30);
       const booking = await api.createBooking({
-        customerId: customer.user_id,
         roomId: Number(roomId),
         startDatetime,
         endDatetime,

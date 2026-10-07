@@ -6,7 +6,6 @@ import Input from '../../components/Input.jsx';
 import Select from '../../components/Select.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
-import { useAuth } from '../../context/AuthContext.jsx';
 import { todayISODate, addMinutesToTime, addMinutesToDateTime, timeToMinutes, isSlotPastBangkok, formatTimeHM, DAY_LABELS, findTodayHours, buildHalfHourSlots } from '../../utils/format.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
@@ -14,7 +13,6 @@ import useNowTick from '../../hooks/useNowTick.js';
 const WALKIN_MIN_SLOTS = 2;
 
 export default function AdminWalkInPage() {
-  const { admin } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -223,7 +221,6 @@ export default function AdminWalkInPage() {
         endDatetime: endDatetime(today, start, end),
         customerName: customerName.trim() || 'ลูกค้าหน้าร้าน',
         customerPhone: customerPhone.trim() || null,
-        adminUserId: admin.user_id,
       });
       setCustomerName('');
       setCustomerPhone('');
