@@ -79,7 +79,7 @@ const api = {
   loginAdmin: (username, password) => request('/auth/admin-login', { method: 'POST', body: { username, password } }),
 
   // ---- ข้อมูลส่วนตัวลูกค้า ----
-  updateProfile: (userId, name, phone) => request(`/users/${userId}`, { method: 'PATCH', body: { name, phone } }),
+  updateProfile: (userId, name, phone, avatarUrl) => request(`/users/${userId}`, { method: 'PATCH', body: { name, phone, avatarUrl } }),
 
   // ---- ห้อง (ฝั่งลูกค้า) ----
   // start/end (ไม่บังคับ) = ช่วงเวลาที่ค้นหา — ถ้าส่งมา แต่ละห้องจะมี is_available บอกว่าว่างทั้งช่วงหรือไม่
