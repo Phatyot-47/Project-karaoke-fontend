@@ -8,13 +8,11 @@ import Select from '../../components/Select.jsx';
 import { BookingNote, CancelReason, SlipImage } from '../../components/BookingDetails.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
-import { useAuth } from '../../context/AuthContext.jsx';
 import { formatDateTimeRange, formatTimeHM, formatThaiDate, formatBookedAt, isSlotPastBangkok, money } from '../../utils/format.js';
 import { resolveRoomImage } from '../../utils/roomImage.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
 export default function AdminBookingsPage() {
-  const { admin } = useAuth();
   const navigate = useNavigate();
   const { updateBadgeFromStats } = useOutletContext() || {};
   const [stats, setStats] = useState({ pending_count: 0, in_progress_count: 0, completed_count: 0, revenue_today: 0 });
@@ -60,7 +58,7 @@ export default function AdminBookingsPage() {
 
   const handleVerifyPayment = async (paymentId, approve, reason) => {
     try {
-      await api.verifyPayment(paymentId, approve, admin.user_id, reason);
+      await api.verifyPayment(paymentId, approve, reason);
       setRejectingSlipId(null);
       setSlipReason('');
       load();
@@ -96,20 +94,20 @@ export default function AdminBookingsPage() {
   };
 
   const handleCheckIn = (b) => runSessionAction(
-    () => api.checkIn(b.booking_id, admin.user_id),
+    () => api.checkIn(b.booking_id),
     () => `Check-in ${b.room_name} แล้ว`
   );
 
   const handleExtend = (b) => {
     const minutes = extendMinutes[b.booking_id] || 30;
     return runSessionAction(
-      () => api.extendBooking(b.booking_id, minutes, admin.user_id),
+      () => api.extendBooking(b.booking_id, minutes),
       (ext) => `ต่อเวลา ${b.room_name} ${minutes} นาที ถึง ${formatTimeHM(ext.new_end_datetime)} น. (+${money(ext.extra_amount)} บาท)`
     );
   };
 
   const handleCheckOut = (b) => runSessionAction(
-    () => api.checkOut(b.booking_id, admin.user_id),
+    () => api.checkOut(b.booking_id),
     (s) => (Number(s.overtime_amount) > 0
       ? `Check-out ${b.room_name} แล้ว — ออกช้า ${s.minutes_late} นาที คิดค่าเกินเวลา ${money(s.overtime_amount)} บาท`
       : `Check-out ${b.room_name} แล้ว`)

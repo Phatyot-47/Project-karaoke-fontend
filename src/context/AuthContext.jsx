@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 // Context สำหรับเก็บข้อมูลผู้ใช้ที่ล็อกอินอยู่ (ลูกค้าหรือแอดมิน)
 // ค่าเริ่มต้น null เพื่อให้ useAuth() ตรวจจับได้ว่าถูกเรียกนอก Provider
@@ -11,7 +11,7 @@ const ADMIN_KEY = 'gens_karaoke_admin';
 
 /**
  * Provider หลัก — ห่อ App ทั้งหมดไว้ใน main.jsx
- * จัดการ state และ sync กับ localStorage อัตโนมัติ
+ * จัดการ state และเก็บลง localStorage ทุกครั้งที่ login/logout
  */
 export function AuthProvider({ children }) {
   // อ่านข้อมูลจาก localStorage ตอน mount ครั้งแรก (lazy initializer)
@@ -23,24 +23,20 @@ export function AuthProvider({ children }) {
     try { return JSON.parse(localStorage.getItem(ADMIN_KEY)) || null; } catch { return null; }
   });
 
-  // Sync customer → localStorage ทุกครั้งที่ state เปลี่ยน
-  // ถ้า logout (customer = null) → ลบ key ออกจาก storage เลย ไม่เก็บ "null" เป็นสตริง
-  useEffect(() => {
-    if (customer) localStorage.setItem(CUSTOMER_KEY, JSON.stringify(customer));
-    else localStorage.removeItem(CUSTOMER_KEY);
-  }, [customer]);
-
-  // Sync admin → localStorage เช่นเดียวกัน
-  useEffect(() => {
-    if (admin) localStorage.setItem(ADMIN_KEY, JSON.stringify(admin));
-    else localStorage.removeItem(ADMIN_KEY);
-  }, [admin]);
+  // เขียน localStorage ทันทีตอน login/logout (ไม่รอ useEffect) — token ต้องพร้อมก่อนหน้าถัดไปเริ่มเรียก API
+  // (effect ของหน้าลูกจะรันก่อน effect ของ Provider ถ้า sync ผ่าน useEffect หน้าแรกหลัง login จะยิง request โดยไม่มี token)
+  // logout (user = null) → ลบ key ออกจาก storage เลย ไม่เก็บ "null" เป็นสตริง
+  const persist = (key, setter) => (user) => {
+    if (user) localStorage.setItem(key, JSON.stringify(user));
+    else localStorage.removeItem(key);
+    setter(user);
+  };
 
   // เมธอดที่ส่งให้ component ลูก — ใช้ผ่าน useAuth()
-  const loginCustomer = (user) => setCustomer(user);
-  const logoutCustomer = () => setCustomer(null);
-  const loginAdmin = (user) => setAdmin(user);
-  const logoutAdmin = () => setAdmin(null);
+  const loginCustomer = persist(CUSTOMER_KEY, setCustomer);
+  const logoutCustomer = () => loginCustomer(null);
+  const loginAdmin = persist(ADMIN_KEY, setAdmin);
+  const logoutAdmin = () => loginAdmin(null);
 
   return (
     <AuthContext.Provider value={{ customer, admin, loginCustomer, logoutCustomer, loginAdmin, logoutAdmin }}>

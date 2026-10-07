@@ -72,7 +72,7 @@ export default function UploadSlot({ placeholder = 'คลิกเพื่อ�
     <div className="upload-slot" style={{ height, width: '100%' }}>
       {preview ? <img src={preview} alt="" style={{ opacity: uploading ? 0.5 : 1 }} /> : <span>{placeholder}</span>}
       {uploading && <span style={{ position: 'absolute', zIndex: 1 }}>กำลังอัปโหลด...</span>}
-      <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} disabled={uploading || !!cropSrc} />
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleFile} disabled={uploading || !!cropSrc} />
       {error && (
         <span
           className="field-error"

@@ -84,6 +84,57 @@ export default function ProfilePage() {
           </div>
         </form>
       </Card>
+
+      <ChangePasswordCard userId={customer.user_id} />
     </div>
+  );
+}
+
+// การ์ด "เปลี่ยนรหัสผ่าน" — ต้องกรอกรหัสผ่านเดิมให้ถูกก่อน
+function ChangePasswordCard({ userId }) {
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const { saved, flashSaved } = useSavedFlag();
+  const clearError = (setter) => (e) => { setter(e.target.value); setError(''); };
+
+  const handleSubmit = async () => {
+    if (!current) { setError('กรุณากรอกรหัสผ่านเดิม'); return; }
+    if (next.length < 6) { setError('รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
+    if (next !== confirm) { setError('ยืนยันรหัสผ่านใหม่ไม่ตรงกัน'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      await api.changePassword(userId, current, next);
+      setCurrent(''); setNext(''); setConfirm('');
+      flashSaved();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card style={{ marginTop: 20 }}>
+      <form
+        onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+      >
+        <span style={{ fontWeight: 700, color: 'var(--text-strong)' }}>เปลี่ยนรหัสผ่าน</span>
+        <Input label="รหัสผ่านเดิม" type="password" placeholder="รหัสผ่านปัจจุบัน" value={current} onChange={clearError(setCurrent)} />
+        <Input label="รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)" type="password" placeholder="รหัสผ่านใหม่" value={next} onChange={clearError(setNext)} />
+        <Input label="ยืนยันรหัสผ่านใหม่" type="password" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" value={confirm} onChange={clearError(setConfirm)} />
+        {error && <div className="field-error">{error}</div>}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+          <SavedNotice show={saved} />
+          <Button type="submit" variant="accent" disabled={saving}>
+            {saving ? 'กำลังบันทึก...' : 'เปลี่ยนรหัสผ่าน'}
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }
