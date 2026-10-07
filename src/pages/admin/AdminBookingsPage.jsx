@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import Card from '../../components/Card.jsx';
 import Button from '../../components/Button.jsx';
 import Tag from '../../components/Tag.jsx';
@@ -15,6 +15,7 @@ import useNowTick from '../../hooks/useNowTick.js';
 export default function AdminBookingsPage() {
   const { admin } = useAuth();
   const navigate = useNavigate();
+  const { updateBadgeFromStats } = useOutletContext() || {};
   const [stats, setStats] = useState({ pending_count: 0, in_progress_count: 0, completed_count: 0, revenue_today: 0 });
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,7 @@ export default function AdminBookingsPage() {
       .then((today) => {
         setStats(today.stats);
         setBookings(today.bookings);
+        updateBadgeFromStats?.(today.stats); // ให้ badge บนเมนูตรงกับรายการที่เพิ่งโหลด
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -138,6 +140,7 @@ export default function AdminBookingsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 4, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
             <span>{formatDateTimeRange(b.start_datetime, b.end_datetime)}</span>
             <span>ลูกค้า: {b.customer_name || 'ไม่ระบุ'}</span>
+            <span>จองเมื่อ {formatTimeHM(b.created_at)} น.</span>
             {isWalkIn && <Tag tone="info" size="sm">วอล์คอิน</Tag>}
             {overdue && <Tag tone="danger" size="sm">ค้างจากวันที่ {formatThaiDate(b.booking_date)}</Tag>}
             {b.deposit_status && <Tag tone={b.deposit_status === 'paid' ? 'success' : b.deposit_status === 'pending_verify' ? 'warning' : 'neutral'} size="sm">มัดจำ: {b.deposit_status}</Tag>}
@@ -293,7 +296,7 @@ export default function AdminBookingsPage() {
 
       <Card
         title="รายการจองวันนี้"
-        subtitle="รอการยืนยันจากคุณ"
+        subtitle="เรียงตามเวลาที่จอง ใหม่สุดอยู่บน"
         pad={false}
         actions={<Button variant="primary" size="sm" onClick={() => navigate('/admin/walkin')}>จองวอล์คอิน</Button>}
       >
