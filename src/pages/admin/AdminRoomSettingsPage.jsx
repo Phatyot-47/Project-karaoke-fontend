@@ -4,7 +4,9 @@ import Input from '../../components/Input.jsx';
 import Select from '../../components/Select.jsx';
 import Button from '../../components/Button.jsx';
 import UploadSlot from '../../components/UploadSlot.jsx';
-import { Check, Plus } from '../../components/Icons.jsx';
+import { Plus } from '../../components/Icons.jsx';
+import SavedNotice from '../../components/SavedNotice.jsx';
+import useSavedFlag from '../../hooks/useSavedFlag.js';
 import api from '../../api/client.js';
 import { resolveRoomImage, ROOM_PHOTO_ASPECT_RATIO } from '../../utils/roomImage.js';
 
@@ -15,7 +17,7 @@ export default function AdminRoomSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saved, flashSaved, clearSaved } = useSavedFlag();
   const [adding, setAdding] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -40,7 +42,7 @@ export default function AdminRoomSettingsPage() {
   const selectRoom = (room) => {
     setSelectedId(room.room_id);
     setDraft(room);
-    setSaved(false);
+    clearSaved();
     setConfirmingDelete(false);
   };
 
@@ -98,8 +100,7 @@ export default function AdminRoomSettingsPage() {
       });
       setRooms((rs) => rs.map((r) => (r.room_id === updated.room_id ? updated : r)));
       setDraft(updated);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      flashSaved();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -209,11 +210,7 @@ export default function AdminRoomSettingsPage() {
             )}
           </div>
           <div style={{ flex: 1 }} />
-          {saved && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--green-700)', fontSize: 'var(--text-xs)', fontWeight: 600 }}>
-              <Check style={{ width: 16, height: 16 }} /> บันทึกสำเร็จ
-            </span>
-          )}
+          <SavedNotice show={saved} />
           <Button variant="primary" size="md" onClick={handleSave} disabled={saving}>
             {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
           </Button>

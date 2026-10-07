@@ -4,7 +4,8 @@ import Input from '../../components/Input.jsx';
 import Select from '../../components/Select.jsx';
 import Button from '../../components/Button.jsx';
 import UploadSlot from '../../components/UploadSlot.jsx';
-import { Check } from '../../components/Icons.jsx';
+import SavedNotice from '../../components/SavedNotice.jsx';
+import useSavedFlag from '../../hooks/useSavedFlag.js';
 import api from '../../api/client.js';
 import { DAY_LABELS } from '../../utils/format.js';
 
@@ -17,7 +18,7 @@ export default function AdminShopSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saved, flashSaved } = useSavedFlag();
 
   useEffect(() => {
     api.getShop()
@@ -53,8 +54,7 @@ export default function AdminShopSettingsPage() {
       if (hours.length) {
         await api.updateShopHours(hours.map((h) => ({ dayOfWeek: h.day_of_week, openHour: h.open_hour, closeHour: h.close_hour })));
       }
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      flashSaved();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -156,11 +156,7 @@ export default function AdminShopSettingsPage() {
       </Card>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
-        {saved && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--green-700)', fontSize: 'var(--text-xs)', fontWeight: 600 }}>
-            <Check style={{ width: 16, height: 16 }} /> บันทึกสำเร็จ
-          </span>
-        )}
+        <SavedNotice show={saved} />
         <Button variant="primary" size="md" onClick={handleSave} disabled={saving}>
           {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
         </Button>
