@@ -283,7 +283,7 @@ export default function AdminRoomTypesPage() {
               <div style={{ flex: 1 }} />
               <SavedNotice show={saved} />
               <Button variant="primary" onClick={handleSave} disabled={saving}>
-                {saving ? 'กำลังบันทึก...' : draft.type_id ? 'บันทึกประเภท' : 'เพิ่มประเภท'}
+                {saving ? 'กำลังบันทึก...' : draft.type_id ? 'บันทึกประเภท' : 'บันทึกประเภทใหม่'}
               </Button>
             </div>
           </>
