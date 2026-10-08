@@ -26,7 +26,7 @@ export function calculateBookingPrice({ pricePerHour, peakStartTime, peakSurchar
   }
 
   const totalHalfSlots = totalMinutes / 30; // จำนวนช่วง 30 นาที
-  const totalHours = totalMinutes / 60;     // จำนวนชั่วโมงรวม (สำหรับคำนวณ basePrice)
+  const totalHours = totalMinutes / 60; // จำนวนชั่วโมงรวม (สำหรับคำนวณ basePrice)
 
   // แปลง peakStartTime เป็นนาทีนับจากเที่ยงคืน — "24:00" = ไม่มีพีคไทม์เลย
   const [peakH, peakM] = (peakStartTime || '24:00').split(':').map(Number);

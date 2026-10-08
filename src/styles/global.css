@@ -167,7 +167,9 @@ button {
   border-left: none;
   border-right: none;
   font-weight: 500;
-  transition: color .15s ease, border-color .15s ease;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .topbar-nav-item:hover {
@@ -192,7 +194,9 @@ button {
   cursor: pointer;
   background: var(--surface-card);
   color: var(--text-strong);
-  transition: background .15s ease, border-color .15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
   flex-shrink: 0;
 }
 
@@ -278,7 +282,11 @@ button {
   cursor: pointer;
   padding: 0 16px;
   height: 42px;
-  transition: background .15s ease, border-color .15s ease, opacity .15s ease, transform .1s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease,
+    transform 0.1s ease;
   white-space: nowrap;
   line-height: 1;
 }
@@ -293,7 +301,7 @@ button {
 }
 
 .btn:disabled {
-  opacity: .5;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -383,7 +391,9 @@ button {
   justify-content: center;
   cursor: pointer;
   color: var(--text-body);
-  transition: background .15s ease, color .15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
   flex-shrink: 0;
 }
 
@@ -421,7 +431,9 @@ button {
   font-size: var(--text-sm);
   padding: 0 14px;
   font-family: inherit;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .field::placeholder {
@@ -632,7 +644,7 @@ button {
   font-size: var(--text-xs);
   cursor: pointer;
   color: var(--text-body);
-  transition: all .12s ease;
+  transition: all 0.12s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -677,7 +689,9 @@ button {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width .2s ease, transform .2s ease;
+  transition:
+    width 0.2s ease,
+    transform 0.2s ease;
   z-index: 30;
 }
 
@@ -749,7 +763,7 @@ button {
   font-size: var(--text-sm);
   font-weight: 500;
   text-align: left;
-  transition: background .15s ease;
+  transition: background 0.15s ease;
 }
 
 .admin-nav-item svg {
@@ -763,7 +777,7 @@ button {
 }
 
 .admin-nav-item.active {
-  background: rgba(255, 255, 255, 0.20);
+  background: rgba(255, 255, 255, 0.2);
   font-weight: 700;
 }
 
@@ -996,7 +1010,7 @@ button {
   color: var(--text-body);
   font-weight: 500;
   font-size: var(--text-sm);
-  transition: background .12s ease;
+  transition: background 0.12s ease;
 }
 
 .room-settings-list-item:hover {
@@ -1035,7 +1049,7 @@ button {
   object-fit: cover;
 }
 
-.upload-slot>input {
+.upload-slot > input {
   position: absolute;
   inset: 0;
   opacity: 0;

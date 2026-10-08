@@ -17,10 +17,18 @@ export function AuthProvider({ children }) {
   // อ่านข้อมูลจาก localStorage ตอน mount ครั้งแรก (lazy initializer)
   // ใช้ try/catch ป้องกัน JSON.parse crash กรณีข้อมูลใน storage เสียหาย
   const [customer, setCustomer] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(CUSTOMER_KEY)) || null; } catch { return null; }
+    try {
+      return JSON.parse(localStorage.getItem(CUSTOMER_KEY)) || null;
+    } catch {
+      return null;
+    }
   });
   const [admin, setAdmin] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(ADMIN_KEY)) || null; } catch { return null; }
+    try {
+      return JSON.parse(localStorage.getItem(ADMIN_KEY)) || null;
+    } catch {
+      return null;
+    }
   });
 
   // เขียน localStorage ทันทีตอน login/logout (ไม่รอ useEffect) — token ต้องพร้อมก่อนหน้าถัดไปเริ่มเรียก API

@@ -1,3 +1,4 @@
+// หน้าแอดมิน "ตั้งค่าห้อง" (/admin/room-settings) — เพิ่ม/แก้ไข/ลบห้อง เปลี่ยนราคาและรูปห้อง
 import { useEffect, useState } from 'react';
 import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';
@@ -24,7 +25,8 @@ export default function AdminRoomSettingsPage() {
 
   const load = () => {
     setLoading(true);
-    api.listAdminRooms()
+    api
+      .listAdminRooms()
       .then((data) => {
         setRooms(data);
         if (data.length) {
@@ -114,7 +116,11 @@ export default function AdminRoomSettingsPage() {
     <div className="admin-grid-split" style={{ maxWidth: 1200, margin: '0 auto' }}>
       <Card
         title={`ห้องทั้งหมด (${rooms.length} ห้อง)`}
-        actions={<Button variant="primary" size="sm" iconLeft={<Plus />} onClick={handleAddRoom} disabled={adding}>เพิ่มห้อง</Button>}
+        actions={
+          <Button variant="primary" size="sm" iconLeft={<Plus />} onClick={handleAddRoom} disabled={adding}>
+            เพิ่มห้อง
+          </Button>
+        }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {rooms.map((r) => (
@@ -127,7 +133,11 @@ export default function AdminRoomSettingsPage() {
               {r.room_name}
             </button>
           ))}
-          {!rooms.length && <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>ยังไม่มีห้อง กดปุ่ม "เพิ่มห้อง" เพื่อเริ่มต้น</p>}
+          {!rooms.length && (
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>
+              ยังไม่มีห้อง กดปุ่ม "เพิ่มห้อง" เพื่อเริ่มต้น
+            </p>
+          )}
         </div>
       </Card>
 
@@ -135,87 +145,117 @@ export default function AdminRoomSettingsPage() {
         {error && <div className="field-error">{error}</div>}
 
         {!draft ? (
-          <Card><p style={{ color: 'var(--text-muted)' }}>เลือกห้องทางซ้าย หรือกดปุ่ม "เพิ่มห้อง" เพื่อเริ่มตั้งค่าห้องใหม่</p></Card>
+          <Card>
+            <p style={{ color: 'var(--text-muted)' }}>
+              เลือกห้องทางซ้าย หรือกดปุ่ม "เพิ่มห้อง" เพื่อเริ่มตั้งค่าห้องใหม่
+            </p>
+          </Card>
         ) : (
-        <>
-        <Card title="ข้อมูลพื้นฐาน">
-          <div className="admin-form-2col">
-            <div style={{ gridColumn: '1 / -1' }}>
-              <Input label="ชื่อห้อง" value={draft.room_name} onChange={setField('room_name')} />
-            </div>
-            <Select label="ขนาดห้อง" value={draft.size} onChange={setField('size')}>
-              <option value="S">S — เล็ก</option>
-              <option value="M">M — กลาง</option>
-              <option value="L">L — ใหญ่</option>
-              <option value="XL">XL — ใหญ่พิเศษ</option>
-            </Select>
-            <Input label="ความจุ (คน)" type="number" value={draft.capacity} onChange={setField('capacity')} />
-            <Input label="ธีมห้อง" placeholder="เช่น One Piece, สงกรานต์" value={draft.theme ?? ''} onChange={setField('theme')} />
-            <Select
-              label="สถานะห้อง"
-              value={draft.is_active ? 'open' : 'closed'}
-              onChange={(e) => setDraft((d) => ({ ...d, is_active: e.target.value === 'open' }))}
+          <>
+            <Card title="ข้อมูลพื้นฐาน">
+              <div className="admin-form-2col">
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <Input label="ชื่อห้อง" value={draft.room_name} onChange={setField('room_name')} />
+                </div>
+                <Select label="ขนาดห้อง" value={draft.size} onChange={setField('size')}>
+                  <option value="S">S — เล็ก</option>
+                  <option value="M">M — กลาง</option>
+                  <option value="L">L — ใหญ่</option>
+                  <option value="XL">XL — ใหญ่พิเศษ</option>
+                </Select>
+                <Input label="ความจุ (คน)" type="number" value={draft.capacity} onChange={setField('capacity')} />
+                <Input
+                  label="ธีมห้อง"
+                  placeholder="เช่น One Piece, สงกรานต์"
+                  value={draft.theme ?? ''}
+                  onChange={setField('theme')}
+                />
+                <Select
+                  label="สถานะห้อง"
+                  value={draft.is_active ? 'open' : 'closed'}
+                  onChange={(e) => setDraft((d) => ({ ...d, is_active: e.target.value === 'open' }))}
+                >
+                  <option value="open">เปิดให้จอง</option>
+                  <option value="closed">ปิดให้บริการชั่วคราว</option>
+                </Select>
+              </div>
+            </Card>
+
+            <Card title="ราคา">
+              <div style={{ maxWidth: 280, width: '100%' }}>
+                <Input
+                  label="ราคาต่อชั่วโมง (บาท)"
+                  type="number"
+                  value={draft.price_per_hour}
+                  onChange={setField('price_per_hour')}
+                />
+              </div>
+            </Card>
+
+            <Card title="หมายเหตุห้อง">
+              <div className="field-wrap">
+                <label className="field-label" htmlFor="room-description">
+                  หมายเหตุ
+                </label>
+                <textarea
+                  id="room-description"
+                  className="field field-textarea"
+                  placeholder="เช่น ห้องธีมอวกาศ, สูบบุหรี่ได้, มีคาราโอเกะจอ 4K"
+                  value={draft.description ?? ''}
+                  onChange={setField('description')}
+                  maxLength={300}
+                />
+              </div>
+            </Card>
+
+            <Card title="รูปภาพห้อง">
+              <div style={{ width: '100%', maxWidth: 480 }}>
+                <UploadSlot
+                  key={selectedId}
+                  placeholder="อัปโหลดรูปห้อง"
+                  value={
+                    draft.image_url && draft.image_url.startsWith('data:') ? draft.image_url : resolveRoomImage(draft)
+                  }
+                  onChange={(url) => setDraft((d) => ({ ...d, image_url: url }))}
+                  height={200}
+                  cropAspectRatio={ROOM_PHOTO_ASPECT_RATIO}
+                />
+              </div>
+            </Card>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
             >
-              <option value="open">เปิดให้จอง</option>
-              <option value="closed">ปิดให้บริการชั่วคราว</option>
-            </Select>
-          </div>
-        </Card>
-
-        <Card title="ราคา">
-          <div style={{ maxWidth: 280, width: '100%' }}>
-            <Input label="ราคาต่อชั่วโมง (บาท)" type="number" value={draft.price_per_hour} onChange={setField('price_per_hour')} />
-          </div>
-        </Card>
-
-        <Card title="หมายเหตุห้อง">
-          <div className="field-wrap">
-            <label className="field-label" htmlFor="room-description">หมายเหตุ</label>
-            <textarea
-              id="room-description"
-              className="field field-textarea"
-              placeholder="เช่น ห้องธีมอวกาศ, สูบบุหรี่ได้, มีคาราโอเกะจอ 4K"
-              value={draft.description ?? ''}
-              onChange={setField('description')}
-              maxLength={300}
-            />
-          </div>
-        </Card>
-
-        <Card title="รูปภาพห้อง">
-          <div style={{ width: '100%', maxWidth: 480 }}>
-            <UploadSlot
-              key={selectedId}
-              placeholder="อัปโหลดรูปห้อง"
-              value={draft.image_url && draft.image_url.startsWith('data:') ? draft.image_url : resolveRoomImage(draft)}
-              onChange={(url) => setDraft((d) => ({ ...d, image_url: url }))}
-              height={200}
-              cropAspectRatio={ROOM_PHOTO_ASPECT_RATIO}
-            />
-          </div>
-        </Card>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {!confirmingDelete ? (
-              <Button variant="danger" size="sm" onClick={() => setConfirmingDelete(true)}>ลบห้องนี้</Button>
-            ) : (
-              <>
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--red-600)' }}>ยืนยันลบห้องนี้?</span>
-                <Button variant="outline" size="sm" onClick={() => setConfirmingDelete(false)}>ยกเลิก</Button>
-                <Button variant="danger" size="sm" onClick={handleDeleteRoom} disabled={deleting}>
-                  {deleting ? 'กำลังลบ...' : 'ยืนยันลบ'}
-                </Button>
-              </>
-            )}
-          </div>
-          <div style={{ flex: 1 }} />
-          <SavedNotice show={saved} />
-          <Button variant="primary" size="md" onClick={handleSave} disabled={saving}>
-            {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
-          </Button>
-        </div>
-        </>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {!confirmingDelete ? (
+                  <Button variant="danger" size="sm" onClick={() => setConfirmingDelete(true)}>
+                    ลบห้องนี้
+                  </Button>
+                ) : (
+                  <>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--red-600)' }}>ยืนยันลบห้องนี้?</span>
+                    <Button variant="outline" size="sm" onClick={() => setConfirmingDelete(false)}>
+                      ยกเลิก
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={handleDeleteRoom} disabled={deleting}>
+                      {deleting ? 'กำลังลบ...' : 'ยืนยันลบ'}
+                    </Button>
+                  </>
+                )}
+              </div>
+              <div style={{ flex: 1 }} />
+              <SavedNotice show={saved} />
+              <Button variant="primary" size="md" onClick={handleSave} disabled={saving}>
+                {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
+              </Button>
+            </div>
+          </>
         )}
       </div>
     </div>

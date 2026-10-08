@@ -15,7 +15,11 @@ const SESSIONS = {
 function currentSession() {
   const session = window.location.pathname.startsWith('/admin') ? SESSIONS.admin : SESSIONS.customer;
   let token = null;
-  try { token = JSON.parse(localStorage.getItem(session.key))?.token || null; } catch { /* ข้อมูลเสีย = ไม่มี token */ }
+  try {
+    token = JSON.parse(localStorage.getItem(session.key))?.token || null;
+  } catch {
+    /* ข้อมูลเสีย = ไม่มี token */
+  }
   return { ...session, token };
 }
 
@@ -36,7 +40,7 @@ async function request(path, { method = 'GET', body, params } = {}) {
   // สร้าง query string จาก params — ข้ามค่าที่เป็น undefined, null, หรือ string ว่าง
   if (params) {
     const qs = new URLSearchParams(
-      Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''),
     ).toString();
     if (qs) url += `?${qs}`;
   }
@@ -108,13 +112,16 @@ const api = {
 
   // ---- auth: ลงทะเบียน/ล็อกอินลูกค้า + ล็อกอินแอดมิน ----
   // ผลลัพธ์ = ข้อมูลผู้ใช้ + token / login บัญชีเดิมที่ยังไม่มีรหัสผ่านจะได้ error.data.code = 'PASSWORD_NOT_SET'
-  registerCustomer: (name, phone, password) => request('/auth/register', { method: 'POST', body: { name, phone, password } }),
+  registerCustomer: (name, phone, password) =>
+    request('/auth/register', { method: 'POST', body: { name, phone, password } }),
   loginCustomer: (phone, password) => request('/auth/login', { method: 'POST', body: { phone, password } }),
-  setFirstPassword: (phone, name, password) => request('/auth/set-password', { method: 'POST', body: { phone, name, password } }),
+  setFirstPassword: (phone, name, password) =>
+    request('/auth/set-password', { method: 'POST', body: { phone, name, password } }),
   loginAdmin: (username, password) => request('/auth/admin-login', { method: 'POST', body: { username, password } }),
 
   // ---- ข้อมูลส่วนตัวลูกค้า ----
-  updateProfile: (userId, name, phone, avatarUrl) => request(`/users/${userId}`, { method: 'PATCH', body: { name, phone, avatarUrl } }),
+  updateProfile: (userId, name, phone, avatarUrl) =>
+    request(`/users/${userId}`, { method: 'PATCH', body: { name, phone, avatarUrl } }),
   changePassword: (userId, currentPassword, newPassword) =>
     request(`/users/${userId}/password`, { method: 'PATCH', body: { currentPassword, newPassword } }),
 
@@ -140,7 +147,8 @@ const api = {
   confirmBooking: (id) => request(`/admin/bookings/${id}/confirm`, { method: 'PATCH' }),
   rejectBooking: (id, reason) => request(`/admin/bookings/${id}/reject`, { method: 'PATCH', body: { reason } }),
   markNoShow: (id, reason) => request(`/admin/bookings/${id}/no-show`, { method: 'PATCH', body: { reason } }),
-  changeBookingRoom: (id, roomId) => request(`/admin/bookings/${id}/change-room`, { method: 'PATCH', body: { roomId } }),
+  changeBookingRoom: (id, roomId) =>
+    request(`/admin/bookings/${id}/change-room`, { method: 'PATCH', body: { roomId } }),
 
   // ---- แอดมิน: Check-in / ต่อเวลา / Check-out ----
   checkIn: (id) => request(`/admin/bookings/${id}/check-in`, { method: 'PATCH' }),

@@ -3,14 +3,15 @@
 หน้าบ้าน (React + Vite) ของระบบจองห้องคาราโอเกะ Gens Karaoke & Board Game สร้างจากดีไซน์ต้นฉบับ
 (`Gens Karaoke.dc.html`) ต่อกับ `gens-karaoke-backend` (Node.js + Express + PostgreSQL) ที่มีอยู่แล้ว
 
-
 ## ติดตั้งและรัน
 
 ```bash
-cd gens-karaoke-frontend
+cd Project-karaoke-fontend
 npm install
 cp .env.example .env   # ตั้ง VITE_API_BASE_URL ให้ตรงกับ backend (default http://localhost:4000/api)
 npm run dev            # เปิดที่ http://localhost:5173
+npm run build          # build ไฟล์จริงไว้ที่ dist/
+npm run format         # จัดรูปแบบโค้ดด้วย Prettier
 ```
 
 ต้องรัน `gens-karaoke-backend` (npm run dev ที่ port 4000) คู่กันไว้ด้วย ไม่งั้นหน้าเว็บจะโหลดข้อมูลไม่ได้
@@ -18,6 +19,7 @@ npm run dev            # เปิดที่ http://localhost:5173
 ## โครงสร้างหน้าจอ
 
 **ฝั่งลูกค้า**
+
 - `/login`, `/register` — เข้าสู่ระบบ/สมัครสมาชิกด้วยเบอร์โทร
 - `/` — เลือกห้อง (filter ขนาดห้อง, ค้นหาชื่อห้อง)
 - `/book/:roomId` — เลือกเวลาแบบคลิก slot ทีละ 30 นาที, คำนวณราคาพรีวิว, กดยืนยันจะสร้าง booking จริงที่ backend
@@ -26,6 +28,7 @@ npm run dev            # เปิดที่ http://localhost:5173
 - `/history` — ประวัติการจอง + ยกเลิก
 
 **ฝั่งแอดมิน**
+
 - `/admin/login`
 - `/admin/bookings` — สรุปยอดวันนี้ + อนุมัติ/ปฏิเสธ + เพิ่มจองวอล์คอิน
 - `/admin/history` — ประวัติทุกสถานะ

@@ -49,7 +49,10 @@ export default function ProfilePage() {
 
       <Card style={{ marginTop: 20 }}>
         <form
-          onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
@@ -60,21 +63,50 @@ export default function ProfilePage() {
                 <UploadSlot
                   key={uploadKey}
                   placeholder="คลิกเพื่อเลือกรูป"
-                  onChange={(url) => { setAvatarUrl(url); setError(''); }}
+                  onChange={(url) => {
+                    setAvatarUrl(url);
+                    setError('');
+                  }}
                   height={110}
                   cropAspectRatio={1}
                 />
               </div>
               {avatarUrl && (
-                <Button variant="outline" size="sm" style={{ width: 'fit-content' }} onClick={() => { setAvatarUrl(''); setUploadKey((k) => k + 1); }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  style={{ width: 'fit-content' }}
+                  onClick={() => {
+                    setAvatarUrl('');
+                    setUploadKey((k) => k + 1);
+                  }}
+                >
                   ลบรูปโปรไฟล์
                 </Button>
               )}
-              <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)' }}>เลือกรูปแล้วกด "บันทึกข้อมูล" เพื่อยืนยัน</span>
+              <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)' }}>
+                เลือกรูปแล้วกด "บันทึกข้อมูล" เพื่อยืนยัน
+              </span>
             </div>
           </div>
-          <Input label="ชื่อ" placeholder="ชื่อ-นามสกุล" value={name} onChange={(e) => { setName(e.target.value); setError(''); }} />
-          <Input label="เบอร์โทรศัพท์" placeholder="08x-xxx-xxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '')); setError(''); }} />
+          <Input
+            label="ชื่อ"
+            placeholder="ชื่อ-นามสกุล"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setError('');
+            }}
+          />
+          <Input
+            label="เบอร์โทรศัพท์"
+            placeholder="08x-xxx-xxxx"
+            value={phone}
+            onChange={(e) => {
+              setPhone(e.target.value.replace(/\D/g, ''));
+              setError('');
+            }}
+          />
           {error && <div className="field-error">{error}</div>}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
             <SavedNotice show={saved} />
@@ -98,17 +130,31 @@ function ChangePasswordCard({ userId }) {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const { saved, flashSaved } = useSavedFlag();
-  const clearError = (setter) => (e) => { setter(e.target.value); setError(''); };
+  const clearError = (setter) => (e) => {
+    setter(e.target.value);
+    setError('');
+  };
 
   const handleSubmit = async () => {
-    if (!current) { setError('กรุณากรอกรหัสผ่านเดิม'); return; }
-    if (next.length < 6) { setError('รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
-    if (next !== confirm) { setError('ยืนยันรหัสผ่านใหม่ไม่ตรงกัน'); return; }
+    if (!current) {
+      setError('กรุณากรอกรหัสผ่านเดิม');
+      return;
+    }
+    if (next.length < 6) {
+      setError('รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร');
+      return;
+    }
+    if (next !== confirm) {
+      setError('ยืนยันรหัสผ่านใหม่ไม่ตรงกัน');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
       await api.changePassword(userId, current, next);
-      setCurrent(''); setNext(''); setConfirm('');
+      setCurrent('');
+      setNext('');
+      setConfirm('');
       flashSaved();
     } catch (err) {
       setError(err.message);
@@ -120,13 +166,34 @@ function ChangePasswordCard({ userId }) {
   return (
     <Card style={{ marginTop: 20 }}>
       <form
-        onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
         style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
       >
         <span style={{ fontWeight: 700, color: 'var(--text-strong)' }}>เปลี่ยนรหัสผ่าน</span>
-        <Input label="รหัสผ่านเดิม" type="password" placeholder="รหัสผ่านปัจจุบัน" value={current} onChange={clearError(setCurrent)} />
-        <Input label="รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)" type="password" placeholder="รหัสผ่านใหม่" value={next} onChange={clearError(setNext)} />
-        <Input label="ยืนยันรหัสผ่านใหม่" type="password" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" value={confirm} onChange={clearError(setConfirm)} />
+        <Input
+          label="รหัสผ่านเดิม"
+          type="password"
+          placeholder="รหัสผ่านปัจจุบัน"
+          value={current}
+          onChange={clearError(setCurrent)}
+        />
+        <Input
+          label="รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)"
+          type="password"
+          placeholder="รหัสผ่านใหม่"
+          value={next}
+          onChange={clearError(setNext)}
+        />
+        <Input
+          label="ยืนยันรหัสผ่านใหม่"
+          type="password"
+          placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
+          value={confirm}
+          onChange={clearError(setConfirm)}
+        />
         {error && <div className="field-error">{error}</div>}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
           <SavedNotice show={saved} />

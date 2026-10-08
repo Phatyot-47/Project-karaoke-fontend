@@ -14,12 +14,35 @@ export function todayISODate() {
 
 // ชื่อเดือนภาษาไทย — index 0 = มกราคม
 const THAI_MONTHS = [
-  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
+  'มกราคม',
+  'กุมภาพันธ์',
+  'มีนาคม',
+  'เมษายน',
+  'พฤษภาคม',
+  'มิถุนายน',
+  'กรกฎาคม',
+  'สิงหาคม',
+  'กันยายน',
+  'ตุลาคม',
+  'พฤศจิกายน',
+  'ธันวาคม',
 ];
 
 // ชื่อเดือนภาษาไทยแบบย่อ — index 0 = ม.ค.
-const THAI_MONTHS_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const THAI_MONTHS_SHORT = [
+  'ม.ค.',
+  'ก.พ.',
+  'มี.ค.',
+  'เม.ย.',
+  'พ.ค.',
+  'มิ.ย.',
+  'ก.ค.',
+  'ส.ค.',
+  'ก.ย.',
+  'ต.ค.',
+  'พ.ย.',
+  'ธ.ค.',
+];
 
 /**
  * แปลงวันที่ ISO ("YYYY-MM-DD") เป็นรูปแบบไทย (เช่น "9 สิงหาคม 2569")
@@ -120,7 +143,7 @@ function bangkokNowParts() {
  */
 export function isSlotPastBangkok(dateISO, time, graceMinutes = PAST_SLOT_GRACE_MINUTES) {
   const now = bangkokNowParts();
-  if (dateISO < now.dateISO) return true;  // วันที่ผ่านไปแล้ว
+  if (dateISO < now.dateISO) return true; // วันที่ผ่านไปแล้ว
   if (dateISO > now.dateISO) return false; // วันในอนาคต
   // วันเดียวกัน → เปรียบเทียบนาทีของวัน (บวก grace)
   return timeToMinutes(time) + graceMinutes <= now.minutesOfDay;
@@ -149,22 +172,25 @@ export function addMinutesToDateTime(dateTimeStr, minutes) {
  * ใช้แสดงเป็น Tag แต่ละอัน เช่น ["ห้องธีมอวกาศ", "มีคาราโอเกะจอ 4K"]
  */
 export function roomNoteLines(description) {
-  return (description || '').split('\n').map((line) => line.trim()).filter(Boolean);
+  return (description || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 // Map สถานะการจอง → label ภาษาไทย + tone สีของ Tag component
 const BOOKING_STATUS_LABEL = {
-  pending:   { label: 'รอดำเนินการ',      tone: 'warning' },
-  confirmed: { label: 'กำลังดำเนินการ',   tone: 'info'    },
-  completed: { label: 'เสร็จสมบูรณ์',     tone: 'success' },
-  cancelled: { label: 'ยกเลิกแล้ว',       tone: 'danger'  },
-  no_show:   { label: 'ไม่มาใช้บริการ',   tone: 'danger'  },
+  pending: { label: 'รอดำเนินการ', tone: 'warning' },
+  confirmed: { label: 'กำลังดำเนินการ', tone: 'info' },
+  completed: { label: 'เสร็จสมบูรณ์', tone: 'success' },
+  cancelled: { label: 'ยกเลิกแล้ว', tone: 'danger' },
+  no_show: { label: 'ไม่มาใช้บริการ', tone: 'danger' },
 };
 
 // สถานะย่อยของ booking ที่ confirmed แล้ว — ดูจากรอบใช้บริการจริง (service_session) แบบเดียวกับหน้าอนุมัติการจอง
 const CHECKIN_STATUS_LABEL = {
-  waiting: { label: 'รอ Check-in',  tone: 'warning' },
-  in_use:  { label: 'กำลังใช้ห้อง', tone: 'info'    },
+  waiting: { label: 'รอ Check-in', tone: 'warning' },
+  in_use: { label: 'กำลังใช้ห้อง', tone: 'info' },
 };
 
 const NAIVE_DATETIME_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/;

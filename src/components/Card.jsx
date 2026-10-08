@@ -15,7 +15,10 @@ export default function Card({ title, subtitle, actions, pad = true, children, s
     <div className={`card ${className}`} style={style}>
       {/* แสดง header เฉพาะเมื่อมี title หรือ actions อย่างน้อยหนึ่งอย่าง */}
       {(title || actions) && (
-        <div className="card-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div
+          className="card-header"
+          style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}
+        >
           <div>
             {title && <div className="title">{title}</div>}
             {subtitle && <div className="subtitle">{subtitle}</div>}

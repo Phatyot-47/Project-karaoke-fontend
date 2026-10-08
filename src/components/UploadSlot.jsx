@@ -9,7 +9,13 @@ import ImageCropModal from './ImageCropModal.jsx';
  * cropAspectRatio (optional): ถ้าส่งมา จะเปิดโมดัลลาก/ซูมครอปรูปตามสัดส่วนนี้ก่อน
  * แล้วอัปโหลดเฉพาะไฟล์ที่ครอปแล้ว — ถ้าไม่ส่ง พฤติกรรมเดิมทุกประการ (ไม่กระทบจุดใช้งานอื่น)
  */
-export default function UploadSlot({ placeholder = 'คลิกเพื่อเลือกไฟล์', value, onChange, height = 182, cropAspectRatio }) {
+export default function UploadSlot({
+  placeholder = 'คลิกเพื่อเลือกไฟล์',
+  value,
+  onChange,
+  height = 182,
+  cropAspectRatio,
+}) {
   const inputRef = useRef(null);
   const [preview, setPreview] = useState(value || null);
   const [uploading, setUploading] = useState(false);
@@ -72,11 +78,25 @@ export default function UploadSlot({ placeholder = 'คลิกเพื่อ�
     <div className="upload-slot" style={{ height, width: '100%' }}>
       {preview ? <img src={preview} alt="" style={{ opacity: uploading ? 0.5 : 1 }} /> : <span>{placeholder}</span>}
       {uploading && <span style={{ position: 'absolute', zIndex: 1 }}>กำลังอัปโหลด...</span>}
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleFile} disabled={uploading || !!cropSrc} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={handleFile}
+        disabled={uploading || !!cropSrc}
+      />
       {error && (
         <span
           className="field-error"
-          style={{ position: 'absolute', bottom: 6, left: 6, right: 6, background: 'var(--surface-card)', padding: '2px 6px', borderRadius: 6 }}
+          style={{
+            position: 'absolute',
+            bottom: 6,
+            left: 6,
+            right: 6,
+            background: 'var(--surface-card)',
+            padding: '2px 6px',
+            borderRadius: 6,
+          }}
         >
           {error}
         </span>

@@ -1,3 +1,5 @@
+// หน้าแอดมิน "ตั้งค่าร้าน" (/admin/shop-settings) — ข้อมูลร้าน, บัญชีรับโอน/QR, พีคไทม์,
+// เวลาเปิด-ปิด และนโยบายมัดจำ/ยกเลิก
 import { useEffect, useState } from 'react';
 import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';
@@ -33,7 +35,8 @@ export default function AdminShopSettingsPage() {
   const { saved, flashSaved } = useSavedFlag();
 
   useEffect(() => {
-    api.getShop()
+    api
+      .getShop()
       .then((data) => {
         setForm(data);
         setHours(data.hours || []);
@@ -75,7 +78,9 @@ export default function AdminShopSettingsPage() {
         setSavedPolicy(toPolicyForm(newPolicy));
       }
       if (hours.length) {
-        await api.updateShopHours(hours.map((h) => ({ dayOfWeek: h.day_of_week, openHour: h.open_hour, closeHour: h.close_hour })));
+        await api.updateShopHours(
+          hours.map((h) => ({ dayOfWeek: h.day_of_week, openHour: h.open_hour, closeHour: h.close_hour })),
+        );
       }
       flashSaved();
     } catch (err) {
@@ -107,7 +112,7 @@ export default function AdminShopSettingsPage() {
         </div>
       </Card>
 
-      <Card title="แผนผังห้องของร้าน" subtitle="แสดงในหน้าเลือกห้องของลูกค้า (ปุ่ม &quot;ดูแผนผังห้อง&quot;)">
+      <Card title="แผนผังห้องของร้าน" subtitle='แสดงในหน้าเลือกห้องของลูกค้า (ปุ่ม "ดูแผนผังห้อง")'>
         <div style={{ width: '100%', maxWidth: 480 }}>
           <UploadSlot
             placeholder="อัปโหลดรูปแผนผังห้อง"
@@ -122,30 +127,59 @@ export default function AdminShopSettingsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {sortedHours.map((d) => (
             <div key={d.day_of_week} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ minWidth: 80, width: 90, fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-strong)', flex: 'none' }}>
+              <span
+                style={{
+                  minWidth: 80,
+                  width: 90,
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 600,
+                  color: 'var(--text-strong)',
+                  flex: 'none',
+                }}
+              >
                 {DAY_LABELS[d.day_of_week] ?? `วันที่ ${d.day_of_week}`}
               </span>
               <div style={{ flex: '1 1 110px', minWidth: 90 }}>
                 <Select value={d.open_hour} onChange={setHourField(d.day_of_week, 'open_hour')}>
-                  {HOUR_OPTIONS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                  {HOUR_OPTIONS.map((h) => (
+                    <option key={h} value={h}>
+                      {h}:00
+                    </option>
+                  ))}
                 </Select>
               </div>
               <span style={{ color: 'var(--text-muted)' }}>—</span>
               <div style={{ flex: '1 1 110px', minWidth: 90 }}>
                 <Select value={d.close_hour} onChange={setHourField(d.day_of_week, 'close_hour')}>
-                  {HOUR_OPTIONS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                  {HOUR_OPTIONS.map((h) => (
+                    <option key={h} value={h}>
+                      {h}:00
+                    </option>
+                  ))}
                 </Select>
               </div>
             </div>
           ))}
-          {!sortedHours.length && <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>ยังไม่มีข้อมูลเวลาเปิด-ปิด</p>}
+          {!sortedHours.length && (
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>ยังไม่มีข้อมูลเวลาเปิด-ปิด</p>
+          )}
         </div>
       </Card>
 
       <Card title="นโยบายมัดจำและการยกเลิก" subtitle="มีผลกับการจองใหม่ — การจองที่ทำไปแล้วใช้นโยบาย ณ ตอนที่จอง">
         <div className="admin-form-2col">
-          <Input label="มัดจำ (% ของยอดรวม)" type="number" value={policy.depositPercent} onChange={setPolicyField('depositPercent')} />
-          <Input label="ยกเลิกได้ล่วงหน้า (ชั่วโมง)" type="number" value={policy.cancelHoursBefore} onChange={setPolicyField('cancelHoursBefore')} />
+          <Input
+            label="มัดจำ (% ของยอดรวม)"
+            type="number"
+            value={policy.depositPercent}
+            onChange={setPolicyField('depositPercent')}
+          />
+          <Input
+            label="ยกเลิกได้ล่วงหน้า (ชั่วโมง)"
+            type="number"
+            value={policy.cancelHoursBefore}
+            onChange={setPolicyField('cancelHoursBefore')}
+          />
           <Input
             label="แก้ไขการจองได้ล่วงหน้า (ชั่วโมง)"
             type="number"
@@ -155,25 +189,49 @@ export default function AdminShopSettingsPage() {
           />
           <div />
           <div style={{ gridColumn: '1 / -1' }}>
-            <Input label="นโยบายการคืนเงินมัดจำ" value={policy.refundPolicyDesc} onChange={setPolicyField('refundPolicyDesc')} placeholder="เช่น มัดจำไม่สามารถขอคืนได้ทุกกรณี" />
+            <Input
+              label="นโยบายการคืนเงินมัดจำ"
+              value={policy.refundPolicyDesc}
+              onChange={setPolicyField('refundPolicyDesc')}
+              placeholder="เช่น มัดจำไม่สามารถขอคืนได้ทุกกรณี"
+            />
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
-            <Input label="นโยบายกรณีไม่มาใช้บริการ (No-show)" value={policy.noShowPolicyDesc} onChange={setPolicyField('noShowPolicyDesc')} placeholder="เช่น ไม่มาตามเวลาที่จอง ร้านไม่คืนเงินมัดจำ" />
+            <Input
+              label="นโยบายกรณีไม่มาใช้บริการ (No-show)"
+              value={policy.noShowPolicyDesc}
+              onChange={setPolicyField('noShowPolicyDesc')}
+              placeholder="เช่น ไม่มาตามเวลาที่จอง ร้านไม่คืนเงินมัดจำ"
+            />
           </div>
         </div>
       </Card>
 
       <Card title="พีคไทม์" subtitle="ช่วงเวลาที่คิดค่าบริการเพิ่ม">
         <div className="admin-form-2col">
-          <Input label="เริ่มพีคไทม์เวลา (HH:MM)" value={form.peak_start_time || ''} onChange={setField('peak_start_time')} placeholder="18:00" />
-          <Input label="ค่าบริการเพิ่ม (บาท/ชม.)" type="number" value={form.peak_surcharge || ''} onChange={setField('peak_surcharge')} />
+          <Input
+            label="เริ่มพีคไทม์เวลา (HH:MM)"
+            value={form.peak_start_time || ''}
+            onChange={setField('peak_start_time')}
+            placeholder="18:00"
+          />
+          <Input
+            label="ค่าบริการเพิ่ม (บาท/ชม.)"
+            type="number"
+            value={form.peak_surcharge || ''}
+            onChange={setField('peak_surcharge')}
+          />
         </div>
       </Card>
 
       <Card title="บัญชีธนาคารสำหรับรับเงิน" subtitle="ใช้แสดงในหน้าชำระมัดจำของลูกค้า">
         <div className="admin-form-2col">
           <Select label="ธนาคาร" value={form.bank_name || ''} onChange={setField('bank_name')}>
-            {BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
+            {BANKS.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
           </Select>
           <Input label="เลขบัญชี" value={form.bank_account_no || ''} onChange={setField('bank_account_no')} />
           <div style={{ gridColumn: '1 / -1' }}>

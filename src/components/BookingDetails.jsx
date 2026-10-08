@@ -17,7 +17,16 @@ export function CancelReason({ booking }) {
   const label = { cancelled: 'เหตุผลที่ยกเลิก', no_show: 'ไม่มาใช้บริการ' }[booking.booking_status];
   if (!label || !booking.cancel_reason) return null;
   return (
-    <div style={{ marginTop: 8, fontSize: 'var(--text-2xs)', color: 'var(--red-600)', background: 'var(--red-50)', borderRadius: 6, padding: '4px 8px' }}>
+    <div
+      style={{
+        marginTop: 8,
+        fontSize: 'var(--text-2xs)',
+        color: 'var(--red-600)',
+        background: 'var(--red-50)',
+        borderRadius: 6,
+        padding: '4px 8px',
+      }}
+    >
       {label}: {booking.cancel_reason}
     </div>
   );
@@ -29,7 +38,14 @@ export function SlipImage({ src }) {
     <img
       src={src}
       alt="สลิปเงินมัดจำ"
-      style={{ width: 120, height: 120, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border-default)', background: '#fff' }}
+      style={{
+        width: 120,
+        height: 120,
+        objectFit: 'contain',
+        borderRadius: 6,
+        border: '1px solid var(--border-default)',
+        background: '#fff',
+      }}
     />
   );
 }
