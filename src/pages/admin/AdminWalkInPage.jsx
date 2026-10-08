@@ -37,7 +37,8 @@ export default function AdminWalkInPage() {
     Promise.all([api.getTodayBookings(), api.listAdminRooms(), api.getShop()])
       .then(([today, roomList, shopData]) => {
         setBookings(today.bookings);
-        setRooms(roomList);
+        // วอล์คอินจองได้เฉพาะห้องที่เปิดให้บริการ (backend ก็ตรวจซ้ำอีกชั้น)
+        setRooms(roomList.filter((r) => r.is_active));
         setShop(shopData);
       })
       .catch((err) => setError(err.message))
