@@ -1,3 +1,4 @@
+// หน้าแจ้งผลหลังส่งสลิปมัดจำสำเร็จ (/success)
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client.js';

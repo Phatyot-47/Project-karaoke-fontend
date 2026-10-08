@@ -1,3 +1,4 @@
+// หน้าเข้าสู่ระบบแอดมิน (/admin/login) — username + password
 import { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Card from '../../components/Card.jsx';

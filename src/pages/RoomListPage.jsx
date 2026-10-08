@@ -1,3 +1,4 @@
+// หน้าแรกของลูกค้า "เลือกห้องคาราโอเกะ" (/) — กรองตามขนาด และค้นหาห้องว่างตามเวลา
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card.jsx';

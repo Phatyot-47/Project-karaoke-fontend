@@ -1,3 +1,4 @@
+// หน้าต่างครอปรูป (ลาก/ซูม) ก่อนอัปโหลด — ใช้กับรูปห้องและรูปโปรไฟล์
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';

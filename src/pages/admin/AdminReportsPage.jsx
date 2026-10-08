@@ -1,3 +1,4 @@
+// หน้าแอดมิน "รายงาน" (/admin/reports) — รายได้รายวัน/สัปดาห์/เดือน และแยกตามห้อง
 import { useEffect, useMemo, useState } from 'react';
 import Card from '../../components/Card.jsx';
 import Tabs from '../../components/Tabs.jsx';

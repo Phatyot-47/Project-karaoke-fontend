@@ -1,3 +1,5 @@
+// หน้าแอดมิน "ตั้งค่าร้าน" (/admin/shop-settings) — ข้อมูลร้าน, บัญชีรับโอน/QR, พีคไทม์,
+// เวลาเปิด-ปิด และนโยบายมัดจำ/ยกเลิก
 import { useEffect, useState } from 'react';
 import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';

@@ -1,3 +1,4 @@
+// หน้าแอดมิน "ประวัติการจอง" (/admin/history) — รายการจองทุกสถานะ
 import { useEffect, useState } from 'react';
 import Card from '../../components/Card.jsx';
 import Tag from '../../components/Tag.jsx';

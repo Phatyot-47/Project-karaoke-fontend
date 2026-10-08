@@ -1,3 +1,4 @@
+// หน้าแอดมิน "ตั้งค่าห้อง" (/admin/room-settings) — เพิ่ม/แก้ไข/ลบห้อง เปลี่ยนราคาและรูปห้อง
 import { useEffect, useState } from 'react';
 import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';

@@ -1,3 +1,4 @@
+// หน้า "ประวัติการจอง" ของลูกค้า (/history) — ดูสถานะ, ชำระมัดจำต่อ, แก้ไข และยกเลิกการจอง
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card.jsx';

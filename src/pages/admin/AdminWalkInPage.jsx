@@ -1,3 +1,4 @@
+// หน้าแอดมิน "จองวอล์คอิน" (/admin/walkin) — ดูสถานะห้องตอนนี้ และจองให้ลูกค้าหน้าร้าน
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card.jsx';

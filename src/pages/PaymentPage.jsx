@@ -1,3 +1,4 @@
+// หน้า "ยืนยันและชำระมัดจำ" (/pay/:bookingId) — แสดง QR ร้าน นับถอยหลัง 5 นาที และแนบสลิป
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Card from '../components/Card.jsx';

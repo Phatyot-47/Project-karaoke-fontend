@@ -1,3 +1,5 @@
+// หน้าแอดมิน "อนุมัติการจอง" (/admin/bookings) — การ์ดสรุปวันนี้ + จัดการแต่ละรายการ
+// (ยืนยัน/ปฏิเสธ, ตรวจสลิป, ย้ายห้อง, Check-in, ต่อเวลา, Check-out, ไม่มาใช้บริการ)
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import Card from '../../components/Card.jsx';
