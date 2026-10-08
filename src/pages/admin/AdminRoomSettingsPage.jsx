@@ -156,9 +156,9 @@ export default function AdminRoomSettingsPage() {
             <thead>
               <tr>
                 <th>ประเภท</th>
-                <th>ความจุ</th>
+                <th className="hide-mobile">ความจุ</th>
                 <th>ราคาห้องธรรมดา/ชม.</th>
-                <th>มีอยู่แล้ว</th>
+                <th className="hide-mobile">มีอยู่แล้ว</th>
                 <th style={{ width: 130 }}>จำนวนที่จะเพิ่ม</th>
               </tr>
             </thead>
@@ -168,9 +168,9 @@ export default function AdminRoomSettingsPage() {
                   <td>
                     <strong>{t.code}</strong> — {t.name}
                   </td>
-                  <td>{capacityLabel(t).replace('ความจุ ', '')}</td>
+                  <td className="hide-mobile">{capacityLabel(t).replace('ความจุ ', '')}</td>
                   <td>{money(t.base_price_per_hour)} บาท</td>
-                  <td>{t.room_count} ห้อง</td>
+                  <td className="hide-mobile">{t.room_count} ห้อง</td>
                   <td>
                     <input
                       className="field"

@@ -1067,6 +1067,13 @@ button {
   vertical-align: middle;
 }
 
+/* จอมือถือ: ซ่อนคอลัมน์รอง ให้ช่องกรอกข้อมูลอยู่ในจอโดยไม่ต้องเลื่อนตาราง */
+@media (max-width: 640px) {
+  .simple-table .hide-mobile {
+    display: none;
+  }
+}
+
 .upload-slot {
   border: 2px dashed var(--border-default);
   border-radius: var(--radius-md);
