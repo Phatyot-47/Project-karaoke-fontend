@@ -6,20 +6,20 @@
 
 // Map ชื่อห้อง (lowercase) → asset path
 const NAME_TO_ASSET = {
-  'one piece':      '/assets/room-one-piece.png',
-  'song kran':      '/assets/room-songkran.png',
-  'songkran':       '/assets/room-songkran.png',
-  'small s':        '/assets/room-small-s.jpg',
-  'medium m':       '/assets/room-medium-m.png',
-  'large l':        '/assets/room-large-l.png',
+  'one piece': '/assets/room-one-piece.png',
+  'song kran': '/assets/room-songkran.png',
+  songkran: '/assets/room-songkran.png',
+  'small s': '/assets/room-small-s.jpg',
+  'medium m': '/assets/room-medium-m.png',
+  'large l': '/assets/room-large-l.png',
   'extra large xl': '/assets/room-xl.png',
 };
 
 // Map ขนาดห้อง (S/M/L/XL) → asset path — ใช้เมื่อหาชื่อไม่ตรงใน NAME_TO_ASSET
 const SIZE_TO_ASSET = {
-  S:  '/assets/room-small-s.jpg',
-  M:  '/assets/room-medium-m.png',
-  L:  '/assets/room-large-l.png',
+  S: '/assets/room-small-s.jpg',
+  M: '/assets/room-medium-m.png',
+  L: '/assets/room-large-l.png',
   XL: '/assets/room-xl.png',
 };
 
@@ -41,9 +41,9 @@ export function resolveRoomImage(room) {
 
 // Label ความจุห้องแยกตามขนาด — ใช้แสดงใน RoomListPage และ BookingPage
 export const SIZE_CAPACITY_LABEL = {
-  S:  'ความจุ 1-3 คน',
-  M:  'ความจุ 3-5 คน',
-  L:  'ความจุ 5-8 คน',
+  S: 'ความจุ 1-3 คน',
+  M: 'ความจุ 3-5 คน',
+  L: 'ความจุ 5-8 คน',
   XL: 'ความจุ 8-12 คน',
 };
 

@@ -6,7 +6,15 @@ import Avatar from '../components/Avatar.jsx';
 import IconButton from '../components/IconButton.jsx';
 import api from '../api/client.js';
 import {
-  Menu, ClipboardCheck, HistoryIcon, Store, DoorOpen, CalendarIcon, LogOut, Plus, X,
+  Menu,
+  ClipboardCheck,
+  HistoryIcon,
+  Store,
+  DoorOpen,
+  CalendarIcon,
+  LogOut,
+  Plus,
+  X,
 } from '../components/Icons.jsx';
 
 // Map path → ชื่อหน้าที่แสดงใน header — เพิ่ม path ใหม่ที่นี่ถ้ามีหน้าเพิ่ม
@@ -46,10 +54,15 @@ export default function AdminLayout() {
   // ใช้ alive flag ป้องกัน setState หลัง component unmount (React warning)
   useEffect(() => {
     let alive = true;
-    api.getTodayBookings()
-      .then((data) => { if (alive) updateBadgeFromStats(data?.stats); })
+    api
+      .getTodayBookings()
+      .then((data) => {
+        if (alive) updateBadgeFromStats(data?.stats);
+      })
       .catch(() => {}); // ไม่แสดง error ถ้าโหลด badge ไม่สำเร็จ — ไม่ critical
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [location.pathname]);
 
   // ปิด mobile sidebar อัตโนมัติเมื่อ route เปลี่ยน (ผู้ใช้เลือก menu item แล้ว)
@@ -83,13 +96,7 @@ export default function AdminLayout() {
   return (
     <div className="admin-shell">
       {/* Backdrop สำหรับปิด mobile sidebar เมื่อแตะนอก drawer */}
-      {mobileOpen && (
-        <div
-          className="admin-backdrop"
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
-      )}
+      {mobileOpen && <div className="admin-backdrop" onClick={() => setMobileOpen(false)} aria-hidden="true" />}
 
       {/* Sidebar — class .collapsed ย่อ sidebar บน desktop / .mobile-open เปิด drawer บน mobile */}
       <aside className={`admin-aside${collapsed ? ' collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
@@ -111,9 +118,25 @@ export default function AdminLayout() {
           <div className="admin-nav-group">
             <div className="admin-nav-group-title">การจอง</div>
             <div className="admin-nav-items">
-              <NavItem label="อนุมัติการจอง" icon={<ClipboardCheck />} active={isActive('/admin/bookings')} badge={pendingCount} onClick={() => go('/admin/bookings')} />
-              <NavItem label="จองวอล์คอิน" icon={<Plus />} active={isActive('/admin/walkin')} onClick={() => go('/admin/walkin')} />
-              <NavItem label="ประวัติการจอง" icon={<HistoryIcon />} active={isActive('/admin/history')} onClick={() => go('/admin/history')} />
+              <NavItem
+                label="อนุมัติการจอง"
+                icon={<ClipboardCheck />}
+                active={isActive('/admin/bookings')}
+                badge={pendingCount}
+                onClick={() => go('/admin/bookings')}
+              />
+              <NavItem
+                label="จองวอล์คอิน"
+                icon={<Plus />}
+                active={isActive('/admin/walkin')}
+                onClick={() => go('/admin/walkin')}
+              />
+              <NavItem
+                label="ประวัติการจอง"
+                icon={<HistoryIcon />}
+                active={isActive('/admin/history')}
+                onClick={() => go('/admin/history')}
+              />
             </div>
           </div>
 
@@ -121,8 +144,18 @@ export default function AdminLayout() {
           <div className="admin-nav-group">
             <div className="admin-nav-group-title">ตั้งค่า</div>
             <div className="admin-nav-items">
-              <NavItem label="ตั้งค่าร้าน" icon={<Store />} active={isActive('/admin/shop-settings')} onClick={() => go('/admin/shop-settings')} />
-              <NavItem label="ตั้งค่าห้อง" icon={<DoorOpen />} active={isActive('/admin/room-settings')} onClick={() => go('/admin/room-settings')} />
+              <NavItem
+                label="ตั้งค่าร้าน"
+                icon={<Store />}
+                active={isActive('/admin/shop-settings')}
+                onClick={() => go('/admin/shop-settings')}
+              />
+              <NavItem
+                label="ตั้งค่าห้อง"
+                icon={<DoorOpen />}
+                active={isActive('/admin/room-settings')}
+                onClick={() => go('/admin/room-settings')}
+              />
             </div>
           </div>
 
@@ -130,7 +163,12 @@ export default function AdminLayout() {
           <div className="admin-nav-group">
             <div className="admin-nav-group-title">รายงาน</div>
             <div className="admin-nav-items">
-              <NavItem label="รายงานสรุป" icon={<CalendarIcon />} active={isActive('/admin/reports')} onClick={() => go('/admin/reports')} />
+              <NavItem
+                label="รายงานสรุป"
+                icon={<CalendarIcon />}
+                active={isActive('/admin/reports')}
+                onClick={() => go('/admin/reports')}
+              />
             </div>
           </div>
         </nav>
@@ -140,7 +178,9 @@ export default function AdminLayout() {
       <div className="admin-main-wrap">
         <header className="admin-header">
           {/* ปุ่ม toggle sidebar — ทำงานต่างกันบน mobile และ desktop */}
-          <IconButton label="เมนู" onClick={toggleSidebar}><Menu /></IconButton>
+          <IconButton label="เมนู" onClick={toggleSidebar}>
+            <Menu />
+          </IconButton>
           <h1>{title}</h1>
           {/* ปุ่ม logout แสดงชื่อแอดมินปัจจุบัน */}
           <button type="button" className="user-pill" onClick={logoutAdmin} title="ออกจากระบบ">

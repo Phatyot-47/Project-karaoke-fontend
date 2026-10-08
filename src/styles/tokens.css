@@ -4,7 +4,7 @@
 
 :root {
   /* ---- Primary · slate blue ------------------------------- */
-  --primary-50:  #eef2f8;
+  --primary-50: #eef2f8;
   --primary-100: #d6dfec;
   --primary-200: #b3c3db;
   --primary-300: #8aa1c4;
@@ -16,7 +16,7 @@
   --primary-900: #141b34;
 
   /* ---- Green · brand / success / "go" ---------------------- */
-  --green-50:  #f2f9f0;
+  --green-50: #f2f9f0;
   --green-100: #d6edd0;
   --green-200: #bbe1b0;
   --green-300: #9ed68f;
@@ -28,8 +28,8 @@
   --green-900: #1c3715;
 
   /* ---- Neutral ---------------------------------------------- */
-  --neutral-0:   #ffffff;
-  --neutral-50:  #f8fafc;
+  --neutral-0: #ffffff;
+  --neutral-50: #f8fafc;
   --neutral-100: #f1f5f9;
   --neutral-150: #e9ecef;
   --neutral-200: #e2e8f0;
@@ -43,13 +43,13 @@
   --paper: #faf9f6;
 
   /* ---- Red / Amber -------------------------------------------- */
-  --red-50:  #fef2f2;
+  --red-50: #fef2f2;
   --red-100: #fde4e3;
   --red-200: #f9c4c1;
   --red-500: #d9342b;
   --red-600: #b02727;
   --red-700: #8c221c;
-  --amber-50:  #fefce8;
+  --amber-50: #fefce8;
   --amber-100: #fef3c7;
   --amber-200: #fde68a;
   --amber-400: #eab308;
@@ -99,18 +99,20 @@
   --control-disabled: var(--neutral-100);
 
   /* ---- Typography ------------------------------------------- */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Noto Sans Thai", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-num: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans Thai", sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Noto Sans Thai', 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-num: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Noto Sans Thai', sans-serif;
 
   --text-2xs: 0.6875rem; /* 11px */
-  --text-xs:  0.75rem;   /* 12px */
-  --text-sm:  0.875rem;  /* 14px */
-  --text-md:  1rem;      /* 16px */
-  --text-lg:  1.125rem;  /* 18px */
-  --text-xl:  1.25rem;   /* 20px */
-  --text-2xl: 1.5rem;    /* 24px */
-  --text-3xl: 1.875rem;  /* 30px */
-  --text-4xl: 2.25rem;   /* 36px */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-md: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-3xl: 1.875rem; /* 30px */
+  --text-4xl: 2.25rem; /* 36px */
 
   --leading-tight: 1.2;
   --leading-snug: 1.35;

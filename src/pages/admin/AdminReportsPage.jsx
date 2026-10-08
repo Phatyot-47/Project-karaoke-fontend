@@ -27,7 +27,11 @@ export default function AdminReportsPage() {
 
   useEffect(() => {
     setLoading(true);
-    api.getReports(period).then(setReport).catch((err) => setError(err.message)).finally(() => setLoading(false));
+    api
+      .getReports(period)
+      .then(setReport)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, [period]);
 
   const maxTrendValue = useMemo(() => {
@@ -51,30 +55,56 @@ export default function AdminReportsPage() {
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             <Card style={{ padding: '16px 18px' }}>
-              <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>รายได้รวม ({RANGE_LABEL[period]})</div>
-              <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--green-700)', marginTop: 4 }}>฿ {money(report.totals.total_revenue)}</div>
+              <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
+                รายได้รวม ({RANGE_LABEL[period]})
+              </div>
+              <div
+                className="num"
+                style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--green-700)', marginTop: 4 }}
+              >
+                ฿ {money(report.totals.total_revenue)}
+              </div>
             </Card>
             <Card style={{ padding: '16px 18px' }}>
               <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>จำนวนการจอง</div>
-              <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--primary-700)', marginTop: 4 }}>{report.totals.total_bookings}</div>
+              <div
+                className="num"
+                style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--primary-700)', marginTop: 4 }}
+              >
+                {report.totals.total_bookings}
+              </div>
             </Card>
             <Card style={{ padding: '16px 18px' }}>
               <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ยอดเฉลี่ย/รายการ</div>
-              <div className="num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-strong)', marginTop: 4 }}>฿ {money(report.totals.avg_ticket)}</div>
+              <div
+                className="num"
+                style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-strong)', marginTop: 4 }}
+              >
+                ฿ {money(report.totals.avg_ticket)}
+              </div>
             </Card>
           </div>
 
-          <Card title="แนวโน้มรายได้" subtitle={`รายได้${period === 'day' ? 'รายวัน' : period === 'week' ? 'รายสัปดาห์' : 'รายเดือน'} (${RANGE_LABEL[period]})`}>
+          <Card
+            title="แนวโน้มรายได้"
+            subtitle={`รายได้${period === 'day' ? 'รายวัน' : period === 'week' ? 'รายสัปดาห์' : 'รายเดือน'} (${RANGE_LABEL[period]})`}
+          >
             {!report.trend.length && <p style={{ color: 'var(--text-muted)' }}>ยังไม่มีข้อมูล</p>}
             <div className="chart-bars">
               {report.trend.map((t, i) => (
                 <div className="chart-bar-col" key={t.period}>
-                  <span className="num" style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>{money(t.revenue)}</span>
+                  <span className="num" style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
+                    {money(t.revenue)}
+                  </span>
                   <div
                     className={`chart-bar${i === report.trend.length - 1 ? ' last' : ''}`}
-                    style={{ height: `${maxTrendValue ? Math.max(8, (Number(t.revenue) / maxTrendValue) * 140) : 8}px` }}
+                    style={{
+                      height: `${maxTrendValue ? Math.max(8, (Number(t.revenue) / maxTrendValue) * 140) : 8}px`,
+                    }}
                   />
-                  <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>{formatPeriodLabel(t.period, period)}</span>
+                  <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>
+                    {formatPeriodLabel(t.period, period)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -84,11 +114,29 @@ export default function AdminReportsPage() {
             {!report.byRoom.length && <p style={{ color: 'var(--text-muted)', padding: 16 }}>ยังไม่มีข้อมูล</p>}
             {report.byRoom.map((rb) => (
               <div className="room-breakdown-row" key={rb.room_name}>
-                <span style={{ fontWeight: 600, color: 'var(--text-strong)', minWidth: 90, flex: 'none', fontSize: 'var(--text-xs)' }}>{rb.room_name}</span>
+                <span
+                  style={{
+                    fontWeight: 600,
+                    color: 'var(--text-strong)',
+                    minWidth: 90,
+                    flex: 'none',
+                    fontSize: 'var(--text-xs)',
+                  }}
+                >
+                  {rb.room_name}
+                </span>
                 <div className="room-breakdown-track">
-                  <div className="room-breakdown-fill" style={{ width: `${maxRoomRevenue ? (Number(rb.revenue) / maxRoomRevenue) * 100 : 0}%` }} />
+                  <div
+                    className="room-breakdown-fill"
+                    style={{ width: `${maxRoomRevenue ? (Number(rb.revenue) / maxRoomRevenue) * 100 : 0}%` }}
+                  />
                 </div>
-                <span className="num" style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)', minWidth: 80, textAlign: 'right' }}>฿ {money(rb.revenue)}</span>
+                <span
+                  className="num"
+                  style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)', minWidth: 80, textAlign: 'right' }}
+                >
+                  ฿ {money(rb.revenue)}
+                </span>
               </div>
             ))}
           </Card>

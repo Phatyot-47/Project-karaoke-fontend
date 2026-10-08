@@ -28,7 +28,9 @@ export default function Button({
     `btn-${variant}`,
     size === 'sm' ? 'btn-sm' : size === 'lg' ? 'btn-lg' : '',
     block ? 'btn-block' : '',
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <button type={type} className={classes} disabled={disabled} onClick={onClick} style={style}>

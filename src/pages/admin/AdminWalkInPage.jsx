@@ -6,7 +6,17 @@ import Input from '../../components/Input.jsx';
 import Select from '../../components/Select.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
-import { todayISODate, addMinutesToTime, addMinutesToDateTime, timeToMinutes, isSlotPastBangkok, formatTimeHM, DAY_LABELS, findTodayHours, buildHalfHourSlots } from '../../utils/format.js';
+import {
+  todayISODate,
+  addMinutesToTime,
+  addMinutesToDateTime,
+  timeToMinutes,
+  isSlotPastBangkok,
+  formatTimeHM,
+  DAY_LABELS,
+  findTodayHours,
+  buildHalfHourSlots,
+} from '../../utils/format.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
 // วอล์คอินจองขั้นต่ำ 1 ชม. (2 ช่อง ช่องละ 30 นาที) — ต้องตรงกับ WALKIN_MIN_MINUTES ฝั่ง backend
@@ -42,7 +52,9 @@ export default function AdminWalkInPage() {
         setShop(shopData);
       })
       .catch((err) => setError(err.message))
-      .finally(() => { if (!silent) setLoading(false); });
+      .finally(() => {
+        if (!silent) setLoading(false);
+      });
   };
 
   // โหลดครั้งแรก + รีเฟรชอัตโนมัติทุก 15 วิ ให้สถานะห้องเป็นเรียลไทม์
@@ -63,7 +75,10 @@ export default function AdminWalkInPage() {
 
   const endOptions = useMemo(() => slotTimes.map((t) => addMinutesToTime(t, 30)), [slotTimes]);
 
-  const lockedStartTimes = useMemo(() => new Set(slotTimes.filter((t) => isSlotPastBangkok(todayISODate(), t))), [slotTimes, nowTick]);
+  const lockedStartTimes = useMemo(
+    () => new Set(slotTimes.filter((t) => isSlotPastBangkok(todayISODate(), t))),
+    [slotTimes, nowTick],
+  );
 
   // ปล่อยเวลาว่างไว้จนกว่าแอดมินจะเลือกเอง — เคลียร์เฉพาะตอนที่ค่าที่เลือกไว้ใช้ไม่ได้แล้ว (เช่น เวลาเลยไปแล้ว หรือเวลาร้านเปลี่ยน)
   useEffect(() => {
@@ -100,7 +115,9 @@ export default function AdminWalkInPage() {
     if (needed.length < WALKIN_MIN_SLOTS || needed.some((s) => s.status || s.isPast)) {
       setStart('');
       setEnd('');
-      setFormError(`วอล์คอินต้องจองอย่างน้อย 1 ชั่วโมง — ช่วง ${t}–${addMinutesToTime(t, 60)} น. ไม่ว่างหรือเกินเวลาปิดร้าน`);
+      setFormError(
+        `วอล์คอินต้องจองอย่างน้อย 1 ชั่วโมง — ช่วง ${t}–${addMinutesToTime(t, 60)} น. ไม่ว่างหรือเกินเวลาปิดร้าน`,
+      );
       return;
     }
     setStart(t);
@@ -111,8 +128,15 @@ export default function AdminWalkInPage() {
     if (disabled) return;
     setFormError('');
     const isMinimumSelected = start && end === addMinutesToTime(start, WALKIN_MIN_SLOTS * 30);
-    if (!isMinimumSelected) { selectMinimum(time); return; }
-    if (time === start) { setStart(''); setEnd(''); return; }
+    if (!isMinimumSelected) {
+      selectMinimum(time);
+      return;
+    }
+    if (time === start) {
+      setStart('');
+      setEnd('');
+      return;
+    }
     const so = order.get(start);
     const eo = order.get(time);
     if (eo < so + WALKIN_MIN_SLOTS) {
@@ -121,7 +145,10 @@ export default function AdminWalkInPage() {
     }
     const daySlots = roomDaySchedule.get(Number(roomId)) || [];
     const hasBlockedBetween = daySlots.some((s, i) => i > so && i <= eo && (s.status || s.isPast));
-    if (hasBlockedBetween) { selectMinimum(time); return; }
+    if (hasBlockedBetween) {
+      selectMinimum(time);
+      return;
+    }
     setEnd(addMinutesToTime(time, 30));
   };
 
@@ -143,12 +170,13 @@ export default function AdminWalkInPage() {
     const selEnd = new Date(endDatetime(today, start, end));
     if (!(selStart < selEnd)) return map;
     rooms.forEach((r) => {
-      const conflict = bookings.find((b) => (
-        b.room_id === r.room_id
-        && (b.booking_status === 'pending' || b.booking_status === 'confirmed')
-        && new Date(b.start_datetime) < selEnd
-        && new Date(b.end_datetime) > selStart
-      ));
+      const conflict = bookings.find(
+        (b) =>
+          b.room_id === r.room_id &&
+          (b.booking_status === 'pending' || b.booking_status === 'confirmed') &&
+          new Date(b.start_datetime) < selEnd &&
+          new Date(b.end_datetime) > selStart,
+      );
       map.set(r.room_id, { available: !conflict, conflict });
     });
     return map;
@@ -162,12 +190,13 @@ export default function AdminWalkInPage() {
       const slots = slotTimes.map((t) => {
         const slotStart = new Date(`${today}T${t}:00`);
         const slotEnd = new Date(slotStart.getTime() + 30 * 60000);
-        const booking = bookings.find((b) => (
-          b.room_id === r.room_id
-          && (b.booking_status === 'pending' || b.booking_status === 'confirmed')
-          && new Date(b.start_datetime) < slotEnd
-          && new Date(b.end_datetime) > slotStart
-        ));
+        const booking = bookings.find(
+          (b) =>
+            b.room_id === r.room_id &&
+            (b.booking_status === 'pending' || b.booking_status === 'confirmed') &&
+            new Date(b.start_datetime) < slotEnd &&
+            new Date(b.end_datetime) > slotStart,
+        );
         return { time: t, isPast: lockedStartTimes.has(t), status: booking ? booking.booking_status : null };
       });
       map.set(r.room_id, slots);
@@ -181,9 +210,9 @@ export default function AdminWalkInPage() {
     const now = new Date();
     const map = new Map();
     rooms.forEach((r) => {
-      const roomBookings = bookings.filter((b) => (
-        b.room_id === r.room_id && (b.booking_status === 'pending' || b.booking_status === 'confirmed')
-      ));
+      const roomBookings = bookings.filter(
+        (b) => b.room_id === r.room_id && (b.booking_status === 'pending' || b.booking_status === 'confirmed'),
+      );
       const daySlots = roomDaySchedule.get(r.room_id) || [];
       const remainingSlots = daySlots.filter((s) => !s.isPast);
       const fullyBooked = remainingSlots.length > 0 && remainingSlots.every((s) => s.status);
@@ -202,11 +231,23 @@ export default function AdminWalkInPage() {
 
   const submit = async () => {
     setSuccessMsg('');
-    if (!roomId) { setFormError('กรุณาเลือกห้อง'); return; }
-    if (!start || !end) { setFormError('กรุณาเลือกเวลาเริ่มและเวลาสิ้นสุด'); return; }
-    if (lockedStartTimes.has(start)) { setFormError('เวลาที่เลือกผ่านไปแล้ว กรุณาเลือกเวลาใหม่'); return; }
+    if (!roomId) {
+      setFormError('กรุณาเลือกห้อง');
+      return;
+    }
+    if (!start || !end) {
+      setFormError('กรุณาเลือกเวลาเริ่มและเวลาสิ้นสุด');
+      return;
+    }
+    if (lockedStartTimes.has(start)) {
+      setFormError('เวลาที่เลือกผ่านไปแล้ว กรุณาเลือกเวลาใหม่');
+      return;
+    }
     const durationMinutes = (((timeToMinutes(end) - timeToMinutes(start)) % 1440) + 1440) % 1440 || 1440;
-    if (durationMinutes < WALKIN_MIN_SLOTS * 30) { setFormError('วอล์คอินต้องจองอย่างน้อย 1 ชั่วโมง'); return; }
+    if (durationMinutes < WALKIN_MIN_SLOTS * 30) {
+      setFormError('วอล์คอินต้องจองอย่างน้อย 1 ชั่วโมง');
+      return;
+    }
     const avail = roomAvailability.get(Number(roomId));
     if (avail && avail.available === false) {
       setFormError('ห้องนี้ไม่ว่างในช่วงเวลาที่เลือก กรุณาเลือกห้องหรือเวลาอื่น');
@@ -254,7 +295,9 @@ export default function AdminWalkInPage() {
               ? 'ไม่มีช่วงว่างเหลือวันนี้'
               : isBusy
                 ? `ถึง ${formatTimeHM(status.until)} น.`
-                : (status.nextStart ? `ว่างถึง ${formatTimeHM(status.nextStart)} น.` : 'ว่างตลอดวันนี้');
+                : status.nextStart
+                  ? `ว่างถึง ${formatTimeHM(status.nextStart)} น.`
+                  : 'ว่างตลอดวันนี้';
             const isSelected = Number(roomId) === r.room_id;
             return (
               <div
@@ -263,7 +306,9 @@ export default function AdminWalkInPage() {
                 role="button"
                 tabIndex={0}
                 onClick={() => setRoomId(String(r.room_id))}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setRoomId(String(r.room_id)); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') setRoomId(String(r.room_id));
+                }}
                 style={{
                   background: palette.bg,
                   border: `1px solid ${palette.border}`,
@@ -277,13 +322,13 @@ export default function AdminWalkInPage() {
                   padding: '12px 14px',
                 }}
               >
-                <div className="label" style={{ fontWeight: 600 }}>{r.room_name}</div>
+                <div className="label" style={{ fontWeight: 600 }}>
+                  {r.room_name}
+                </div>
                 <div className="value" style={{ fontSize: 'var(--text-md)', color: palette.text }}>
                   {label}
                 </div>
-                <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', marginTop: 4 }}>
-                  {detail}
-                </div>
+                <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)', marginTop: 4 }}>{detail}</div>
               </div>
             );
           })}
@@ -302,26 +347,41 @@ export default function AdminWalkInPage() {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div style={{ flex: '1 1 200px', minWidth: 160 }}>
             <Select label="ห้อง" value={roomId} onChange={(e) => setRoomId(e.target.value)}>
-              <option value="" disabled>เลือกห้อง</option>
+              <option value="" disabled>
+                เลือกห้อง
+              </option>
               {rooms.map((r) => {
                 const avail = roomAvailability.get(r.room_id);
                 const busy = avail && avail.available === false;
                 return (
                   <option key={r.room_id} value={r.room_id} disabled={busy}>
-                    {r.room_name}{busy ? ' — ไม่ว่างช่วงนี้' : ''}
+                    {r.room_name}
+                    {busy ? ' — ไม่ว่างช่วงนี้' : ''}
                   </option>
                 );
               })}
             </Select>
           </div>
           <div style={{ flex: '1 1 160px', minWidth: 140 }}>
-            <Input label="ชื่อลูกค้า" placeholder="เช่น คุณสมชาย" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+            <Input
+              label="ชื่อลูกค้า"
+              placeholder="เช่น คุณสมชาย"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+            />
           </div>
           <div style={{ flex: '1 1 160px', minWidth: 140 }}>
-            <Input label="เบอร์โทร (ถ้ามี)" placeholder="08x-xxx-xxxx" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+            <Input
+              label="เบอร์โทร (ถ้ามี)"
+              placeholder="08x-xxx-xxxx"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+            />
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', width: 'auto' }}>
-            <Button variant="outline" onClick={() => navigate('/admin/bookings')}>ยกเลิก</Button>
+            <Button variant="outline" onClick={() => navigate('/admin/bookings')}>
+              ยกเลิก
+            </Button>
             <Button
               variant="accent"
               iconLeft={<Check />}
@@ -334,16 +394,29 @@ export default function AdminWalkInPage() {
         </div>
 
         {!loading && shop && !slotTimes.length && (
-          <div className="field-error" style={{ marginTop: 8 }}>ร้านปิดวันนี้ตามการตั้งค่าร้าน จึงยังไม่สามารถเพิ่มรายการจองวอล์คอินได้</div>
+          <div className="field-error" style={{ marginTop: 8 }}>
+            ร้านปิดวันนี้ตามการตั้งค่าร้าน จึงยังไม่สามารถเพิ่มรายการจองวอล์คอินได้
+          </div>
         )}
 
         <div style={{ marginTop: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 8,
+              marginBottom: 10,
+            }}
+          >
             <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)' }}>
               เวลาว่างของห้องนี้ (เรียลไทม์)
             </span>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-              {start && end ? `ช่วงที่เลือก ${start}–${end}` : 'คลิกช่องเวลาเริ่มเพื่อจอง 1 ชม. (ขั้นต่ำ) แล้วคลิกช่องถัดไปถ้าต้องการขยายเวลา'}
+              {start && end
+                ? `ช่วงที่เลือก ${start}–${end}`
+                : 'คลิกช่องเวลาเริ่มเพื่อจอง 1 ชม. (ขั้นต่ำ) แล้วคลิกช่องถัดไปถ้าต้องการขยายเวลา'}
             </span>
           </div>
           {!roomId && <p style={{ color: 'var(--text-muted)' }}>เลือกห้องก่อนเพื่อดูเวลาว่าง</p>}
@@ -352,7 +425,13 @@ export default function AdminWalkInPage() {
               {(roomDaySchedule.get(Number(roomId)) || []).map((s) => {
                 const disabled = !!s.status || s.isPast;
                 const selected = inRange(s.time);
-                const title = s.status ? (s.status === 'confirmed' ? 'จองแล้ว' : 'รอดำเนินการ') : (s.isPast ? 'เวลาผ่านไปแล้ว' : undefined);
+                const title = s.status
+                  ? s.status === 'confirmed'
+                    ? 'จองแล้ว'
+                    : 'รอดำเนินการ'
+                  : s.isPast
+                    ? 'เวลาผ่านไปแล้ว'
+                    : undefined;
                 return (
                   <button
                     key={s.time}
@@ -371,8 +450,14 @@ export default function AdminWalkInPage() {
           )}
         </div>
 
-        {formError && <div className="field-error" style={{ marginTop: 8 }}>{formError}</div>}
-        {successMsg && <div style={{ marginTop: 8, fontSize: 'var(--text-xs)', color: 'var(--green-700)' }}>{successMsg}</div>}
+        {formError && (
+          <div className="field-error" style={{ marginTop: 8 }}>
+            {formError}
+          </div>
+        )}
+        {successMsg && (
+          <div style={{ marginTop: 8, fontSize: 'var(--text-xs)', color: 'var(--green-700)' }}>{successMsg}</div>
+        )}
       </Card>
     </div>
   );

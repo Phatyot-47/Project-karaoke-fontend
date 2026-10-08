@@ -22,7 +22,7 @@ import { getCroppedImageFile } from '../utils/cropImage.js';
 export default function ImageCropModal({ imageSrc, aspect, fileName, onConfirm, onCancel }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [ready, setReady] = useState(false);       // true เมื่อ Cropper พร้อมและมี croppedAreaPixels แล้ว
+  const [ready, setReady] = useState(false); // true เมื่อ Cropper พร้อมและมี croppedAreaPixels แล้ว
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState('');
   // ใช้ ref แทน state เพื่อไม่ให้ re-render ทุกครั้งที่ผู้ใช้ขยับ crop
@@ -32,12 +32,16 @@ export default function ImageCropModal({ imageSrc, aspect, fileName, onConfirm, 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prevOverflow; };
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
   }, []);
 
   // ปิดโมดัลเมื่อกด Escape — cleanup listener เมื่อ onCancel เปลี่ยนหรือ unmount
   useEffect(() => {
-    const handleKeyDown = (e) => { if (e.key === 'Escape') onCancel(); };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onCancel();
+    };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onCancel]);
@@ -102,7 +106,9 @@ export default function ImageCropModal({ imageSrc, aspect, fileName, onConfirm, 
 
         {/* ปุ่มยกเลิก/ยืนยัน — ปุ่มยืนยัน disabled จนกว่า Cropper จะพร้อม */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-          <Button variant="outline" onClick={onCancel} disabled={confirming}>ยกเลิก</Button>
+          <Button variant="outline" onClick={onCancel} disabled={confirming}>
+            ยกเลิก
+          </Button>
           <Button variant="accent" onClick={handleConfirm} disabled={!ready || confirming}>
             {confirming ? 'กำลังบันทึก...' : 'ยืนยัน'}
           </Button>

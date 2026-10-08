@@ -11,7 +11,7 @@ export {
   Check,
   Menu,
   ClipboardCheck,
-  History as HistoryIcon,   // alias เพื่อหลีกเลี่ยง conflict กับ browser History API
+  History as HistoryIcon, // alias เพื่อหลีกเลี่ยง conflict กับ browser History API
   DoorOpen,
   Store,
   Calendar as CalendarIcon,

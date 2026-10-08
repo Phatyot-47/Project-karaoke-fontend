@@ -37,22 +37,50 @@ export default function AdminLoginPage() {
     <div className="center-screen" style={{ background: 'var(--surface-app)' }}>
       <Card style={{ width: 420, maxWidth: '100%', padding: '28px 24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover' }} />
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--text-strong)' }}>เข้าสู่ระบบแอดมิน</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>สำหรับพนักงานร้าน Gens Karaoke</div>
+          <img
+            src="/assets/logo.png"
+            alt="Gens Karaoke logo"
+            style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover' }}
+          />
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--text-strong)' }}>
+            เข้าสู่ระบบแอดมิน
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>
+            สำหรับพนักงานร้าน Gens Karaoke
+          </div>
         </div>
         <form
-          onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
           style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}
         >
-          <Input label="Username" value={username} onChange={(e) => { setUsername(e.target.value); setError(''); }} />
-          <Input label="Password" type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(''); }} />
+          <Input
+            label="Username"
+            value={username}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              setError('');
+            }}
+          />
+          <Input
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError('');
+            }}
+          />
           {error && <div className="field-error">{error}</div>}
           <Button type="submit" variant="primary" block disabled={loading}>
             {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
           </Button>
           <div style={{ textAlign: 'center', fontSize: 'var(--text-xs)', marginTop: 4 }}>
-            <Link to="/login" style={{ color: 'var(--text-subtle)' }}>กลับหน้าลูกค้า</Link>
+            <Link to="/login" style={{ color: 'var(--text-subtle)' }}>
+              กลับหน้าลูกค้า
+            </Link>
           </div>
         </form>
       </Card>

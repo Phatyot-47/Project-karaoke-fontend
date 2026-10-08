@@ -21,8 +21,14 @@ export default function RegisterPage() {
       setError('กรุณากรอกชื่อและเบอร์โทรศัพท์ให้ครบถ้วน');
       return;
     }
-    if (password.length < 6) { setError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
-    if (password !== confirm) { setError('ยืนยันรหัสผ่านไม่ตรงกัน'); return; }
+    if (password.length < 6) {
+      setError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+      return;
+    }
+    if (password !== confirm) {
+      setError('ยืนยันรหัสผ่านไม่ตรงกัน');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -40,26 +46,70 @@ export default function RegisterPage() {
     <div className="page-dark app-dark center-screen">
       <Card style={{ width: 420, maxWidth: '100%', padding: '28px 24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <img src="/assets/logo.png" alt="Gens Karaoke logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover' }} />
+          <img
+            src="/assets/logo.png"
+            alt="Gens Karaoke logo"
+            style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover' }}
+          />
           <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--text-strong)' }}>สมัครสมาชิก</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>
             กรอกชื่อ เบอร์โทรศัพท์ และตั้งรหัสผ่านเพื่อสมัครสมาชิก
           </div>
         </div>
         <form
-          onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
           style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}
         >
-          <Input label="ชื่อ" placeholder="ชื่อ-นามสกุล" value={name} onChange={(e) => { setName(e.target.value); setError(''); }} />
-          <Input label="เบอร์โทรศัพท์" placeholder="08x-xxx-xxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '')); setError(''); }} />
-          <Input label="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" type="password" placeholder="รหัสผ่าน" value={password} onChange={(e) => { setPassword(e.target.value); setError(''); }} />
-          <Input label="ยืนยันรหัสผ่าน" type="password" placeholder="กรอกรหัสผ่านอีกครั้ง" value={confirm} onChange={(e) => { setConfirm(e.target.value); setError(''); }} />
+          <Input
+            label="ชื่อ"
+            placeholder="ชื่อ-นามสกุล"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setError('');
+            }}
+          />
+          <Input
+            label="เบอร์โทรศัพท์"
+            placeholder="08x-xxx-xxxx"
+            value={phone}
+            onChange={(e) => {
+              setPhone(e.target.value.replace(/\D/g, ''));
+              setError('');
+            }}
+          />
+          <Input
+            label="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)"
+            type="password"
+            placeholder="รหัสผ่าน"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError('');
+            }}
+          />
+          <Input
+            label="ยืนยันรหัสผ่าน"
+            type="password"
+            placeholder="กรอกรหัสผ่านอีกครั้ง"
+            value={confirm}
+            onChange={(e) => {
+              setConfirm(e.target.value);
+              setError('');
+            }}
+          />
           {error && <div className="field-error">{error}</div>}
           <Button type="submit" variant="accent" block disabled={loading}>
             {loading ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}
           </Button>
           <div style={{ textAlign: 'center', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-            มีบัญชีแล้ว? <Link to="/login" style={{ color: 'var(--primary-600)', fontWeight: 600 }}>เข้าสู่ระบบ</Link>
+            มีบัญชีแล้ว?{' '}
+            <Link to="/login" style={{ color: 'var(--primary-600)', fontWeight: 600 }}>
+              เข้าสู่ระบบ
+            </Link>
           </div>
         </form>
       </Card>

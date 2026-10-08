@@ -14,12 +14,20 @@ export default function AdminHistoryPage() {
   useNowTick(); // บังคับ re-render ทุก 30s ให้ getBookingDisplayStatus() คำนวณสถานะใหม่ตามเวลาจริง
 
   useEffect(() => {
-    api.getBookingHistory().then(setRows).catch((err) => setError(err.message)).finally(() => setLoading(false));
+    api
+      .getBookingHistory()
+      .then(setRows)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-      {error && <div className="field-error" style={{ marginBottom: 12 }}>{error}</div>}
+      {error && (
+        <div className="field-error" style={{ marginBottom: 12 }}>
+          {error}
+        </div>
+      )}
       <Card title="ประวัติการจองทั้งหมด" subtitle="รายการจองทุกสถานะ" pad={false}>
         {loading && <p style={{ color: 'var(--text-muted)', padding: 16 }}>กำลังโหลด...</p>}
         {!loading && !rows.length && <p style={{ color: 'var(--text-muted)', padding: 16 }}>ยังไม่มีข้อมูล</p>}
@@ -29,21 +37,50 @@ export default function AdminHistoryPage() {
             <div className="booking-row" key={b.booking_id}>
               <div className="booking-photo" style={{ backgroundImage: `url(${resolveRoomImage(b)})` }} />
               <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{b.room_name}</span>
-                  <span className="num" style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{money(b.price_total)} บาท</span>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>
+                    {b.room_name}
+                  </span>
+                  <span
+                    className="num"
+                    style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}
+                  >
+                    {money(b.price_total)} บาท
+                  </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 4, fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    flexWrap: 'wrap',
+                    marginTop: 4,
+                    fontSize: 'var(--text-2xs)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
                   <span>{formatDateTimeRange(b.start_datetime, b.end_datetime)}</span>
                   <span>ลูกค้า: {b.customer_name || 'ไม่ระบุ'}</span>
                 </div>
                 {b.evidence_url && (
                   <div style={{ marginTop: 8 }}>
-                    {(b.slip_urls || [b.evidence_url]).map((url, i) => <SlipImage key={`${i}-${url}`} src={url} />)}
+                    {(b.slip_urls || [b.evidence_url]).map((url, i) => (
+                      <SlipImage key={`${i}-${url}`} src={url} />
+                    ))}
                   </div>
                 )}
               </div>
-              <Tag tone={statusInfo.tone} dot>{statusInfo.label}</Tag>
+              <Tag tone={statusInfo.tone} dot>
+                {statusInfo.label}
+              </Tag>
             </div>
           );
         })}

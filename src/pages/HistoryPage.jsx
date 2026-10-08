@@ -23,7 +23,8 @@ export default function HistoryPage() {
 
   const load = () => {
     setLoading(true);
-    api.listCustomerBookings(customer.user_id)
+    api
+      .listCustomerBookings(customer.user_id)
       .then(setBookings)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -49,7 +50,11 @@ export default function HistoryPage() {
         ตรวจสอบและจัดการรายการจองห้องคาราโอเกะของคุณ
       </p>
 
-      {error && <div className="field-error" style={{ marginTop: 16 }}>{error}</div>}
+      {error && (
+        <div className="field-error" style={{ marginTop: 16 }}>
+          {error}
+        </div>
+      )}
       {loading && <p style={{ color: 'var(--text-muted)', marginTop: 20 }}>กำลังโหลด...</p>}
       {!loading && !bookings.length && <p style={{ color: 'var(--text-muted)', marginTop: 20 }}>ยังไม่มีรายการจอง</p>}
 
@@ -67,44 +72,97 @@ export default function HistoryPage() {
           const isCanceling = cancelingId === b.booking_id;
           return (
             <Card key={b.booking_id} style={{ padding: 18 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  flexWrap: 'wrap',
+                }}
+              >
                 <div>
-                  <Tag tone={statusInfo.tone} dot size="sm">{statusInfo.label}</Tag>
-                  <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)', marginTop: 6 }}>{b.room_name}</div>
+                  <Tag tone={statusInfo.tone} dot size="sm">
+                    {statusInfo.label}
+                  </Tag>
+                  <div
+                    style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)', marginTop: 6 }}
+                  >
+                    {b.room_name}
+                  </div>
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
-                    {formatDateTimeRange(b.start_datetime, b.end_datetime)} · {SIZE_CAPACITY_LABEL[b.size] || `ความจุ ${b.capacity || '-'} คน`}
+                    {formatDateTimeRange(b.start_datetime, b.end_datetime)} ·{' '}
+                    {SIZE_CAPACITY_LABEL[b.size] || `ความจุ ${b.capacity || '-'} คน`}
                   </div>
                   <BookingNote note={b.note} />
                   <CancelReason booking={b} />
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ยอดรวม</div>
-                  <div className="num" style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text-strong)' }}>{money(b.price_total)} บาท</div>
+                  <div
+                    className="num"
+                    style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text-strong)' }}
+                  >
+                    {money(b.price_total)} บาท
+                  </div>
                 </div>
               </div>
 
               {isCanceling && (
                 <div style={{ marginTop: 10 }}>
-                  <Input placeholder="ระบุเหตุผลที่ยกเลิก" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
+                  <Input
+                    placeholder="ระบุเหตุผลที่ยกเลิก"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                  />
                 </div>
               )}
 
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                 {isCanceling ? (
                   <>
-                    <Button variant="outline" size="sm" onClick={() => { setCancelingId(null); setCancelReason(''); }}>ย้อนกลับ</Button>
-                    <Button variant="danger" size="sm" onClick={() => submitCancel(b.booking_id)}>ยืนยันยกเลิก</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setCancelingId(null);
+                        setCancelReason('');
+                      }}
+                    >
+                      ย้อนกลับ
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => submitCancel(b.booking_id)}>
+                      ยืนยันยกเลิก
+                    </Button>
                   </>
                 ) : (
                   <>
                     {canPay && (
                       <Button variant="accent" size="sm" onClick={() => navigate(`/pay/${b.booking_id}`)}>
-                        {paidAmount > 0 ? `ชำระส่วนต่างมัดจำ ${money(Number(b.deposit_required) - paidAmount)} บาท` : 'ชำระมัดจำ'}
+                        {paidAmount > 0
+                          ? `ชำระส่วนต่างมัดจำ ${money(Number(b.deposit_required) - paidAmount)} บาท`
+                          : 'ชำระมัดจำ'}
                       </Button>
                     )}
-                    {canEdit && <Button variant="outline" size="sm" onClick={() => navigate(`/book/${b.room_id}?edit=${b.booking_id}`)}>แก้ไข</Button>}
-                    {canCancel && <Button variant="outline" size="sm" onClick={() => setCancelingId(b.booking_id)}>ยกเลิก</Button>}
-                    {isDone && <Button variant="subtle" size="sm" disabled>สิ้นสุดแล้ว</Button>}
+                    {canEdit && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/book/${b.room_id}?edit=${b.booking_id}`)}
+                      >
+                        แก้ไข
+                      </Button>
+                    )}
+                    {canCancel && (
+                      <Button variant="outline" size="sm" onClick={() => setCancelingId(b.booking_id)}>
+                        ยกเลิก
+                      </Button>
+                    )}
+                    {isDone && (
+                      <Button variant="subtle" size="sm" disabled>
+                        สิ้นสุดแล้ว
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
