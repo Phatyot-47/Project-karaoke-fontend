@@ -939,6 +939,12 @@ button {
   border-bottom-color: var(--primary-500);
 }
 
+/* แท็บบนพื้นหลังมืด (หน้าเลือกห้องของลูกค้า) — สีเดียวกับเมนูด้านบน ไม่งั้นแท็บที่เลือกจะมองไม่เห็น */
+.app-dark .tab-btn.active {
+  color: var(--text-strong);
+  border-bottom-color: var(--green-600);
+}
+
 .chart-bars {
   display: flex;
   align-items: flex-end;

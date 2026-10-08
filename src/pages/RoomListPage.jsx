@@ -1,4 +1,4 @@
-// หน้าแรกของลูกค้า "เลือกห้องคาราโอเกะ" (/) — กรองตามขนาด และค้นหาห้องว่างตามเวลา
+// หน้าแรกของลูกค้า "เลือกห้องคาราโอเกะ" (/) — กรองตามประเภทห้อง (S/M/L/XL) ห้องธรรมดา/ห้องธีม และค้นหาห้องว่างตามเวลา
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card.jsx';
@@ -6,9 +6,10 @@ import Input from '../components/Input.jsx';
 import Select from '../components/Select.jsx';
 import Tag from '../components/Tag.jsx';
 import Button from '../components/Button.jsx';
+import Tabs from '../components/Tabs.jsx';
 import { Search } from '../components/Icons.jsx';
 import api from '../api/client.js';
-import { resolveRoomImage, SIZE_CAPACITY_LABEL, ROOM_PHOTO_ASPECT_RATIO } from '../utils/roomImage.js';
+import { resolveRoomImage, capacityLabel, ROOM_PHOTO_ASPECT_RATIO } from '../utils/roomImage.js';
 import {
   money,
   roomNoteLines,
@@ -24,7 +25,11 @@ import useNowTick from '../hooks/useNowTick.js';
 export default function RoomListPage() {
   const [rooms, setRooms] = useState([]);
   const [shop, setShop] = useState(null);
+  // ประเภทห้องจาก /api/room-types — size = รหัสประเภทที่เลือกในแท็บ ('all' = ทุกประเภท)
+  const [roomTypes, setRoomTypes] = useState([]);
   const [size, setSize] = useState('all');
+  // kind: 'all' | 'normal' (ห้องธรรมดา) | 'theme' (ห้องธีม)
+  const [kind, setKind] = useState('all');
   const [search, setSearch] = useState('');
   // ค้นหาห้องว่างตามเวลา/ระยะเวลา (จองได้เฉพาะวันนี้) — searchStart ว่าง = ไม่กรองตามเวลา
   const [searchStart, setSearchStart] = useState('');
@@ -41,6 +46,10 @@ export default function RoomListPage() {
     api
       .getShop()
       .then(setShop)
+      .catch(() => {});
+    api
+      .listRoomTypes()
+      .then(setRoomTypes)
       .catch(() => {});
   }, []);
 
@@ -92,9 +101,24 @@ export default function RoomListPage() {
   }, [size, range]);
 
   const filteredRooms = useMemo(
-    () => rooms.filter((r) => r.room_name.toLowerCase().includes(search.trim().toLowerCase())),
-    [rooms, search],
+    () =>
+      rooms.filter(
+        (r) =>
+          r.room_name.toLowerCase().includes(search.trim().toLowerCase()) &&
+          (kind === 'all' || (kind === 'theme' ? Boolean(r.theme) : !r.theme)),
+      ),
+    [rooms, search, kind],
   );
+
+  // แท็บประเภท: แสดงเฉพาะประเภทที่มีห้องเปิดให้บริการ
+  const typeTabs = useMemo(
+    () => [
+      { id: 'all', label: 'ทั้งหมด' },
+      ...roomTypes.filter((t) => t.room_count > 0).map((t) => ({ id: t.code, label: `${t.code} · ${t.name}` })),
+    ],
+    [roomTypes],
+  );
+  const selectedType = roomTypes.find((t) => t.code === size);
 
   // ระหว่างโหลดผลค้นหาช่วงเวลาใหม่ ข้อมูลห้องชุดเดิมยังไม่มี is_available → ถือว่า "ยังไม่รู้" ไม่ใช่ "ไม่ว่าง"
   const searching = Boolean(range) && (loading || rooms.some((r) => r.is_available === undefined));
@@ -111,7 +135,25 @@ export default function RoomListPage() {
         เลือกห้องที่ว่าง แล้วจองเวลาได้ทันที (จองได้เฉพาะวันนี้)
       </p>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 18, flexWrap: 'wrap' }}>
+      <div style={{ marginTop: 18 }}>
+        <Tabs items={typeTabs} value={size} onChange={setSize} />
+      </div>
+      {selectedType && (
+        <div style={{ marginTop: 10, fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+          <strong style={{ color: 'var(--text-strong)' }}>
+            ประเภท {selectedType.code} — {selectedType.name}
+          </strong>
+          {' · '}
+          {capacityLabel(selectedType)}
+          {' · '}
+          ห้องธรรมดา {selectedType.room_count - selectedType.theme_room_count} ห้อง / ห้องธีม{' '}
+          {selectedType.theme_room_count} ห้อง
+          {selectedType.min_price_per_hour != null && ` · เริ่มต้น ${money(selectedType.min_price_per_hour)} บาท/ชม.`}
+          {selectedType.description && <div style={{ marginTop: 2 }}>{selectedType.description}</div>}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 220px', minWidth: 180 }}>
           <Input
             placeholder="ค้นหาชื่อห้อง"
@@ -121,12 +163,10 @@ export default function RoomListPage() {
           />
         </div>
         <div style={{ flex: '0 1 180px', minWidth: 140 }}>
-          <Select value={size} onChange={(e) => setSize(e.target.value)}>
-            <option value="all">ขนาดห้อง: ทั้งหมด</option>
-            <option value="S">S</option>
-            <option value="M">M</option>
-            <option value="L">L</option>
-            <option value="XL">XL</option>
+          <Select value={kind} onChange={(e) => setKind(e.target.value)}>
+            <option value="all">ห้องธรรมดาและห้องธีม</option>
+            <option value="normal">เฉพาะห้องธรรมดา</option>
+            <option value="theme">เฉพาะห้องธีม</option>
           </Select>
         </div>
         <div style={{ flex: '0 1 170px', minWidth: 140 }}>
@@ -199,13 +239,20 @@ export default function RoomListPage() {
                     {room.room_name}
                   </span>
                   <Tag tone="neutral" size="sm">
-                    {SIZE_CAPACITY_LABEL[room.size] || `ความจุ ${room.capacity} คน`}
+                    {capacityLabel(room)}
                   </Tag>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {room.theme && (
+                  <Tag tone="neutral" size="sm">
+                    ประเภท {room.size}
+                  </Tag>
+                  {room.theme ? (
                     <Tag tone="info" size="sm">
-                      ธีม: {room.theme}
+                      ห้องธีม: {room.theme}
+                    </Tag>
+                  ) : (
+                    <Tag tone="neutral" size="sm">
+                      ห้องธรรมดา
                     </Tag>
                   )}
                   {range &&

@@ -130,6 +130,8 @@ const api = {
   listRooms: (size, start, end) => request('/rooms', { params: { size, start, end } }),
   getRoom: (id) => request(`/rooms/${id}`),
   getRoomAvailability: (id, date) => request(`/rooms/${id}/availability`, { params: { date } }),
+  // ประเภทห้อง (S/M/L/XL ...) + จำนวนห้องและราคาเริ่มต้นของแต่ละประเภท — ใช้ทำแท็บกรองหน้าเลือกห้อง
+  listRoomTypes: () => request('/room-types'),
 
   // ---- การจอง (ฝั่งลูกค้า) ----
   createBooking: (payload) => request('/bookings', { method: 'POST', body: payload }),

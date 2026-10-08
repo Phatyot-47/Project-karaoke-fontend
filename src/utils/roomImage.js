@@ -39,13 +39,18 @@ export function resolveRoomImage(room) {
   return SIZE_TO_ASSET[room.size] || '/assets/hero-room.png';
 }
 
-// Label ความจุห้องแยกตามขนาด — ใช้แสดงใน RoomListPage และ BookingPage
-export const SIZE_CAPACITY_LABEL = {
-  S: 'ความจุ 1-3 คน',
-  M: 'ความจุ 3-5 คน',
-  L: 'ความจุ 5-8 คน',
-  XL: 'ความจุ 8-12 คน',
-};
+/**
+ * ป้ายความจุของห้อง — ใช้ช่วงความจุของประเภทห้อง (room_type ที่ API ส่งมาด้วย เช่น "ความจุ 3-5 คน")
+ * ถ้าไม่มีข้อมูลประเภท ใช้ความจุของห้องนั้นแทน — ใช้ใน RoomListPage, BookingPage, HistoryPage
+ */
+export function capacityLabel(room) {
+  if (room?.capacity_min && room?.capacity_max) {
+    return room.capacity_min === room.capacity_max
+      ? `ความจุ ${room.capacity_max} คน`
+      : `ความจุ ${room.capacity_min}-${room.capacity_max} คน`;
+  }
+  return `ความจุ ${room?.capacity || '-'} คน`;
+}
 
 /**
  * สัดส่วน (aspect ratio) กล่องรูปห้อง — single source of truth

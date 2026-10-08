@@ -7,7 +7,7 @@ import IconButton from '../components/IconButton.jsx';
 import { ArrowLeft, ArrowRight } from '../components/Icons.jsx';
 import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { resolveRoomImage, SIZE_CAPACITY_LABEL, ROOM_PHOTO_ASPECT_RATIO } from '../utils/roomImage.js';
+import { resolveRoomImage, capacityLabel, ROOM_PHOTO_ASPECT_RATIO } from '../utils/roomImage.js';
 import { calculateBookingPrice } from '../utils/pricing.js';
 import {
   todayISODate,
@@ -327,8 +327,13 @@ export default function BookingPage() {
               {room.room_name}
             </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              <span className="tag tag-neutral">{SIZE_CAPACITY_LABEL[room.size] || `ความจุ ${room.capacity} คน`}</span>
-              {room.theme && <span className="tag tag-info">ธีม: {room.theme}</span>}
+              <span className="tag tag-neutral">{capacityLabel(room)}</span>
+              <span className="tag tag-neutral">ประเภท {room.size}</span>
+              {room.theme ? (
+                <span className="tag tag-info">ห้องธีม: {room.theme}</span>
+              ) : (
+                <span className="tag tag-neutral">ห้องธรรมดา</span>
+              )}
             </div>
             {roomNoteLines(room.description).length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

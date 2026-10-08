@@ -9,7 +9,7 @@ import { BookingNote, CancelReason } from '../components/BookingDetails.jsx';
 import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getBookingDisplayStatus, formatDateTimeRange, money } from '../utils/format.js';
-import { SIZE_CAPACITY_LABEL } from '../utils/roomImage.js';
+import { capacityLabel } from '../utils/roomImage.js';
 import useNowTick from '../hooks/useNowTick.js';
 
 export default function HistoryPage() {
@@ -92,8 +92,7 @@ export default function HistoryPage() {
                     {b.room_name}
                   </div>
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
-                    {formatDateTimeRange(b.start_datetime, b.end_datetime)} ·{' '}
-                    {SIZE_CAPACITY_LABEL[b.size] || `ความจุ ${b.capacity || '-'} คน`}
+                    {formatDateTimeRange(b.start_datetime, b.end_datetime)} · {capacityLabel(b)}
                   </div>
                   <BookingNote note={b.note} />
                   <CancelReason booking={b} />
