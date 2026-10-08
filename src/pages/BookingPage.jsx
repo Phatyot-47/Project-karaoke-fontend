@@ -106,7 +106,7 @@ export default function BookingPage() {
       });
     });
     return set;
-  }, [availability, slotTimes]);
+  }, [availability, slotTimes, editId]);
 
   const pastTimes = useMemo(() => new Set(slotTimes.filter((t) => isSlotPastBangkok(today, t))), [slotTimes, today, nowTick]);
 
