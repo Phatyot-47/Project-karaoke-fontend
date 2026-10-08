@@ -61,7 +61,8 @@ export default function HistoryPage() {
           const canEdit = ['pending', 'confirmed'].includes(b.booking_status) && paidAmount > 0 && !b.session_status;
           // ยังไม่ได้ส่งสลิป (และยังไม่หมดเวลาชำระ ซึ่ง backend จะยกเลิกให้เอง) → กลับไปหน้าชำระมัดจำต่อได้
           const canPay = b.booking_status === 'pending' && b.deposit_status === 'unpaid';
-          const canCancel = b.booking_status === 'pending' || b.booking_status === 'confirmed';
+          // Check-in แล้ว (มี session_status) ยกเลิกเองไม่ได้ ต้องให้ร้านจัดการ
+          const canCancel = ['pending', 'confirmed'].includes(b.booking_status) && !b.session_status;
           const isDone = ['completed', 'cancelled', 'no_show'].includes(b.booking_status);
           const isCanceling = cancelingId === b.booking_id;
           return (
