@@ -1029,6 +1029,44 @@ button {
   font-weight: 700;
 }
 
+/* หัวกลุ่มประเภทห้องในรายการห้อง (หน้าตั้งค่าห้อง) */
+.room-settings-group-title {
+  padding: 4px 14px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ตารางเรียบๆ ในหน้าแอดมิน (เช่น เพิ่มห้องตามประเภท) — เลื่อนแนวนอนได้บนจอเล็ก */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.simple-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+  color: var(--text-body);
+}
+
+.simple-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.simple-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
 .upload-slot {
   border: 2px dashed var(--border-default);
   border-radius: var(--radius-md);

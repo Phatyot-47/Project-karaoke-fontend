@@ -175,6 +175,15 @@ const api = {
   createAdminRoom: (payload) => request('/admin/rooms', { method: 'POST', body: payload }),
   updateAdminRoom: (id, payload) => request(`/admin/rooms/${id}`, { method: 'PATCH', body: payload }),
   deleteAdminRoom: (id) => request(`/admin/rooms/${id}`, { method: 'DELETE' }),
+  // เพิ่มห้องธรรมดาหลายห้องตามประเภท — items = [{ typeId, count }] ชื่อห้องตั้งให้อัตโนมัติ เช่น S-01
+  bulkCreateAdminRooms: (items) => request('/admin/rooms/bulk', { method: 'POST', body: { items } }),
+
+  // ---- แอดมิน: ประเภทห้อง ----
+  listAdminRoomTypes: () => request('/admin/room-types'),
+  createRoomType: (payload) => request('/admin/room-types', { method: 'POST', body: payload }),
+  // payload.applyToRoomIds = ห้องธรรมดาที่เลือกให้เปลี่ยนเป็นราคาใหม่ของประเภท
+  updateRoomType: (id, payload) => request(`/admin/room-types/${id}`, { method: 'PATCH', body: payload }),
+  deleteRoomType: (id) => request(`/admin/room-types/${id}`, { method: 'DELETE' }),
 
   // ---- แอดมิน: รายงาน ----
   getReports: (period) => request('/admin/reports', { params: { period } }),
