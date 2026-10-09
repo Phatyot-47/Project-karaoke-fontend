@@ -23,7 +23,8 @@ import useNowTick from '../../hooks/useNowTick.js';
 
 export default function AdminBookingsPage() {
   const navigate = useNavigate();
-  const { updateBadgeFromStats } = useOutletContext() || {};
+  // alertsVersion เปลี่ยน = AdminLayout เจอสลิปใหม่ → โหลดรายการใหม่ให้เลย ไม่ต้องกดรีเฟรช
+  const { updateBadgeFromStats, alertsVersion } = useOutletContext() || {};
   const [stats, setStats] = useState({ pending_count: 0, in_progress_count: 0, completed_count: 0, revenue_today: 0 });
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +57,7 @@ export default function AdminBookingsPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [alertsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     api
