@@ -13,6 +13,7 @@ export {
   ClipboardCheck,
   History as HistoryIcon, // alias เพื่อหลีกเลี่ยง conflict กับ browser History API
   DoorOpen,
+  LayoutGrid,
   Store,
   Calendar as CalendarIcon,
   ArrowLeft,

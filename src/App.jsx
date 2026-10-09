@@ -24,6 +24,7 @@ import AdminWalkInPage from './pages/admin/AdminWalkInPage.jsx';
 import AdminHistoryPage from './pages/admin/AdminHistoryPage.jsx';
 import AdminShopSettingsPage from './pages/admin/AdminShopSettingsPage.jsx';
 import AdminRoomSettingsPage from './pages/admin/AdminRoomSettingsPage.jsx';
+import AdminRoomTypesPage from './pages/admin/AdminRoomTypesPage.jsx';
 import AdminReportsPage from './pages/admin/AdminReportsPage.jsx';
 
 export default function App() {
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/admin/walkin" element={<AdminWalkInPage />} />
         <Route path="/admin/history" element={<AdminHistoryPage />} />
         <Route path="/admin/shop-settings" element={<AdminShopSettingsPage />} />
+        <Route path="/admin/room-types" element={<AdminRoomTypesPage />} />
         <Route path="/admin/room-settings" element={<AdminRoomSettingsPage />} />
         <Route path="/admin/reports" element={<AdminReportsPage />} />
       </Route>

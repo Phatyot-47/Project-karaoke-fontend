@@ -11,6 +11,7 @@ import {
   HistoryIcon,
   Store,
   DoorOpen,
+  LayoutGrid,
   CalendarIcon,
   LogOut,
   Plus,
@@ -23,6 +24,7 @@ const PAGE_TITLES = {
   '/admin/walkin': 'จองวอล์คอิน',
   '/admin/history': 'ประวัติการจอง',
   '/admin/shop-settings': 'ตั้งค่าร้าน',
+  '/admin/room-types': 'ประเภทห้อง',
   '/admin/room-settings': 'ตั้งค่าห้อง',
   '/admin/reports': 'รายงาน',
 };
@@ -149,6 +151,12 @@ export default function AdminLayout() {
                 icon={<Store />}
                 active={isActive('/admin/shop-settings')}
                 onClick={() => go('/admin/shop-settings')}
+              />
+              <NavItem
+                label="ประเภทห้อง"
+                icon={<LayoutGrid />}
+                active={isActive('/admin/room-types')}
+                onClick={() => go('/admin/room-types')}
               />
               <NavItem
                 label="ตั้งค่าห้อง"
