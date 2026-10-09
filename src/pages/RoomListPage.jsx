@@ -61,7 +61,7 @@ export default function RoomListPage() {
     return slots
       .map((t, i) => ({ time: t, slotsLeft: slots.length - i }))
       .filter((s) => !isSlotPastBangkok(today, s.time));
-  }, [shop, today, nowTick]);
+  }, [shop, today, nowTick]); // eslint-disable-line react-hooks/exhaustive-deps -- nowTick: บังคับคำนวณใหม่ทุก 30 วิ ตามเวลาจริง
 
   // ระยะเวลาสูงสุดที่เลือกได้ = ไม่เกินเวลาปิดร้าน
   const maxSlots = startOptions.find((s) => s.time === searchStart)?.slotsLeft ?? 0;

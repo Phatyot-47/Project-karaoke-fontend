@@ -179,7 +179,6 @@ const api = {
 
   // ---- แอดมิน: จัดการห้อง ----
   listAdminRooms: () => request('/admin/rooms'),
-  createAdminRoom: (payload) => request('/admin/rooms', { method: 'POST', body: payload }),
   updateAdminRoom: (id, payload) => request(`/admin/rooms/${id}`, { method: 'PATCH', body: payload }),
   deleteAdminRoom: (id) => request(`/admin/rooms/${id}`, { method: 'DELETE' }),
   // เพิ่มห้องธรรมดาหลายห้องตามประเภท — items = [{ typeId, count }] ชื่อห้องตั้งให้อัตโนมัติ เช่น S-01

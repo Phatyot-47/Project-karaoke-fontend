@@ -8,7 +8,7 @@ import Input from '../components/Input.jsx';
 import { BookingNote, CancelReason } from '../components/BookingDetails.jsx';
 import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { getBookingDisplayStatus, formatDateTimeRange, money } from '../utils/format.js';
+import { getBookingDisplayStatus, formatDateTimeRange, money, isActiveBooking } from '../utils/format.js';
 import { capacityLabel } from '../utils/roomImage.js';
 import useNowTick from '../hooks/useNowTick.js';
 
@@ -64,11 +64,11 @@ export default function HistoryPage() {
           const statusInfo = getBookingDisplayStatus(b);
           // แก้ไข (เปลี่ยนห้อง/เวลา) ได้เมื่อส่งสลิปมัดจำแล้ว ยังไม่ Check-in — เงื่อนไขเวลาล่วงหน้า backend เป็นคนตรวจ
           const paidAmount = Number(b.paid_amount || 0);
-          const canEdit = ['pending', 'confirmed'].includes(b.booking_status) && paidAmount > 0 && !b.session_status;
+          const canEdit = isActiveBooking(b) && paidAmount > 0 && !b.session_status;
           // ยังไม่ได้ส่งสลิป (และยังไม่หมดเวลาชำระ ซึ่ง backend จะยกเลิกให้เอง) → กลับไปหน้าชำระมัดจำต่อได้
           const canPay = b.booking_status === 'pending' && b.deposit_status === 'unpaid';
           // Check-in แล้ว (มี session_status) ยกเลิกเองไม่ได้ ต้องให้ร้านจัดการ
-          const canCancel = ['pending', 'confirmed'].includes(b.booking_status) && !b.session_status;
+          const canCancel = isActiveBooking(b) && !b.session_status;
           const isDone = ['completed', 'cancelled', 'no_show'].includes(b.booking_status);
           const isCanceling = cancelingId === b.booking_id;
           return (

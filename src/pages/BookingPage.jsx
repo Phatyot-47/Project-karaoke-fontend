@@ -143,7 +143,7 @@ export default function BookingPage() {
 
   const pastTimes = useMemo(
     () => new Set(slotTimes.filter((t) => isSlotPastBangkok(today, t))),
-    [slotTimes, today, nowTick],
+    [slotTimes, today, nowTick], // eslint-disable-line react-hooks/exhaustive-deps -- nowTick: บังคับคำนวณใหม่ทุก 30 วิ ตามเวลาจริง
   );
 
   const startOrder = selectedStart ? order.get(selectedStart) : null;

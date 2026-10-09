@@ -1,6 +1,6 @@
 /**
  * room.image_url จาก backend อาจว่างหรือเป็น path ที่ยังไม่ตรงกับไฟล์จริง
- * ฟังก์ชัน resolveRoomImage() เดารูปจากชื่อห้องหรือขนาดห้องเป็น fallback
+ * ฟังก์ชัน resolveRoomImage() เดารูปจากชื่อห้องหรือประเภทห้อง (size = รหัสประเภท S/M/L/XL) เป็น fallback
  * (ใช้ asset ที่มากับดีไซน์ต้นฉบับใน /public/assets/)
  */
 
@@ -15,7 +15,7 @@ const NAME_TO_ASSET = {
   'extra large xl': '/assets/room-xl.png',
 };
 
-// Map ขนาดห้อง (S/M/L/XL) → asset path — ใช้เมื่อหาชื่อไม่ตรงใน NAME_TO_ASSET
+// Map รหัสประเภทห้อง (S/M/L/XL) → asset path — ใช้เมื่อหาชื่อไม่ตรงใน NAME_TO_ASSET (ประเภทที่เพิ่มเองใช้รูป hero)
 const SIZE_TO_ASSET = {
   S: '/assets/room-small-s.jpg',
   M: '/assets/room-medium-m.png',
@@ -28,7 +28,7 @@ const SIZE_TO_ASSET = {
  * 1. image_url ที่เป็น URL เต็ม (https://...) → ใช้ตรงๆ
  * 2. image_url ที่ขึ้นต้นด้วย / (เช่น /uploads/...) → เป็น path ของ server ใช้ได้
  * 3. ชื่อห้อง (lowercase trim) ตรงกับ NAME_TO_ASSET → ใช้ asset ที่ map ไว้
- * 4. ขนาดห้อง (SIZE_TO_ASSET) → fallback ตามขนาด
+ * 4. ประเภทห้อง (SIZE_TO_ASSET) → fallback ตามประเภท
  * 5. hero image → fallback สุดท้าย
  */
 export function resolveRoomImage(room) {
