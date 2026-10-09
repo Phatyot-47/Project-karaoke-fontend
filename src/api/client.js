@@ -120,6 +120,11 @@ const api = {
   loginAdmin: (username, password) => request('/auth/admin-login', { method: 'POST', body: { username, password } }),
 
   // ---- ข้อมูลส่วนตัวลูกค้า ----
+  // ---- แจ้งเตือนของลูกค้า (กระดิ่งบนเมนู) ----
+  listNotifications: () => request('/notifications'), // { unreadCount, items }
+  markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PATCH' }),
+
   updateProfile: (userId, name, phone, avatarUrl) =>
     request(`/users/${userId}`, { method: 'PATCH', body: { name, phone, avatarUrl } }),
   changePassword: (userId, currentPassword, newPassword) =>
