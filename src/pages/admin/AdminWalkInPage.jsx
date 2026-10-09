@@ -17,6 +17,8 @@ import {
   DAY_LABELS,
   findTodayHours,
   buildHalfHourSlots,
+  isActiveBooking,
+  overlapsRoomBooking,
 } from '../../utils/format.js';
 import useNowTick from '../../hooks/useNowTick.js';
 
@@ -63,7 +65,7 @@ export default function AdminWalkInPage() {
     load();
     const interval = setInterval(() => load({ silent: true }), 15000);
     return () => clearInterval(interval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // เวลาเปิด-ปิดร้านของ "วันนี้" ตาม day_of_week (0=อาทิตย์...6=เสาร์) จากการตั้งค่าร้าน (ตั้งค่าร้าน > เวลาเปิด-ปิด)
   const todayHours = useMemo(() => findTodayHours(shop?.hours), [shop]);
@@ -78,7 +80,7 @@ export default function AdminWalkInPage() {
 
   const lockedStartTimes = useMemo(
     () => new Set(slotTimes.filter((t) => isSlotPastBangkok(todayISODate(), t))),
-    [slotTimes, nowTick],
+    [slotTimes, nowTick], // eslint-disable-line react-hooks/exhaustive-deps -- nowTick: บังคับคำนวณใหม่ทุก 30 วิ ตามเวลาจริง
   );
 
   // ปล่อยเวลาว่างไว้จนกว่าแอดมินจะเลือกเอง — เคลียร์เฉพาะตอนที่ค่าที่เลือกไว้ใช้ไม่ได้แล้ว (เช่น เวลาเลยไปแล้ว หรือเวลาร้านเปลี่ยน)
@@ -171,13 +173,7 @@ export default function AdminWalkInPage() {
     const selEnd = new Date(endDatetime(today, start, end));
     if (!(selStart < selEnd)) return map;
     rooms.forEach((r) => {
-      const conflict = bookings.find(
-        (b) =>
-          b.room_id === r.room_id &&
-          (b.booking_status === 'pending' || b.booking_status === 'confirmed') &&
-          new Date(b.start_datetime) < selEnd &&
-          new Date(b.end_datetime) > selStart,
-      );
+      const conflict = bookings.find((b) => overlapsRoomBooking(b, r.room_id, selStart, selEnd));
       map.set(r.room_id, { available: !conflict, conflict });
     });
     return map;
@@ -191,13 +187,7 @@ export default function AdminWalkInPage() {
       const slots = slotTimes.map((t) => {
         const slotStart = new Date(`${today}T${t}:00`);
         const slotEnd = new Date(slotStart.getTime() + 30 * 60000);
-        const booking = bookings.find(
-          (b) =>
-            b.room_id === r.room_id &&
-            (b.booking_status === 'pending' || b.booking_status === 'confirmed') &&
-            new Date(b.start_datetime) < slotEnd &&
-            new Date(b.end_datetime) > slotStart,
-        );
+        const booking = bookings.find((b) => overlapsRoomBooking(b, r.room_id, slotStart, slotEnd));
         return { time: t, isPast: lockedStartTimes.has(t), status: booking ? booking.booking_status : null };
       });
       map.set(r.room_id, slots);
@@ -211,9 +201,7 @@ export default function AdminWalkInPage() {
     const now = new Date();
     const map = new Map();
     rooms.forEach((r) => {
-      const roomBookings = bookings.filter(
-        (b) => b.room_id === r.room_id && (b.booking_status === 'pending' || b.booking_status === 'confirmed'),
-      );
+      const roomBookings = bookings.filter((b) => b.room_id === r.room_id && isActiveBooking(b));
       const daySlots = roomDaySchedule.get(r.room_id) || [];
       const remainingSlots = daySlots.filter((s) => !s.isPast);
       const fullyBooked = remainingSlots.length > 0 && remainingSlots.every((s) => s.status);
@@ -228,7 +216,7 @@ export default function AdminWalkInPage() {
       map.set(r.room_id, { busy: false, fullyBooked: false, nextStart: next ? next.start_datetime : null });
     });
     return map;
-  }, [rooms, bookings, roomDaySchedule, nowTick]);
+  }, [rooms, bookings, roomDaySchedule, nowTick]); // eslint-disable-line react-hooks/exhaustive-deps -- nowTick: บังคับคำนวณใหม่ทุก 30 วิ ตามเวลาจริง
 
   const submit = async () => {
     setSuccessMsg('');

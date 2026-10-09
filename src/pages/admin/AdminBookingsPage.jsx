@@ -17,6 +17,7 @@ import {
   formatBookedAt,
   isSlotPastBangkok,
   money,
+  isActiveBooking,
 } from '../../utils/format.js';
 import { resolveRoomImage } from '../../utils/roomImage.js';
 import useNowTick from '../../hooks/useNowTick.js';
@@ -393,14 +394,11 @@ export default function AdminBookingsPage() {
               )}
             </>
           )}
-          {!overdue &&
-            (b.booking_status === 'pending' || b.booking_status === 'confirmed') &&
-            movingId !== b.booking_id &&
-            rejectingId !== b.booking_id && (
-              <Button variant="outline" size="sm" onClick={() => startMove(b)}>
-                ย้ายห้อง
-              </Button>
-            )}
+          {!overdue && isActiveBooking(b) && movingId !== b.booking_id && rejectingId !== b.booking_id && (
+            <Button variant="outline" size="sm" onClick={() => startMove(b)}>
+              ย้ายห้อง
+            </Button>
+          )}
           {b.booking_status === 'confirmed' && !b.session_id && rejectingId !== b.booking_id && (
             <>
               <Tag tone="warning" dot>

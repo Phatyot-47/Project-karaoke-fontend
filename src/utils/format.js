@@ -178,6 +178,21 @@ export function roomNoteLines(description) {
     .filter(Boolean);
 }
 
+/** การจองที่ยังมีผล (รอยืนยัน / ยืนยันแล้ว) = ยังกันช่วงเวลาของห้องไว้ — ยกเลิก/เสร็จ/ไม่มาใช้บริการ ไม่นับ */
+export function isActiveBooking(booking) {
+  return booking?.booking_status === 'pending' || booking?.booking_status === 'confirmed';
+}
+
+/** การจองของห้องนี้ ที่ยังมีผล และทับช่วงเวลา [start, end) (Date) หรือไม่ — ใช้หาห้องว่าง/ห้องไม่ว่าง */
+export function overlapsRoomBooking(booking, roomId, start, end) {
+  return (
+    booking.room_id === roomId &&
+    isActiveBooking(booking) &&
+    new Date(booking.start_datetime) < end &&
+    new Date(booking.end_datetime) > start
+  );
+}
+
 // Map สถานะการจอง → label ภาษาไทย + tone สีของ Tag component
 const BOOKING_STATUS_LABEL = {
   pending: { label: 'รอดำเนินการ', tone: 'warning' },
@@ -225,7 +240,7 @@ export function getBookingDisplayStatus(booking) {
 }
 
 /**
- * ข้อความเงื่อนไขการยกเลิกจากนโยบายร้านปัจจุบัน (shop.policy จาก GET /admin/shop)
+ * ข้อความเงื่อนไขการยกเลิกจากนโยบายร้านปัจจุบัน (shop.policy จาก GET /api/shop)
  * เช่น "ยกเลิกได้ล่วงหน้าก่อนเวลาเริ่ม 1 ชั่วโมง — ยกเลิกเองหรือไม่มาใช้บริการ ร้านขอสงวนสิทธิ์ไม่คืนมัดจำ…"
  * (ข้อความสำรองใช้ตอนร้านยังไม่ได้ตั้งค่านโยบาย — ตรงกับนโยบายร้าน: ร้านยกเลิกเอง = คืนมัดจำนอกระบบ)
  */
