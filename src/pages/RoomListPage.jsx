@@ -8,7 +8,7 @@ import Tag from '../components/Tag.jsx';
 import Button from '../components/Button.jsx';
 import Tabs from '../components/Tabs.jsx';
 import { Search } from '../components/Icons.jsx';
-import api from '../api/client.js';
+import api, { fileUrl } from '../api/client.js';
 import { resolveRoomImage, capacityLabel, ROOM_PHOTO_ASPECT_RATIO } from '../utils/roomImage.js';
 import {
   money,
@@ -210,7 +210,7 @@ export default function RoomListPage() {
       {showFloorPlan && shop?.floor_plan_url && (
         <Card title="แผนผังห้องของร้าน" style={{ marginTop: 16 }}>
           <img
-            src={shop.floor_plan_url}
+            src={fileUrl(shop.floor_plan_url)}
             alt="แผนผังห้องของร้าน"
             style={{ width: '100%', maxHeight: 520, objectFit: 'contain' }}
           />

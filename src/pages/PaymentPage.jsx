@@ -6,7 +6,7 @@ import Button from '../components/Button.jsx';
 import IconButton from '../components/IconButton.jsx';
 import UploadSlot from '../components/UploadSlot.jsx';
 import { ArrowLeft, Check } from '../components/Icons.jsx';
-import api from '../api/client.js';
+import api, { fileUrl } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveRoomImage } from '../utils/roomImage.js';
 import { formatDateTimeRange, money, pad2, cancellationNote } from '../utils/format.js';
@@ -229,7 +229,7 @@ export default function PaymentPage() {
                 </div>
                 <div className="qr-box">
                   {shop?.qr_code_url ? (
-                    <img src={shop.qr_code_url} alt="QR PromptPay" />
+                    <img src={fileUrl(shop.qr_code_url)} alt="QR PromptPay" />
                   ) : (
                     <span
                       style={{

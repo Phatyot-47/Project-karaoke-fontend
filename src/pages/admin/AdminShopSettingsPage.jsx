@@ -123,7 +123,10 @@ export default function AdminShopSettingsPage() {
         </div>
       </Card>
 
-      <Card title="เวลาเปิด-ปิดร้าน" subtitle="กำหนดเวลาเปิด-ปิดแยกแต่ละวันในสัปดาห์">
+      <Card
+        title="เวลาเปิด-ปิดร้าน"
+        subtitle="กำหนดเวลาเปิด-ปิดแยกแต่ละวันในสัปดาห์ — ตั้งเวลาเปิดและปิดเท่ากัน = ปิดทั้งวัน"
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {sortedHours.map((d) => (
             <div key={d.day_of_week} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

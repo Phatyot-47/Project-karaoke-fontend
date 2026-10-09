@@ -67,6 +67,20 @@ export default function AdminBookingsPage() {
       .catch(() => {});
   }, []);
 
+  // ลูกค้าจ่ายมัดจำเป็นเงินสดที่หน้าร้าน — ถามยืนยันยอดก่อน เพราะเป็นการบันทึกว่าร้านได้รับเงินแล้ว
+  const handleCashDeposit = async (b) => {
+    const due = Number(b.deposit_required) - Number(b.paid_amount || 0);
+    if (!window.confirm(`ยืนยันว่าได้รับมัดจำเงินสด ${money(due)} บาท จากลูกค้า ${b.customer_name || ''} แล้ว?`))
+      return;
+    try {
+      await api.recordCashDeposit(b.booking_id);
+      setNotice(`บันทึกรับมัดจำเงินสด ${money(due)} บาทแล้ว — กดยืนยันการจองต่อได้เลย`);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleConfirm = async (id) => {
     try {
       await api.confirmBooking(id);
@@ -282,8 +296,8 @@ export default function AdminBookingsPage() {
               {b.payment_status === 'pending' && rejectingSlipId !== b.payment_id && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ตรวจสอบสลิปเงินมัดจำ</span>
-                  {b.booking_status === 'cancelled' && (
-                    // สลิปค้างตรวจบนการจองที่ยกเลิกแล้ว = ลูกค้ายกเลิกเอง (ร้านยกเลิกเมื่อไหร่ สลิปไม่ผ่านอัตโนมัติ)
+                  {b.booking_status === 'cancelled' && b.cancelled_by === 'customer' && (
+                    // ลูกค้ายกเลิกเองแต่สลิปยังรอตรวจ (ร้านยกเลิกเมื่อไหร่ สลิปไม่ผ่านอัตโนมัติ)
                     <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--amber-600)', maxWidth: 260 }}>
                       ลูกค้ายกเลิกเอง — มัดจำไม่คืนตามนโยบาย ตรวจสลิปเพื่อยืนยันว่าได้รับเงินแล้ว
                     </span>
@@ -387,7 +401,14 @@ export default function AdminBookingsPage() {
               >
                 ปฏิเสธ
               </Button>
-              {!overdue && (
+              {/* ยังไม่ได้รับมัดจำครบ และไม่มีสลิปรอตรวจ = ลูกค้าอาจจ่ายเงินสดที่หน้าร้าน */}
+              {b.deposit_status !== 'paid' && b.payment_status !== 'pending' && (
+                <Button variant="outline" size="sm" onClick={() => handleCashDeposit(b)}>
+                  รับมัดจำเงินสดแล้ว
+                </Button>
+              )}
+              {/* ยืนยันได้เมื่อได้รับมัดจำครบแล้วเท่านั้น (ตรวจสลิปผ่าน หรือรับเงินสด) */}
+              {!overdue && b.deposit_status === 'paid' && (
                 <Button variant="accent" size="sm" iconLeft={<Check />} onClick={() => handleConfirm(b.booking_id)}>
                   ยืนยัน
                 </Button>

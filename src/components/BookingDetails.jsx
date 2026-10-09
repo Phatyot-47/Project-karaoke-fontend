@@ -2,6 +2,8 @@
  * ส่วนแสดงรายละเอียดของรายการจองที่ใช้ซ้ำหลายหน้า (ประวัติลูกค้า / อนุมัติการจอง / ประวัติแอดมิน)
  */
 
+import { fileUrl } from '../api/client.js';
+
 /** หมายเหตุของการจอง (รวมบรรทัดประวัติ [ย้ายห้อง ...] ที่ระบบต่อท้ายไว้) */
 export function BookingNote({ note }) {
   if (!note) return null;
@@ -36,7 +38,7 @@ export function CancelReason({ booking }) {
 export function SlipImage({ src }) {
   return (
     <img
-      src={src}
+      src={fileUrl(src)}
       alt="สลิปเงินมัดจำ"
       style={{
         width: 120,

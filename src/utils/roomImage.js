@@ -4,6 +4,8 @@
  * (ใช้ asset ที่มากับดีไซน์ต้นฉบับใน /public/assets/)
  */
 
+import { fileUrl } from '../api/client.js';
+
 // Map ชื่อห้อง (lowercase) → asset path
 const NAME_TO_ASSET = {
   'one piece': '/assets/room-one-piece.png',
@@ -33,7 +35,7 @@ const SIZE_TO_ASSET = {
  */
 export function resolveRoomImage(room) {
   if (room.image_url && /^https?:\/\//.test(room.image_url)) return room.image_url;
-  if (room.image_url && room.image_url.startsWith('/')) return room.image_url;
+  if (room.image_url && room.image_url.startsWith('/')) return fileUrl(room.image_url); // /uploads/... ของ backend
   const byName = NAME_TO_ASSET[(room.room_name || room.name || '').trim().toLowerCase()];
   if (byName) return byName;
   return SIZE_TO_ASSET[room.size] || '/assets/hero-room.png';

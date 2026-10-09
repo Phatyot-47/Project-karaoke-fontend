@@ -6,6 +6,8 @@
  * @param {string} src  - ลิงก์รูปโปรไฟล์ (users.avatar_url) ไม่บังคับ
  * @param {'sm'|'md'|'lg'} size - ขนาด: sm = 42px, md = 52px, lg = 112px
  */
+import { fileUrl } from '../api/client.js';
+
 const SIZES = { sm: 42, md: 52, lg: 112 };
 
 export default function Avatar({ name = '', src, size = 'sm' }) {
@@ -15,7 +17,7 @@ export default function Avatar({ name = '', src, size = 'sm' }) {
 
   return (
     <span className="avatar" style={{ width: px, height: px, fontSize: size === 'lg' ? 'var(--text-2xl)' : undefined }}>
-      {src ? <img src={src} alt={name ? `รูปโปรไฟล์ของ ${name}` : 'รูปโปรไฟล์'} /> : initial}
+      {src ? <img src={fileUrl(src)} alt={name ? `รูปโปรไฟล์ของ ${name}` : 'รูปโปรไฟล์'} /> : initial}
     </span>
   );
 }

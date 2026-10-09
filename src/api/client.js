@@ -5,6 +5,13 @@
 // ถ้าไม่ตั้งค่าไว้ จะใช้ localhost:4000/api เป็น fallback สำหรับ development
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
+// ไฟล์ที่อัปโหลด (สลิป, QR, แผนผัง, รูปห้อง, รูปโปรไฟล์) backend เก็บเป็น path "/uploads/xxx" ไม่ผูกกับชื่อเครื่อง
+// → เติมที่อยู่ backend ให้ตอนแสดงผล (ลิงก์อื่น เช่น /assets/... ของหน้าเว็บเอง หรือ data:/http: ใช้ตามเดิม)
+const API_ORIGIN = new URL(BASE_URL, window.location.href).origin;
+export function fileUrl(url) {
+  return typeof url === 'string' && url.startsWith('/uploads/') ? API_ORIGIN + url : url;
+}
+
 // token เข้าสู่ระบบเก็บอยู่ในข้อมูลผู้ใช้ใน localStorage (ดู AuthContext) — แยกลูกค้า/แอดมิน
 // เลือกตามหน้าที่เปิดอยู่: หน้า /admin/* ใช้ token แอดมิน นอกนั้นใช้ token ลูกค้า
 const SESSIONS = {
@@ -160,6 +167,8 @@ const api = {
     request(`/admin/bookings/${id}/change-room`, { method: 'PATCH', body: { roomId } }),
 
   // ---- แอดมิน: Check-in / ต่อเวลา / Check-out ----
+  // ลูกค้าจ่ายมัดจำเป็นเงินสดที่หน้าร้าน — บันทึกยอดที่ยังขาดเป็นเงินสด แล้วกดยืนยันการจองต่อได้
+  recordCashDeposit: (id) => request(`/admin/bookings/${id}/cash-deposit`, { method: 'PATCH' }),
   checkIn: (id) => request(`/admin/bookings/${id}/check-in`, { method: 'PATCH' }),
   extendBooking: (id, minutes) => request(`/admin/bookings/${id}/extend`, { method: 'PATCH', body: { minutes } }),
   checkOut: (id) => request(`/admin/bookings/${id}/check-out`, { method: 'PATCH' }),

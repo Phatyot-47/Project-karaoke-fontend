@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import api from '../api/client.js';
+import api, { fileUrl } from '../api/client.js';
 import ImageCropModal from './ImageCropModal.jsx';
 
 /**
@@ -17,7 +17,7 @@ export default function UploadSlot({
   cropAspectRatio,
 }) {
   const inputRef = useRef(null);
-  const [preview, setPreview] = useState(value || null);
+  const [preview, setPreview] = useState(fileUrl(value) || null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [cropSrc, setCropSrc] = useState(null);
@@ -34,7 +34,7 @@ export default function UploadSlot({
       onChange?.(url, file);
     } catch (err) {
       setError(err.message);
-      setPreview(value || null);
+      setPreview(fileUrl(value) || null);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
