@@ -8,6 +8,7 @@
  */
 export {
   Search,
+  Bell,
   Check,
   Menu,
   ClipboardCheck,

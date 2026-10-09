@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import Avatar from '../components/Avatar.jsx';
 import { LogOut } from '../components/Icons.jsx';
 import api from '../api/client.js';
+import NotificationBell from '../components/NotificationBell.jsx';
 
 /**
  * Layout หลักสำหรับหน้าลูกค้า — ทำหน้าที่:
@@ -53,12 +54,15 @@ export default function CustomerLayout() {
           </NavLink>
         </nav>
 
-        {/* ปุ่ม logout — แสดงชื่อลูกค้าปัจจุบัน */}
-        <button type="button" className="user-pill" onClick={logoutCustomer} title="ออกจากระบบ">
-          <Avatar name={customer.name} src={customer.avatar_url} size="sm" />
-          <span>คุณ {customer.name}</span>
-          <LogOut style={{ width: 14, height: 14, color: 'var(--text-subtle)', marginLeft: 2 }} />
-        </button>
+        {/* กระดิ่งแจ้งเตือน + ปุ่ม logout (แสดงชื่อลูกค้าปัจจุบัน) */}
+        <div className="topbar-actions">
+          <NotificationBell />
+          <button type="button" className="user-pill" onClick={logoutCustomer} title="ออกจากระบบ">
+            <Avatar name={customer.name} src={customer.avatar_url} size="sm" />
+            <span>คุณ {customer.name}</span>
+            <LogOut style={{ width: 14, height: 14, color: 'var(--text-subtle)', marginLeft: 2 }} />
+          </button>
+        </div>
       </header>
 
       {/* พื้นที่ render หน้าลูกค้า */}
