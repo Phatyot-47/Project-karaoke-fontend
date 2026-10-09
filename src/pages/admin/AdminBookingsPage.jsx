@@ -281,6 +281,12 @@ export default function AdminBookingsPage() {
               {b.payment_status === 'pending' && rejectingSlipId !== b.payment_id && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-muted)' }}>ตรวจสอบสลิปเงินมัดจำ</span>
+                  {b.booking_status === 'cancelled' && (
+                    // สลิปค้างตรวจบนการจองที่ยกเลิกแล้ว = ลูกค้ายกเลิกเอง (ร้านยกเลิกเมื่อไหร่ สลิปไม่ผ่านอัตโนมัติ)
+                    <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--amber-600)', maxWidth: 260 }}>
+                      ลูกค้ายกเลิกเอง — มัดจำไม่คืนตามนโยบาย ตรวจสลิปเพื่อยืนยันว่าได้รับเงินแล้ว
+                    </span>
+                  )}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <Button
                       variant="danger"
@@ -306,7 +312,9 @@ export default function AdminBookingsPage() {
               {b.payment_status === 'pending' && rejectingSlipId === b.payment_id && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: '1 1 240px' }}>
                   <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--red-600)' }}>
-                    ปฏิเสธสลิปแล้วการจองนี้จะถูกยกเลิกทันที
+                    {b.booking_status === 'cancelled'
+                      ? 'ปฏิเสธสลิป = ร้านไม่ได้รับเงินมัดจำของการจองนี้'
+                      : 'ปฏิเสธสลิปแล้วการจองนี้จะถูกยกเลิกทันที'}
                   </span>
                   <Input
                     placeholder="เหตุผล (จะแจ้งลูกค้า) เช่น ยอดเงินไม่ตรง"
@@ -336,6 +344,12 @@ export default function AdminBookingsPage() {
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
               />
+              {(b.deposit_status !== 'unpaid' || Number(b.paid_amount) > 0) && (
+                <div style={{ marginTop: 6, fontSize: 'var(--text-2xs)', color: 'var(--red-600)' }}>
+                  ร้านยกเลิกเอง: สลิปที่ยังไม่ได้ตรวจจะเป็น "ไม่ผ่าน (การจองถูกยกเลิก)" อัตโนมัติ —
+                  ถ้าลูกค้าโอนมัดจำแล้ว ร้านต้องคืนเงินให้ลูกค้าเองนอกระบบ
+                </div>
+              )}
             </div>
           )}
         </div>

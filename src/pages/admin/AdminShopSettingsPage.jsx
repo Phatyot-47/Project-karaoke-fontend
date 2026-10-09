@@ -193,7 +193,7 @@ export default function AdminShopSettingsPage() {
               label="นโยบายการคืนเงินมัดจำ"
               value={policy.refundPolicyDesc}
               onChange={setPolicyField('refundPolicyDesc')}
-              placeholder="เช่น มัดจำไม่สามารถขอคืนได้ทุกกรณี"
+              placeholder="เช่น ยกเลิกเองหรือไม่มาใช้บริการ ร้านขอสงวนสิทธิ์ไม่คืนมัดจำทุกกรณี หากร้านเป็นฝ่ายยกเลิก ร้านจะติดต่อคืนมัดจำให้"
             />
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
