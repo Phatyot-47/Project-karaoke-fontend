@@ -167,6 +167,8 @@ const api = {
     request(`/admin/bookings/${id}/change-room`, { method: 'PATCH', body: { roomId } }),
 
   // ---- แอดมิน: Check-in / ต่อเวลา / Check-out ----
+  // ลูกค้าจ่ายมัดจำเป็นเงินสดที่หน้าร้าน — บันทึกยอดที่ยังขาดเป็นเงินสด แล้วกดยืนยันการจองต่อได้
+  recordCashDeposit: (id) => request(`/admin/bookings/${id}/cash-deposit`, { method: 'PATCH' }),
   checkIn: (id) => request(`/admin/bookings/${id}/check-in`, { method: 'PATCH' }),
   extendBooking: (id, minutes) => request(`/admin/bookings/${id}/extend`, { method: 'PATCH', body: { minutes } }),
   checkOut: (id) => request(`/admin/bookings/${id}/check-out`, { method: 'PATCH' }),
