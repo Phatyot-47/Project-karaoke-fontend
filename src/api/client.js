@@ -151,6 +151,8 @@ const api = {
 
   // ---- แอดมิน: จัดการการจอง ----
   getTodayBookings: () => request('/admin/bookings/today'),
+  // แจ้งเตือนแอดมิน: { pendingCount, latestPaymentId, newSlips } — newSlips = สลิปรอตรวจที่ payment_id > afterPaymentId
+  getAdminAlerts: (afterPaymentId) => request('/admin/alerts', { params: { afterPaymentId } }),
   confirmBooking: (id) => request(`/admin/bookings/${id}/confirm`, { method: 'PATCH' }),
   rejectBooking: (id, reason) => request(`/admin/bookings/${id}/reject`, { method: 'PATCH', body: { reason } }),
   markNoShow: (id, reason) => request(`/admin/bookings/${id}/no-show`, { method: 'PATCH', body: { reason } }),
