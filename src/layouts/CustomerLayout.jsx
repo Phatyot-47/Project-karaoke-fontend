@@ -10,7 +10,7 @@ import NotificationBell from '../components/NotificationBell.jsx';
  * Layout หลักสำหรับหน้าลูกค้า — ทำหน้าที่:
  * 1. Guard: redirect ไป /login ถ้ายังไม่ล็อกอิน (พร้อมส่ง state.from ไว้ให้หน้า login redirect กลับมาได้)
  * 2. Topbar: brand logo + navigation (เลือกห้อง / ประวัติการจอง / ข้อมูลส่วนตัว) + ปุ่ม logout
- * 3. <Outlet />: render หน้าลูกค้าตาม route ที่ match (RoomListPage / HistoryPage)
+ * 3. <Outlet />: render หน้าลูกค้าตาม route ที่ match (RoomListPage / HistoryPage / ProfilePage)
  * 4. Footer: ข้อมูลติดต่อร้าน (ชื่อ / เบอร์โทร / ที่อยู่ ดึงจากหน้าตั้งค่าร้านของแอดมิน)
  */
 export default function CustomerLayout() {
@@ -70,7 +70,7 @@ export default function CustomerLayout() {
         <Outlet />
       </main>
 
-      {/* Footer แสดงข้อมูลติดต่อร้าน — shopPhone มาจาก customer object ที่ backend ส่งมา */}
+      {/* Footer แสดงข้อมูลติดต่อร้าน — ดึงจากข้อมูลร้าน (แอดมินแก้ได้ที่หน้าตั้งค่าร้าน) */}
       <footer className="footer">
         <div className="name">{shop?.name || 'Gens Karaoke & Board Game'}</div>
         {shop?.phone && <div className="meta">โทร: {shop.phone}</div>}
