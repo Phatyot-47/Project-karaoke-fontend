@@ -251,7 +251,7 @@ export default function BookingPage() {
       api
         .getRoomAvailability(roomId, today)
         .then(setAvailability)
-        .catch(() => { });
+        .catch(() => {});
     } finally {
       setSubmitting(false);
     }
@@ -278,7 +278,7 @@ export default function BookingPage() {
       api
         .getRoomAvailability(roomId, today)
         .then(setAvailability)
-        .catch(() => { });
+        .catch(() => {});
     } finally {
       setSubmitting(false);
     }
