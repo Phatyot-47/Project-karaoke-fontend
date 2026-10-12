@@ -18,6 +18,7 @@ const HOLD_SECONDS = 5 * 60;
 // จ่ายส่วนต่างมัดจำ (หลังลูกค้าแก้ไขการจอง) = เคยจ่ายมาแล้ว เวลาจองไว้แล้ว จึงไม่มีนับถอยหลัง
 const isTopUp = (booking) => Number(booking?.paid_amount || 0) > 0;
 
+// เหลือกี่วินาที = 5 นาที − (เวลาตอนนี้ − เวลาที่กดจอง) ต่ำสุด 0 / จ่ายส่วนต่างไม่มีนับถอยหลัง
 function secondsLeft(booking) {
   if (isTopUp(booking)) return HOLD_SECONDS;
   const createdAt = booking?.created_at ? new Date(booking.created_at).getTime() : Date.now();
@@ -44,6 +45,8 @@ export default function PaymentPage() {
   // จึงยังถูกต้องแม้สลับไปแท็บอื่นนานๆ แล้วกลับมา (เก็บการจองไว้ใน ref ให้นาฬิกาอ่านค่าล่าสุดได้)
   const bookingRef = useRef(booking);
 
+  // ตอนเปิดหน้า: โหลดการจอง (ถ้ายังไม่มีใน state) + ตรวจว่ายังจ่ายได้ไหม, โหลดข้อมูลร้าน (QR/บัญชี),
+  // และเริ่มนาฬิกานับถอยหลังทุก 1 วินาที (หยุดด้วย clearInterval ตอนออกจากหน้า)
   useEffect(() => {
     if (!customer) {
       navigate('/login');
@@ -127,6 +130,7 @@ export default function PaymentPage() {
   const amountDue = Number(booking.deposit_required) - Number(booking.paid_amount || 0);
   const countdownLabel = `${pad2(Math.floor(countdown / 60))}:${pad2(countdown % 60)}`;
 
+  // ส่ง URL สลิปไปบันทึก → ไปหน้า /success / backend ตอบ 409 ว่าหมดเวลา → แสดงการ์ดหมดเวลา
   const handleConfirmPayment = async () => {
     if (expired) return;
     if (!evidence) {

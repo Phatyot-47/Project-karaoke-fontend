@@ -41,6 +41,7 @@ export default function AdminShopSettingsPage() {
   const [saving, setSaving] = useState(false);
   const { saved, flashSaved } = useSavedFlag();
 
+  // โหลดข้อมูลร้านครั้งเดียว แล้วแยกใส่แต่ละส่วนของฟอร์ม (ข้อมูลร้าน / พีคไทม์ / เวลาเปิด-ปิด / นโยบาย)
   useEffect(() => {
     api
       .getShop()
@@ -62,15 +63,18 @@ export default function AdminShopSettingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // ตัวช่วยสร้าง onChange: แก้เฉพาะ field นั้น (setField = ข้อมูลร้าน / setPolicyField = นโยบาย)
   const setField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const setPolicyField = (field) => (e) => setPolicy((p) => ({ ...p, [field]: e.target.value }));
 
+  // แก้เวลาเปิด/ปิดของวันเดียว — วนทุกวัน เจอวันที่ตรงก็แก้ field นั้น วันอื่นคงเดิม
   const setHourField = (dayOfWeek, field) => (e) => {
     const value = Number(e.target.value);
     setHours((hrs) => hrs.map((h) => (h.day_of_week === dayOfWeek ? { ...h, [field]: value } : h)));
   };
 
+  // แก้พีคไทม์ของวันเดียว (patch = ค่าที่เขียนทับ เช่น { customRates: true } หรือ { rates: {...} })
   const setDayRates = (dayOfWeek, patch) =>
     setHours((hrs) => hrs.map((h) => (h.day_of_week === dayOfWeek ? { ...h, ...patch } : h)));
 
@@ -86,6 +90,7 @@ export default function AdminShopSettingsPage() {
     }
   };
 
+  // บันทึก 3 ส่วนตามลำดับ: ข้อมูลร้าน + พีคไทม์หลัก → นโยบาย (เฉพาะเมื่อแก้ เพราะบันทึกแต่ละครั้งสร้างฉบับใหม่) → เวลาเปิด-ปิด
   const handleSave = async () => {
     setSaving(true);
     setError('');

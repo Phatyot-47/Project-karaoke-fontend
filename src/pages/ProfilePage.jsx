@@ -22,6 +22,8 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const { saved, flashSaved } = useSavedFlag();
 
+  // บันทึกรูป + ชื่อ + เบอร์ แล้วอัปเดตข้อมูลผู้ใช้ที่จำไว้ ให้ชื่อ/รูปบนเมนูเปลี่ยนทันที
+  // { ...customer, ...user } = ข้อมูลเดิมทั้งหมด (รวม token) เขียนทับด้วยค่าใหม่จาก backend
   const handleSubmit = async () => {
     if (!name.trim() || phone.trim().length < 9) {
       setError('กรุณากรอกชื่อและเบอร์โทรศัพท์ให้ครบถ้วน');
@@ -130,11 +132,13 @@ function ChangePasswordCard({ userId }) {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const { saved, flashSaved } = useSavedFlag();
+  // ตัวช่วยสร้าง onChange: ใส่ค่าที่พิมพ์ลงช่องนั้น + ล้างข้อความ error (ใช้ซ้ำทั้ง 3 ช่อง)
   const clearError = (setter) => (e) => {
     setter(e.target.value);
     setError('');
   };
 
+  // เปลี่ยนรหัสผ่าน — รหัสเดิมผิด backend ตอบ error / สำเร็จล้างทุกช่อง
   const handleSubmit = async () => {
     if (!current) {
       setError('กรุณากรอกรหัสผ่านเดิม');

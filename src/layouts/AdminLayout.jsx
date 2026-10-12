@@ -25,6 +25,7 @@ const MAX_TOASTS = 5;
 // จำกล่องแจ้งเตือน + เลขสลิปล่าสุดไว้ในแท็บนี้ (sessionStorage = หายเมื่อปิดแท็บ) — กดรีเฟรชแล้วกล่องไม่หาย และไม่เด้งซ้ำ
 const ALERTS_KEY = 'gens_karaoke_admin_alerts';
 
+// อ่านกล่องแจ้งเตือนที่จำไว้ใน sessionStorage (ไม่มี/ข้อมูลเสีย = เริ่มจากว่าง)
 function loadSavedAlerts() {
   try {
     const saved = JSON.parse(sessionStorage.getItem(ALERTS_KEY));
@@ -66,6 +67,7 @@ export default function AdminLayout() {
 
   // จำนวนรายการรอจัดการ (รอยืนยันวันนี้ + ค้างจากวันก่อน) — ตัวเลขแดงบนเมนู "อนุมัติการจอง"
   const [pendingCount, setPendingCount] = useState(0);
+  // หน้าอนุมัติการจองเรียกฟังก์ชันนี้หลังโหลดรายการ (ส่งผ่าน Outlet context) ให้ตัวเลขแดงตรงกับรายการล่าสุด
   const updateBadgeFromStats = (stats) => {
     setPendingCount(Number(stats?.pending_count || 0) + Number(stats?.overdue_count || 0));
   };
@@ -78,8 +80,10 @@ export default function AdminLayout() {
   // เลขสลิปล่าสุดที่เห็นแล้ว — null = ยังไม่เคยถาม (ครั้งแรกแค่จำเลขไว้ ไม่เด้งสลิปเก่าที่ค้างอยู่ก่อนเปิดหน้า)
   const lastPaymentIdRef = useRef(savedAlerts.lastPaymentId);
 
+  // ref เก็บกล่องแจ้งเตือนล่าสุด ให้ saveAlerts อ่านค่าปัจจุบันได้เสมอ (แม้ถูกเรียกจาก checkAlerts ที่สร้างไว้ครั้งเดียว)
   const slipToastsRef = useRef(slipToasts);
   slipToastsRef.current = slipToasts;
+  // บันทึกกล่องแจ้งเตือน + เลขสลิปล่าสุดลง sessionStorage — เรียกทุกครั้งที่กล่องเปลี่ยน และหลังเช็คสลิปใหม่
   const saveAlerts = () => {
     try {
       sessionStorage.setItem(
@@ -92,6 +96,9 @@ export default function AdminLayout() {
   };
   useEffect(saveAlerts, [slipToasts]);
 
+  // ถาม backend ว่ามีสลิปใหม่หลังเลขล่าสุดที่เคยเห็นไหม → อัปเดตตัวเลขแดง
+  // มีสลิปใหม่ → เพิ่มกล่องแจ้งเตือน (เก็บแค่ 5 กล่องล่าสุด) + เพิ่ม alertsVersion ให้หน้าอนุมัติการจองโหลดใหม่
+  // ครั้งแรก (first) แค่จำเลขล่าสุดไว้ ไม่เด้งสลิปที่ค้างอยู่ก่อนเปิดหน้า
   const checkAlerts = useCallback(() => {
     const first = lastPaymentIdRef.current === null;
     return api
@@ -124,6 +131,7 @@ export default function AdminLayout() {
   useEffect(() => {
     document.title = pendingCount ? `(${pendingCount}) ${baseTitleRef.current}` : baseTitleRef.current;
   }, [pendingCount]);
+  // ออกจากหน้าแอดมิน → คืนชื่อแท็บเดิม (ไม่มีตัวเลขค้าง)
   useEffect(() => () => (document.title = baseTitleRef.current), []);
 
   // ออกจากระบบ = ล้างแจ้งเตือนที่จำไว้ด้วย (คนถัดไปที่ล็อกอินในแท็บนี้จะไม่เห็นของเก่า)
@@ -153,6 +161,7 @@ export default function AdminLayout() {
     setMobileOpen(false);
   };
 
+  // เมนูไหนตรงกับหน้าที่เปิดอยู่ → ไฮไลต์
   const isActive = (path) => location.pathname === path;
   const title = PAGE_TITLES[location.pathname] || 'อนุมัติการจอง';
 

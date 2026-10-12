@@ -19,6 +19,7 @@ export default function CustomerLayout() {
   // ข้อมูลร้านสำหรับ footer — แอดมินแก้ได้ที่หน้า "ตั้งค่าร้าน" (ไม่เขียนเบอร์/ที่อยู่ตายตัวในโค้ด)
   const [shop, setShop] = useState(null);
 
+  // โหลดข้อมูลร้านครั้งเดียว ไว้แสดงใน footer
   useEffect(() => {
     api
       .getShop()

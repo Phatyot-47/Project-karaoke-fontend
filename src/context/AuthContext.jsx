@@ -42,6 +42,7 @@ export function AuthProvider({ children }) {
 
   // ฟังก์ชันที่หน้าอื่นเรียกใช้ได้ผ่าน useAuth()
   const loginCustomer = persist(CUSTOMER_KEY, setCustomer);
+  // ออกจากระบบ = ล็อกอินด้วย null (ลบข้อมูลที่เก็บไว้)
   const logoutCustomer = () => loginCustomer(null);
   const loginAdmin = persist(ADMIN_KEY, setAdmin);
   const logoutAdmin = () => loginAdmin(null);

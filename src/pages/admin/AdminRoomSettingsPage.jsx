@@ -32,6 +32,7 @@ export default function AdminRoomSettingsPage() {
   const [bulkCounts, setBulkCounts] = useState({});
   const [adding, setAdding] = useState(false);
 
+  // เลือกห้องในรายการ → ก๊อปข้อมูลห้องลงฉบับร่าง (draft) ไว้แก้ + ล้างสถานะของห้องก่อนหน้า
   const selectRoom = (room) => {
     setSelectedId(room.room_id);
     setDraft(toDraft(room));
@@ -55,6 +56,7 @@ export default function AdminRoomSettingsPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
 
+  // โหลดตอนเปิดหน้า
   useEffect(() => {
     load();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -67,6 +69,8 @@ export default function AdminRoomSettingsPage() {
 
   const bulkTotal = Object.values(bulkCounts).reduce((sum, n) => sum + (Number(n) || 0), 0);
 
+  // เพิ่มห้องหลายห้องครั้งเดียว: { type_id: จำนวน } → [{ typeId, count }] (ตัดที่เป็น 0 ออก)
+  // backend ตั้งชื่อให้เอง (S-01, S-02, ...) แล้วเลือกห้องแรกที่เพิ่งเพิ่มไว้ให้
   const handleBulkAdd = async () => {
     setAdding(true);
     setError('');
@@ -86,6 +90,7 @@ export default function AdminRoomSettingsPage() {
     }
   };
 
+  // ลบห้อง — ห้องที่มีประวัติการจองแล้ว backend ไม่ยอมลบ (ให้ปิดให้บริการแทน)
   const handleDeleteRoom = async () => {
     setDeleting(true);
     setError('');
@@ -100,6 +105,7 @@ export default function AdminRoomSettingsPage() {
     }
   };
 
+  // ตัวช่วยสร้าง onChange: setField('room_name') → แก้เฉพาะ field นั้นในฉบับร่าง ที่เหลือคงเดิม
   const setField = (field) => (e) => setDraft((d) => ({ ...d, [field]: e.target.value }));
   const draftType = types.find((t) => t.type_id === Number(draft?.type_id));
 
@@ -114,6 +120,7 @@ export default function AdminRoomSettingsPage() {
     }));
   };
 
+  // บันทึกฉบับร่าง → เอาผลจาก backend แทนห้องเดิมในรายการ (ไม่ต้องโหลดทั้งหมดใหม่)
   const handleSave = async () => {
     if (draft.is_theme && !draft.theme.trim()) {
       setError('ห้องธีมต้องใส่ชื่อธีม เช่น One Piece');

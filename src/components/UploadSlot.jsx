@@ -23,6 +23,8 @@ export default function UploadSlot({
   const [cropSrc, setCropSrc] = useState(null);
   const [cropFileName, setCropFileName] = useState('');
 
+  // อัปโหลดไฟล์: โชว์รูปตัวอย่างทันที (FileReader อ่านไฟล์ในเครื่องเป็นรูป) พร้อมส่งขึ้น backend
+  // สำเร็จ → ส่งลิงก์รูปกลับทาง onChange / ไม่สำเร็จ → แสดง error และคืนรูปเดิม
   const uploadFile = async (file) => {
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result);
@@ -41,6 +43,7 @@ export default function UploadSlot({
     }
   };
 
+  // เลือกไฟล์แล้ว: ต้องครอป (มี cropAspectRatio) → เปิดหน้าต่างครอปก่อน / ไม่ต้องครอป → อัปโหลดเลย
   const handleFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -63,12 +66,15 @@ export default function UploadSlot({
     uploadFile(file);
   };
 
+  // ครอปเสร็จ → ปิดหน้าต่างครอป แล้วอัปโหลดรูปที่ครอปแล้ว
+  // (ล้างค่า input ทุกครั้ง เพื่อให้เลือกไฟล์เดิมซ้ำได้ — ถ้าไม่ล้าง เลือกไฟล์เดิมจะไม่เกิด onChange)
   const handleCropConfirm = (croppedFile) => {
     setCropSrc(null);
     if (inputRef.current) inputRef.current.value = '';
     uploadFile(croppedFile);
   };
 
+  // ยกเลิกครอป → ปิดหน้าต่าง ไม่อัปโหลดอะไร
   const handleCropCancel = () => {
     setCropSrc(null);
     if (inputRef.current) inputRef.current.value = '';

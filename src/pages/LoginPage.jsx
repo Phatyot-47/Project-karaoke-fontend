@@ -21,6 +21,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ตรวจข้อมูลในหน้าเว็บก่อน → เรียก API เข้าสู่ระบบ (หรือตั้งรหัสผ่านครั้งแรก) → จำผู้ใช้ไว้ใน AuthContext
+  // สำเร็จ: กลับไปหน้าที่ถูกเด้งมา (location.state.from) หรือหน้าแรก / backend ตอบ PASSWORD_NOT_SET → สลับเป็นโหมดตั้งรหัสผ่าน
   const handleSubmit = async () => {
     if (phone.trim().length < 9) {
       setError('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');

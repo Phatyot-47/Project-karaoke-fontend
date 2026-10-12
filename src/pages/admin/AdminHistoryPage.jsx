@@ -86,6 +86,7 @@ export default function AdminHistoryPage() {
   const [error, setError] = useState('');
   useNowTick(); // วาดหน้าใหม่ทุก 30 วินาที ป้ายสถานะ (เช่น "รอ Check-in") จะได้เปลี่ยนตามเวลาจริง
 
+  // โหลดประวัติการจองทั้งหมดครั้งเดียวตอนเปิดหน้า
   useEffect(() => {
     api
       .getBookingHistory()

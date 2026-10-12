@@ -17,6 +17,8 @@ export default function RegisterPage() {
   const { loginCustomer } = useAuth();
   const navigate = useNavigate();
 
+  // ตรวจข้อมูลในหน้าเว็บก่อน → สมัครสมาชิก → backend ตอบข้อมูลผู้ใช้ + token → ล็อกอินให้เลยแล้วไปหน้าแรก
+  // (เบอร์ซ้ำกับบัญชีอื่น backend จะตอบ error กลับมาแสดงใต้ฟอร์ม)
   const handleSubmit = async () => {
     if (!name.trim() || phone.trim().length < 9) {
       setError('กรุณากรอกชื่อและเบอร์โทรศัพท์ให้ครบถ้วน');
