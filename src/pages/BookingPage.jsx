@@ -394,7 +394,7 @@ export default function BookingPage() {
             </Card>
           )}
 
-          <Card title="เลือกเวลา" subtitle="คลิกเลือกเวลาเริ่ม แล้วคลิกอีกครั้งเพื่อเลือกเวลาสิ้นสุด (คร้ังละ 30 นาที)">
+          <Card title="เลือกเวลา" subtitle="คลิกเลือกเวลาเริ่ม แล้วคลิกอีกครั้งเพื่อเลือกเวลาสิ้นสุด (ครั้งละ 30 นาที)">
             <div className="slot-grid">
               {slotTimes.map((t) => {
                 const isBooked = bookedTimes.has(t);
