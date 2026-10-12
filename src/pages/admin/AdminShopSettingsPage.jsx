@@ -235,7 +235,7 @@ export default function AdminShopSettingsPage() {
             onChange={setPolicyField('depositPercent')}
           />
           <Input
-            label="การยกเลิกได้ก่อนเวลาเริ่ม (ชั่วโมง)"
+            label="ยกเลิกได้ก่อนเวลาเริ่ม (ชั่วโมง)"
             type="number"
             min="0"
             step="0.5"
