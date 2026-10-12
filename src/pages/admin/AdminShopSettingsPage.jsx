@@ -16,8 +16,8 @@ import { DAY_LABELS } from '../../utils/format.js';
 const HOUR_OPTIONS = Array.from({ length: 25 }, (_, i) => i);
 const BANKS = ['กรุงไทย', 'กสิกรไทย', 'ไทยพาณิชย์', 'กรุงเทพ', 'ทหารไทยธนชาต', 'ออมสิน'];
 
-// นโยบายจาก API → ค่าที่ใช้ในฟอร์ม (ช่องตัวเลขเป็นสตริงทั้งหมด ช่องว่าง = ไม่กำหนด)
-// ชั่วโมงเป็น NUMERIC ใน DB (API ส่งมาเป็น "1.5") → Number() ก่อน ให้แสดง 1 แทน 1.0
+// นโยบายจาก backend → ค่าในฟอร์ม (ช่องกรอกเก็บค่าเป็นข้อความทั้งหมด ช่องว่าง = ไม่กำหนด)
+// ชั่วโมงที่ได้มาเป็นข้อความ เช่น "1.0" → แปลงเป็นตัวเลขก่อน ช่องจะได้แสดง 1 ไม่ใช่ 1.0
 const toPolicyForm = (p) => ({
   depositPercent: p ? String(Number(p.deposit_percent)) : '20',
   cancelHoursBefore: p?.cancel_hours_before == null ? '1' : String(Number(p.cancel_hours_before)),

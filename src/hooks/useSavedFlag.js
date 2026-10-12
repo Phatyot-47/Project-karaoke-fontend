@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
- * สถานะ "บันทึกสำเร็จ" ที่หายไปเองหลัง durationMs — ใช้คู่กับ <SavedNotice show={saved} />
- * flashSaved() = แสดงข้อความ (เริ่มนับเวลาใหม่ทุกครั้ง) / clearSaved() = ซ่อนทันที (เช่น เปลี่ยนห้องที่แก้ไข)
+ * ตัวช่วยโชว์ข้อความ "บันทึกสำเร็จ" แล้วให้หายไปเองใน 3 วินาที — ใช้คู่กับ <SavedNotice show={saved} />
+ * วิธีใช้: const { saved, flashSaved, clearSaved } = useSavedFlag();
+ *   flashSaved() = โชว์ข้อความ (กดซ้ำก็เริ่มนับ 3 วินาทีใหม่) / clearSaved() = ซ่อนทันที
  */
 export default function useSavedFlag(durationMs = 3000) {
   const [saved, setSaved] = useState(false);

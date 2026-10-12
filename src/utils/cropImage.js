@@ -1,7 +1,6 @@
-/**
- * โหลดรูปภาพจาก URL เป็น HTMLImageElement
- * ใช้ Promise เพื่อรอให้รูปโหลดเสร็จก่อนวาดลง canvas
- */
+// ตัดรูปตามกรอบที่ผู้ใช้ครอป (ใช้กับ ImageCropModal)
+
+/** โหลดรูป แล้วรอจนโหลดเสร็จ (ต้องโหลดเสร็จก่อนถึงจะวาดลงกระดาน canvas ได้) */
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -21,44 +20,41 @@ function withJpgExtension(fileName) {
 }
 
 /**
- * วาดเฉพาะพื้นที่ที่ crop (croppedAreaPixels จาก react-easy-crop) ลง canvas
- * ขนาดเท่าพื้นที่นั้นจริงๆ แล้วส่งออกเป็น File (image/jpeg) พร้อมอัปโหลด
+ * ตัดเอาเฉพาะส่วนที่อยู่ในกรอบครอป วาดลงกระดาน (canvas) แล้วบันทึกเป็นไฟล์ JPG พร้อมอัปโหลด
  *
- * หมายเหตุการ implement:
- * - เติมพื้นหลังขาวก่อนวาดเสมอ กันรูปโปร่งใส (PNG) กลายเป็นดำ/ไม่มีสีตอน encode เป็น JPEG
- *   (JPEG ไม่รองรับ alpha channel จึงต้องมีพื้นหลังที่กำหนดไว้)
- * - ใช้ Math.max/min กับ sx, sy, sWidth, sHeight เพื่อกันขอบเพี้ยนถ้าพื้นที่ครอป
- *   เกินขอบรูปจริงจากการปัดเศษของ react-easy-crop
- * - quality 0.92 เป็น sweet spot ระหว่างขนาดไฟล์และคุณภาพภาพ
+ * จุดที่ควรรู้:
+ * - ระบายพื้นขาวก่อนวาด เพราะรูป PNG ที่พื้นหลังโปร่งใส ถ้าแปลงเป็น JPG ตรงๆ พื้นจะกลายเป็นสีดำ
+ * - ตัดตัวเลขตำแหน่งไม่ให้เกินขอบรูปจริง (บางทีตัวครอปปัดเศษแล้วเกินขอบ ทำให้มีแถบดำ)
+ * - คุณภาพ 0.92 = ไฟล์ไม่ใหญ่เกินไป แต่รูปยังชัด
  *
- * @param {string} imageSrc             - Data URL ของรูปต้นฉบับ
- * @param {object} croppedAreaPixels    - { x, y, width, height } จาก react-easy-crop
- * @param {string} fileName             - ชื่อไฟล์ผลลัพธ์ (จะถูกเปลี่ยน extension เป็น .jpg)
+ * @param {string} imageSrc             - รูปต้นฉบับ
+ * @param {object} croppedAreaPixels    - ตำแหน่งกรอบครอป { x, y, width, height }
+ * @param {string} fileName             - ชื่อไฟล์ที่จะได้ (เปลี่ยนนามสกุลเป็น .jpg ให้)
  * @returns {Promise<File>}
  */
 export async function getCroppedImageFile(imageSrc, croppedAreaPixels, fileName) {
   const image = await loadImage(imageSrc);
 
-  // clamp ขอบ crop ไม่ให้เกินขนาดรูปจริง — ป้องกัน black stripe จาก floating point ของ easy-crop
+  // ตัดตำแหน่งครอปไม่ให้เกินขอบรูปจริง (กันแถบดำที่ขอบ)
   const sx = Math.max(0, Math.round(croppedAreaPixels.x));
   const sy = Math.max(0, Math.round(croppedAreaPixels.y));
   const sWidth = Math.min(Math.round(croppedAreaPixels.width), image.naturalWidth - sx);
   const sHeight = Math.min(Math.round(croppedAreaPixels.height), image.naturalHeight - sy);
 
-  // สร้าง canvas ขนาดเท่าพื้นที่ crop
+  // สร้างกระดานวาดรูป ขนาดเท่ากรอบที่ครอป
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(croppedAreaPixels.width);
   canvas.height = Math.round(croppedAreaPixels.height);
   const ctx = canvas.getContext('2d');
 
-  // เติมพื้นขาวก่อนวาด — สำหรับรูป PNG ที่มี transparency
+  // ระบายพื้นขาวก่อน (สำหรับรูป PNG ที่พื้นหลังโปร่งใส)
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // วาดเฉพาะส่วนที่ crop (source rect → destination rect)
+  // วาดเฉพาะส่วนที่อยู่ในกรอบลงกระดาน
   ctx.drawImage(image, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
-  // แปลง canvas เป็น Blob (JPEG, quality 0.92)
+  // บันทึกกระดานเป็นไฟล์ JPG
   const blob = await new Promise((resolve, reject) => {
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('สร้างรูปที่ครอปไม่สำเร็จ'))), 'image/jpeg', 0.92);
   });

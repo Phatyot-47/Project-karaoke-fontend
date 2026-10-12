@@ -6,30 +6,30 @@ import Button from './Button.jsx';
 import { getCroppedImageFile } from '../utils/cropImage.js';
 
 /**
- * ImageCropModal — โมดัลลาก/ซูมรูปในกรอบสัดส่วนคงที่ (คล้าย crop รูปโปรไฟล์) ก่อนอัปโหลดจริง
+ * หน้าต่างเด้ง (โมดัล) ให้ลาก/ซูมรูปให้พอดีกรอบ ก่อนอัปโหลด — เหมือนตอนตั้งรูปโปรไฟล์ในโซเชียล
  *
- * การทำงาน:
- * 1. รับ imageSrc (data URL จาก FileReader) มาแสดงใน Cropper
- * 2. ผู้ใช้ปรับตำแหน่ง/zoom → onCropComplete บันทึก croppedAreaPixels ลง ref
- * 3. กด "ยืนยัน" → getCroppedImageFile() สร้าง File จาก canvas → onConfirm(file)
- * 4. กด "ยกเลิก" หรือ Esc หรือคลิก backdrop → onCancel()
+ * ขั้นตอน:
+ * 1. รับรูปที่ผู้ใช้เลือก (imageSrc) มาแสดงในกรอบ
+ * 2. ผู้ใช้ลาก/ซูม → จำตำแหน่งที่ครอปไว้
+ * 3. กด "ยืนยัน" → ตัดรูปเฉพาะส่วนในกรอบ แล้วส่งไฟล์ใหม่กลับไปที่ onConfirm(file)
+ * 4. กด "ยกเลิก" / กด Esc / คลิกพื้นที่มืดรอบๆ → onCancel() ปิดหน้าต่าง
  *
- * @param {string}   imageSrc  - Data URL ของรูปต้นฉบับ
- * @param {number}   aspect    - สัดส่วน (width/height) ของ crop frame เช่น 16/9
- * @param {string}   fileName  - ชื่อไฟล์ผลลัพธ์
- * @param {Function} onConfirm - รับ File ที่ crop แล้ว
- * @param {Function} onCancel  - ปิดโมดัลโดยไม่มีผลข้างเคียง
+ * @param {string}   imageSrc  - รูปต้นฉบับ
+ * @param {number}   aspect    - สัดส่วนกรอบ (กว้าง/สูง) เช่น 16/9
+ * @param {string}   fileName  - ชื่อไฟล์ที่จะได้
+ * @param {Function} onConfirm - ได้ไฟล์รูปที่ครอปแล้ว
+ * @param {Function} onCancel  - ปิดโดยไม่ทำอะไร
  */
 export default function ImageCropModal({ imageSrc, aspect, fileName, onConfirm, onCancel }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [ready, setReady] = useState(false); // true เมื่อ Cropper พร้อมและมี croppedAreaPixels แล้ว
+  const [ready, setReady] = useState(false); // true = รูปโหลดเสร็จและรู้ตำแหน่งครอปแล้ว (กดยืนยันได้)
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState('');
-  // ใช้ ref แทน state เพื่อไม่ให้ re-render ทุกครั้งที่ผู้ใช้ขยับ crop
+  // เก็บตำแหน่งครอปใน ref (ไม่ใช่ state) เพราะไม่ต้องวาดหน้าจอใหม่ทุกครั้งที่ขยับ
   const croppedAreaPixelsRef = useRef(null);
 
-  // ล็อก scroll ของ body ตลอดที่โมดัลเปิดอยู่ — คืนค่าเดิมเมื่อปิด
+  // ระหว่างเปิดหน้าต่างนี้ ห้ามหน้าเว็บด้านหลังเลื่อน (ปิดแล้วเลื่อนได้ตามเดิม)
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -38,7 +38,7 @@ export default function ImageCropModal({ imageSrc, aspect, fileName, onConfirm, 
     };
   }, []);
 
-  // ปิดโมดัลเมื่อกด Escape — cleanup listener เมื่อ onCancel เปลี่ยนหรือ unmount
+  // กดปุ่ม Esc = ปิดหน้าต่าง (เลิกฟังปุ่มเมื่อหน้าต่างปิดไปแล้ว)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onCancel();
@@ -47,13 +47,13 @@ export default function ImageCropModal({ imageSrc, aspect, fileName, onConfirm, 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onCancel]);
 
-  // Cropper เรียก callback นี้ทุกครั้งที่ผู้ใช้หยุดขยับ/zoom
+  // ทำงานทุกครั้งที่ผู้ใช้หยุดลาก/ซูม → จำตำแหน่งครอปล่าสุด
   const handleCropComplete = (_croppedArea, croppedAreaPixels) => {
     croppedAreaPixelsRef.current = croppedAreaPixels;
     setReady(true); // เปิดใช้งานปุ่ม "ยืนยัน"
   };
 
-  // สร้าง File จากพื้นที่ที่ crop แล้วส่งให้ parent
+  // ตัดรูปตามกรอบ แล้วส่งไฟล์ให้หน้าที่เปิดหน้าต่างนี้
   const handleConfirm = async () => {
     if (!croppedAreaPixelsRef.current) return;
     setConfirming(true);
@@ -67,17 +67,16 @@ export default function ImageCropModal({ imageSrc, aspect, fileName, onConfirm, 
     }
   };
 
-  // ปิดโมดัลเมื่อคลิก backdrop โดยตรง (ไม่ปิดถ้าคลิกที่ตัว modal)
+  // คลิกพื้นที่มืดรอบๆ = ปิด (คลิกในกล่องไม่ปิด)
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) onCancel();
   };
 
-  // ใช้ createPortal เพื่อ render โมดัลที่ document.body โดยตรง
-  // ป้องกัน stacking context ของ parent element บดบังโมดัล (z-index issue)
+  // วางหน้าต่างไว้ท้าย <body> โดยตรง (createPortal) จะได้ลอยอยู่บนสุดเสมอ ไม่โดนกล่องอื่นบัง
   return createPortal(
     <div className="crop-modal-backdrop" onClick={handleBackdropClick}>
       <div className="crop-modal" role="dialog" aria-modal="true" aria-label="ครอปรูปภาพ">
-        {/* พื้นที่ Cropper — ผู้ใช้ลากและ zoom รูปที่นี่ */}
+        {/* พื้นที่ลากและซูมรูป */}
         <div className="crop-modal-stage">
           <Cropper
             image={imageSrc}
@@ -90,7 +89,7 @@ export default function ImageCropModal({ imageSrc, aspect, fileName, onConfirm, 
           />
         </div>
 
-        {/* Slider ควบคุม zoom */}
+        {/* แถบเลื่อนซูม */}
         <div className="crop-modal-zoom">
           <span>ซูม</span>
           <input
@@ -105,7 +104,7 @@ export default function ImageCropModal({ imageSrc, aspect, fileName, onConfirm, 
 
         {error && <div className="field-error">{error}</div>}
 
-        {/* ปุ่มยกเลิก/ยืนยัน — ปุ่มยืนยัน disabled จนกว่า Cropper จะพร้อม */}
+        {/* ปุ่มยกเลิก/ยืนยัน — ปุ่มยืนยันกดได้เมื่อรูปพร้อมแล้ว */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <Button variant="outline" onClick={onCancel} disabled={confirming}>
             ยกเลิก

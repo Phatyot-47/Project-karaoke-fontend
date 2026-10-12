@@ -1,7 +1,8 @@
-// จุดเริ่มต้นของแอปพลิเคชัน — ห่อด้วย Provider ตามลำดับความสำคัญ:
-//   StrictMode   → ตรวจจับ side-effect ที่ไม่ปลอดภัยในโหมด development
-//   BrowserRouter → จัดการ routing แบบ HTML5 history (URL เปลี่ยนโดยไม่โหลดหน้าใหม่)
-//   AuthProvider  → เก็บ state ผู้ใช้ (ลูกค้า / แอดมิน) ให้ทุก component เข้าถึงได้ผ่าน useAuth()
+// ไฟล์แรกที่หน้าเว็บรัน — เอาแอป (App.jsx) ไปแสดงในกล่อง <div id="root"> ของ index.html
+// ห่อแอปไว้ 3 ชั้น:
+//   StrictMode    → ตอนพัฒนา ช่วยเตือนถ้าเขียนโค้ด React ผิดวิธี (ไม่มีผลตอนใช้งานจริง)
+//   BrowserRouter → ทำให้เปลี่ยนหน้าตาม URL ได้ โดยไม่ต้องโหลดหน้าเว็บใหม่ทั้งหน้า
+//   AuthProvider  → เก็บว่าใครล็อกอินอยู่ (ลูกค้า/แอดมิน) ทุกหน้าเรียกดูได้ด้วย useAuth()
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

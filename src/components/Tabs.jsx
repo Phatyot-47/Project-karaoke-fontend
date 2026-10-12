@@ -1,9 +1,9 @@
 /**
- * Tabs component — แถบ tab สำหรับสลับ view (เช่น รายวัน / รายสัปดาห์ / รายเดือน)
+ * แถบแท็บสำหรับสลับมุมมอง เช่น รายวัน / รายสัปดาห์ / รายเดือน (หน้ารายงาน)
  *
- * @param {{ id: string, label: string }[]} items  - รายการ tab
- * @param {string}   value    - id ของ tab ที่ active อยู่
- * @param {Function} onChange - callback เมื่อเปลี่ยน tab รับ id ของ tab ที่เลือก
+ * @param {{ id: string, label: string }[]} items  - รายการแท็บ
+ * @param {string}   value    - id ของแท็บที่เลือกอยู่
+ * @param {Function} onChange - ทำงานเมื่อกดแท็บ (ได้ id ของแท็บที่กด)
  */
 export default function Tabs({ items, value, onChange }) {
   return (
@@ -12,7 +12,7 @@ export default function Tabs({ items, value, onChange }) {
         <button
           key={item.id}
           type="button"
-          // เพิ่ม class .active เมื่อ item.id ตรงกับ value ที่เลือกอยู่
+          // แท็บที่เลือกอยู่ได้ class .active (ไฮไลต์)
           className={`tab-btn${item.id === value ? ' active' : ''}`}
           onClick={() => onChange(item.id)}
         >

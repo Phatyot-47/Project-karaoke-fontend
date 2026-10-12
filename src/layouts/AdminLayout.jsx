@@ -25,7 +25,7 @@ import {
 const ALERT_POLL_MS = 15000;
 const MAX_TOASTS = 5;
 const SOUND_KEY = 'gens_karaoke_admin_sound';
-// จำกล่องแจ้งเตือน + payment_id ล่าสุดไว้ในแท็บนี้ (sessionStorage) — กดรีเฟรชแล้วกล่องที่ยังไม่ปิดไม่หาย และไม่เด้งซ้ำ
+// จำกล่องแจ้งเตือน + เลขสลิปล่าสุดไว้ในแท็บนี้ (sessionStorage = หายเมื่อปิดแท็บ) — กดรีเฟรชแล้วกล่องไม่หาย และไม่เด้งซ้ำ
 const ALERTS_KEY = 'gens_karaoke_admin_alerts';
 
 function loadSavedAlerts() {
@@ -38,7 +38,7 @@ function loadSavedAlerts() {
   return { toasts: [], lastPaymentId: null };
 }
 
-// Map path → ชื่อหน้าที่แสดงใน header — เพิ่ม path ใหม่ที่นี่ถ้ามีหน้าเพิ่ม
+// URL → ชื่อหน้าที่โชว์บนแถบด้านบน (ถ้าเพิ่มหน้าแอดมินใหม่ ต้องเพิ่มที่นี่ด้วย)
 const PAGE_TITLES = {
   '/admin/bookings': 'อนุมัติการจอง',
   '/admin/walkin': 'จองวอล์คอิน',
@@ -50,30 +50,31 @@ const PAGE_TITLES = {
 };
 
 /**
- * Layout หลักของระบบแอดมิน — ทำหน้าที่:
- * 1. Guard: redirect ไป /admin/login ถ้ายังไม่ล็อกอิน
- * 2. Sidebar (aside): เมนูนำทาง รองรับ responsive (collapsed บน desktop / drawer บน mobile)
- * 3. Header: แสดงชื่อหน้าปัจจุบัน + ปุ่มเปิด/ปิดเสียงแจ้งเตือน + ปุ่ม logout
- * 4. <Outlet />: render หน้าแอดมินตาม route ที่ match
- * 5. แจ้งเตือน: เช็คทุก 15 วิ — อัปเดต badge + จำนวนบนแท็บเบราว์เซอร์, มีสลิปใหม่ = กล่องแจ้งเตือน + เสียง
+ * "โครง" ของทุกหน้าแอดมิน:
+ * 1. ยังไม่ล็อกอิน → พาไปหน้าล็อกอินแอดมิน
+ * 2. เมนูด้านซ้าย: บนคอมย่อ/ขยายได้ / บนมือถือเป็นเมนูเลื่อนออกมา
+ * 3. แถบด้านบน: ชื่อหน้าปัจจุบัน + ปุ่มเปิด/ปิดเสียงแจ้งเตือน + ปุ่มออกจากระบบ
+ * 4. ตรงกลาง <Outlet />: เนื้อหาของหน้าที่เปิดอยู่
+ * 5. แจ้งเตือน: ถาม backend ทุก 15 วินาที → อัปเดตตัวเลขแดงบนเมนูและบนแท็บเบราว์เซอร์
+ *    ถ้ามีสลิปใหม่ → เด้งกล่องแจ้งเตือนมุมขวาล่าง + มีเสียง
  */
 export default function AdminLayout() {
   const { admin, logoutAdmin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // sidebar collapsed (desktop) / mobile drawer open
+  // สถานะเมนูซ้าย: ย่ออยู่ไหม (บนคอม) / เปิดอยู่ไหม (บนมือถือ)
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // จำนวนรายการที่รอดำเนินการ (รอยืนยันวันนี้ + ค้างจากวันก่อน) — แสดงเป็น badge บน nav item "อนุมัติการจอง"
+  // จำนวนรายการรอจัดการ (รอยืนยันวันนี้ + ค้างจากวันก่อน) — ตัวเลขแดงบนเมนู "อนุมัติการจอง"
   const [pendingCount, setPendingCount] = useState(0);
   const updateBadgeFromStats = (stats) => {
     setPendingCount(Number(stats?.pending_count || 0) + Number(stats?.overdue_count || 0));
   };
 
   // ---- แจ้งเตือนสลิปใหม่ ----
-  // slipToasts = กล่องแจ้งเตือนที่ยังไม่ปิด / alertsVersion เพิ่มทุกครั้งที่มีสลิปใหม่ (หน้าอนุมัติการจองใช้รีเฟรชรายการ)
+  // slipToasts = กล่องแจ้งเตือนที่ยังเปิดอยู่ / alertsVersion = ตัวเลขที่เพิ่มทุกครั้งที่มีสลิปใหม่ (หน้าอนุมัติการจองเห็นแล้วจะโหลดรายการใหม่)
   const [savedAlerts] = useState(loadSavedAlerts);
   const [slipToasts, setSlipToasts] = useState(savedAlerts.toasts);
   const [alertsVersion, setAlertsVersion] = useState(0);
@@ -86,7 +87,7 @@ export default function AdminLayout() {
   });
   const soundOnRef = useRef(soundOn);
   soundOnRef.current = soundOn;
-  // payment_id ล่าสุดที่เห็นแล้ว — null = ยังไม่เคยเช็ค (ครั้งแรกแค่จำค่าไว้ ไม่เด้งแจ้งเตือนสลิปที่ค้างอยู่ก่อนเปิดหน้า)
+  // เลขสลิปล่าสุดที่เห็นแล้ว — null = ยังไม่เคยถาม (ครั้งแรกแค่จำเลขไว้ ไม่เด้งสลิปเก่าที่ค้างอยู่ก่อนเปิดหน้า)
   const lastPaymentIdRef = useRef(savedAlerts.lastPaymentId);
 
   const slipToastsRef = useRef(slipToasts);
@@ -160,17 +161,17 @@ export default function AdminLayout() {
     if (next) playAlertSound(); // เปิดเสียงแล้วเล่นให้ฟังหนึ่งครั้ง
   };
 
-  // ปิด mobile sidebar อัตโนมัติเมื่อ route เปลี่ยน (ผู้ใช้เลือก menu item แล้ว)
+  // บนมือถือ: เปลี่ยนหน้าแล้วปิดเมนูให้อัตโนมัติ
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  // Guard: ถ้าไม่มีข้อมูลแอดมิน (ยังไม่ล็อกอิน หรือ logout แล้ว) → redirect
+  // ยังไม่ล็อกอิน (หรือเพิ่งออกจากระบบ) → ไปหน้าล็อกอินแอดมิน
   if (!admin) {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  // navigate แล้วปิด mobile drawer ในก้าวเดียว
+  // กดเมนู = ไปหน้านั้น + ปิดเมนูมือถือ
   const go = (path) => {
     navigate(path);
     setMobileOpen(false);
@@ -179,7 +180,7 @@ export default function AdminLayout() {
   const isActive = (path) => location.pathname === path;
   const title = PAGE_TITLES[location.pathname] || 'อนุมัติการจอง';
 
-  // toggle sidebar: บน mobile → เปิด/ปิด drawer | บน desktop → ย่อ/ขยาย sidebar
+  // ปุ่ม ☰: บนมือถือ = เปิด/ปิดเมนู / บนคอม = ย่อ/ขยายเมนู
   const toggleSidebar = () => {
     if (window.innerWidth <= 768) {
       setMobileOpen((o) => !o);
@@ -190,17 +191,17 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-shell">
-      {/* Backdrop สำหรับปิด mobile sidebar เมื่อแตะนอก drawer */}
+      {/* พื้นที่มืดด้านหลังเมนูมือถือ — แตะแล้วปิดเมนู */}
       {mobileOpen && <div className="admin-backdrop" onClick={() => setMobileOpen(false)} aria-hidden="true" />}
 
-      {/* Sidebar — class .collapsed ย่อ sidebar บน desktop / .mobile-open เปิด drawer บน mobile */}
+      {/* เมนูด้านซ้าย — .collapsed = ย่อ (คอม) / .mobile-open = เปิดอยู่ (มือถือ) */}
       <aside className={`admin-aside${collapsed ? ' collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
         <div className="admin-aside-header" style={{ justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <img src="/assets/logo.png" alt="Gens Karaoke logo" />
             <div className="name">Gens Karaoke</div>
           </div>
-          {/* ปุ่มปิด drawer — แสดงเฉพาะบน mobile เมื่อ drawer เปิดอยู่ */}
+          {/* ปุ่มปิดเมนู — มีเฉพาะบนมือถือ */}
           {mobileOpen && (
             <IconButton label="ปิดเมนู" onClick={() => setMobileOpen(false)}>
               <X style={{ color: '#fff' }} />
@@ -275,10 +276,10 @@ export default function AdminLayout() {
         </nav>
       </aside>
 
-      {/* พื้นที่หลัก: header + Outlet */}
+      {/* ส่วนหลัก: แถบด้านบน + เนื้อหาของหน้า */}
       <div className="admin-main-wrap">
         <header className="admin-header">
-          {/* ปุ่ม toggle sidebar — ทำงานต่างกันบน mobile และ desktop */}
+          {/* ปุ่ม ☰ เปิด/ย่อเมนู */}
           <IconButton label="เมนู" onClick={toggleSidebar}>
             <Menu />
           </IconButton>
@@ -288,7 +289,7 @@ export default function AdminLayout() {
             <IconButton label={soundOn ? 'ปิดเสียงแจ้งเตือน' : 'เปิดเสียงแจ้งเตือน'} onClick={toggleSound}>
               {soundOn ? <Volume2 /> : <VolumeX />}
             </IconButton>
-            {/* ปุ่ม logout แสดงชื่อแอดมินปัจจุบัน */}
+            {/* ปุ่มออกจากระบบ (โชว์ชื่อแอดมินที่ล็อกอินอยู่) */}
             <button type="button" className="user-pill" onClick={handleLogout} title="ออกจากระบบ">
               <Avatar name={admin.name || admin.username} size="sm" />
               <span>{admin.name || admin.username}</span>

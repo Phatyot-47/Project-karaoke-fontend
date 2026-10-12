@@ -1,4 +1,4 @@
-// หน้าสมัครสมาชิกลูกค้า (/register) — ชื่อ + เบอร์โทร + รหัสผ่าน
+// หน้าสมัครสมาชิกลูกค้า (/register) — กรอกชื่อ + เบอร์โทร + รหัสผ่าน สมัครเสร็จล็อกอินให้เลย
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Card from '../components/Card.jsx';

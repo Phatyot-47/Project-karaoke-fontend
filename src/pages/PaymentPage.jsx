@@ -1,4 +1,5 @@
 // หน้า "ยืนยันและชำระมัดจำ" (/pay/:bookingId) — แสดง QR ร้าน นับถอยหลัง 5 นาที และแนบสลิป
+// ส่งสลิปสำเร็จ → ไปหน้า /success / หมดเวลา 5 นาทีก่อนส่ง → การจองถูกยกเลิก ต้องจองใหม่
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Card from '../components/Card.jsx';
@@ -11,10 +12,10 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { resolveRoomImage } from '../utils/roomImage.js';
 import { formatDateTimeRange, money, pad2, cancellationNote } from '../utils/format.js';
 
-// ต้องตรงกับ HOLD_MINUTES ฝั่ง backend (utils/expireBookings.js) — เวลาที่ระบบล็อกเวลานี้ไว้ให้
+// เวลาที่ระบบกันห้องไว้ให้ 5 นาที — ต้องตรงกับ HOLD_MINUTES ฝั่ง backend (utils/expireBookings.js)
 const HOLD_SECONDS = 5 * 60;
 
-// ชำระส่วนต่างมัดจำ (หลังลูกค้าแก้ไขการจอง) = เคยส่งสลิปมาแล้ว ช่วงเวลาจองไว้แล้ว จึงไม่มีเวลานับถอยหลัง
+// จ่ายส่วนต่างมัดจำ (หลังลูกค้าแก้ไขการจอง) = เคยจ่ายมาแล้ว เวลาจองไว้แล้ว จึงไม่มีนับถอยหลัง
 const isTopUp = (booking) => Number(booking?.paid_amount || 0) > 0;
 
 function secondsLeft(booking) {
@@ -39,8 +40,8 @@ export default function PaymentPage() {
   const [error, setError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [expired, setExpired] = useState(false);
-  // timer อ่าน booking จาก ref แล้วคำนวณเวลาที่เหลือจาก created_at ทุกวินาที (ไม่ลบทีละ 1 จากค่าเดิม)
-  // จึงถูกต้องแม้หน้าเพิ่งโหลด booking ทีหลัง หรือแท็บถูกพักไว้นาน
+  // นาฬิกานับถอยหลัง: ทุก 1 วินาที คิดเวลาที่เหลือใหม่จาก "เวลาที่กดจอง" (ไม่ได้ลบทีละ 1)
+  // จึงยังถูกต้องแม้สลับไปแท็บอื่นนานๆ แล้วกลับมา (เก็บการจองไว้ใน ref ให้นาฬิกาอ่านค่าล่าสุดได้)
   const bookingRef = useRef(booking);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function PaymentPage() {
       return;
     }
     let alive = true;
-    // มาจากหน้าจองจะมี booking ใน state อยู่แล้ว / รีเฟรชหรือกดชำระต่อจากหน้าประวัติ ให้โหลดจาก server
+    // มาจากหน้าจอง = มีข้อมูลการจองติดมาแล้ว / รีเฟรชหน้า หรือมาจากหน้าประวัติ = โหลดจาก backend
     (booking ? Promise.resolve(booking) : api.getBooking(bookingId))
       .then((b) => {
         if (!alive) return;

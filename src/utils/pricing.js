@@ -1,20 +1,20 @@
 /**
- * คำนวณราคาการจองฝั่ง frontend เพื่อ "พรีวิว" ให้ลูกค้าเห็นก่อนกดยืนยัน
+ * คิดราคาในหน้าเว็บ เพื่อ "โชว์ราคาโดยประมาณ" ให้ลูกค้าเห็นก่อนกดยืนยัน
  *
- * สูตรตรงกับ backend (src/utils/pricing.js): แบ่งเป็นช่วงละ 30 นาที ดูจากเวลาเริ่มของแต่ละช่วง
- *   ช่วงพีค = ราคาห้อง + ค่าบริการเพิ่ม / นอกนั้น = ราคาห้อง
+ * สูตรเหมือนฝั่ง backend (src/utils/pricing.js) ทุกอย่าง: แบ่งเวลาเป็นช่องละ 30 นาที
+ *   ช่องที่อยู่ในพีคไทม์ = ราคาห้อง + ค่าบริการเพิ่ม / ช่องอื่น = ราคาห้องปกติ
  *
- * ⚠️ ราคาที่ตัดสินจริงคำนวณที่ backend เสมอ (กันลูกค้าแก้ราคาเอง) ค่านี้ใช้แสดงผลเท่านั้น
+ * ⚠️ ราคาจริงที่บันทึก backend คิดเองเสมอ (กันลูกค้าแก้ราคาในหน้าเว็บ) ตัวเลขตรงนี้ใช้แสดงผลเท่านั้น
  */
 
-/** "HH:MM" หรือ "HH:MM:SS" → นาทีนับจากเที่ยงคืน (ไม่มีค่า = null) */
+/** "HH:MM" หรือ "HH:MM:SS" → จำนวนนาทีนับจากเที่ยงคืน เช่น "19:30" → 1170 (ไม่มีค่า = null) */
 function toMinutes(time) {
   if (!time) return null;
   const [h, m] = String(time).split(':').map(Number);
   return h * 60 + (m || 0);
 }
 
-/** ช่วงพีค [start, end) ในหน่วยนาที — ไม่มีเวลาเริ่ม = ไม่มีพีค / ไม่มีเวลาสิ้นสุด = ถึงร้านปิด */
+/** ช่วงพีคเป็นนาที [เริ่ม, สิ้นสุด) — ไม่มีเวลาเริ่ม = ไม่มีพีค / ไม่มีเวลาสิ้นสุด = ถึงร้านปิด */
 function toRange(start, end) {
   const s = toMinutes(start);
   if (s === null) return null;
@@ -22,8 +22,8 @@ function toRange(start, end) {
 }
 
 /**
- * พีคไทม์ของวันในสัปดาห์ dayOfWeek จากข้อมูลร้าน (GET /api/shop)
- * วันไหนตั้ง "กำหนดราคาเอง" (custom_rates) ใช้ค่าของวันนั้น ไม่งั้นใช้ค่าหลักของร้าน
+ * พีคไทม์ของวันนั้น (dayOfWeek: 0 = อาทิตย์ ... 6 = เสาร์) จากข้อมูลร้าน (GET /api/shop)
+ * วันไหนแอดมินติ๊ก "กำหนดราคาเอง" ใช้ค่าของวันนั้น ไม่งั้นใช้ค่าหลักของร้าน
  */
 export function ratesForDay(shop, dayOfWeek) {
   const day = shop?.hours?.find((h) => Number(h.day_of_week) === dayOfWeek);
@@ -43,24 +43,25 @@ export function isPeakSlot(rates, time) {
 }
 
 /**
+ * คิดราคาการจอง
  * @param {object} params
- * @param {number} params.pricePerHour  - ราคาต่อชั่วโมง (บาท)
- * @param {object} params.rates         - จาก ratesForDay()
+ * @param {number} params.pricePerHour  - ราคาห้องต่อชั่วโมง (บาท)
+ * @param {object} params.rates         - พีคไทม์ของวันนั้น (ได้จาก ratesForDay())
  * @param {string} params.startDatetime - เวลาเริ่ม "YYYY-MM-DDTHH:MM:00"
  * @param {string} params.endDatetime   - เวลาสิ้นสุด "YYYY-MM-DDTHH:MM:00"
- * @returns {{ basePrice, peakSurchargeTotal, priceTotal }}
+ * @returns {{ basePrice, peakSurchargeTotal, priceTotal }}  ราคาปกติ, ค่าพีครวม, ราคารวม
  */
 export function calculateBookingPrice({ pricePerHour, rates, startDatetime, endDatetime }) {
   const start = new Date(startDatetime);
   const end = new Date(endDatetime);
   const totalMinutes = (end - start) / 60000;
 
-  // ช่วงเวลาไม่ถูกต้อง (เช่น end <= start) → ราคา 0 ทั้งหมด
+  // เวลาไม่ถูกต้อง (เช่น เวลาจบก่อนเวลาเริ่ม) → ราคา 0
   if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) {
     return { basePrice: 0, peakSurchargeTotal: 0, priceTotal: 0 };
   }
 
-  // นับจำนวนช่วง 30 นาทีที่อยู่ในพีค
+  // นับว่ามีกี่ช่อง (ช่องละ 30 นาที) ที่อยู่ในพีคไทม์
   const peak = toRange(rates?.peakStart, rates?.peakEnd);
   let peakHalfSlots = 0;
   const cursor = new Date(start);

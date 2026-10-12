@@ -7,11 +7,11 @@ import api from '../api/client.js';
 import NotificationBell from '../components/NotificationBell.jsx';
 
 /**
- * Layout หลักสำหรับหน้าลูกค้า — ทำหน้าที่:
- * 1. Guard: redirect ไป /login ถ้ายังไม่ล็อกอิน (พร้อมส่ง state.from ไว้ให้หน้า login redirect กลับมาได้)
- * 2. Topbar: brand logo + navigation (เลือกห้อง / ประวัติการจอง / ข้อมูลส่วนตัว) + ปุ่ม logout
- * 3. <Outlet />: render หน้าลูกค้าตาม route ที่ match (RoomListPage / HistoryPage / ProfilePage)
- * 4. Footer: ข้อมูลติดต่อร้าน (ชื่อ / เบอร์โทร / ที่อยู่ ดึงจากหน้าตั้งค่าร้านของแอดมิน)
+ * "โครง" ของหน้าลูกค้า (หน้าเลือกห้อง / ประวัติการจอง / ข้อมูลส่วนตัว ใช้โครงนี้ร่วมกัน):
+ * 1. ยังไม่ล็อกอิน → พาไปหน้าล็อกอิน (ล็อกอินเสร็จจะพากลับมาหน้าเดิม)
+ * 2. แถบด้านบน: โลโก้ + เมนู + กระดิ่งแจ้งเตือน + ปุ่มออกจากระบบ
+ * 3. ตรงกลาง <Outlet />: เนื้อหาของหน้าที่เปิดอยู่
+ * 4. ด้านล่าง: ข้อมูลติดต่อร้าน (ชื่อ / เบอร์โทร / ที่อยู่ — แอดมินแก้ได้ที่หน้าตั้งค่าร้าน)
  */
 export default function CustomerLayout() {
   const { customer, logoutCustomer } = useAuth();
@@ -26,8 +26,7 @@ export default function CustomerLayout() {
       .catch(() => {}); // โหลดไม่ได้ก็แค่ไม่แสดงข้อมูลติดต่อ ไม่กระทบการใช้งานหน้าอื่น
   }, []);
 
-  // Guard: ถ้าไม่มีข้อมูลลูกค้า → redirect ไป /login
-  // ส่ง state.from ไว้เพื่อให้หน้า login นำกลับมายังหน้าที่ต้องการหลังล็อกอินสำเร็จ
+  // ยังไม่ล็อกอิน → ไปหน้าล็อกอิน (จำหน้าปัจจุบันไว้ใน state.from ล็อกอินเสร็จจะพากลับมา)
   if (!customer) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -35,13 +34,13 @@ export default function CustomerLayout() {
   return (
     <div className="page-dark app-dark">
       <header className="topbar">
-        {/* Brand logo — คลิกกลับหน้าหลัก (/) */}
+        {/* โลโก้ร้าน — กดแล้วกลับหน้าแรก */}
         <NavLink to="/" className="topbar-brand">
           <img src="/assets/logo.png" alt="Gens Karaoke logo" />
           <span>Gens Karaoke</span>
         </NavLink>
 
-        {/* Navigation หลัก — NavLink ใช้ className function เพื่อเพิ่ม class .active อัตโนมัติ */}
+        {/* เมนูหลัก — เมนูของหน้าที่เปิดอยู่จะถูกไฮไลต์ (class .active) ให้อัตโนมัติ */}
         <nav className="topbar-nav">
           <NavLink to="/" end className={({ isActive }) => `topbar-nav-item${isActive ? ' active' : ''}`}>
             เลือกห้อง
@@ -65,7 +64,7 @@ export default function CustomerLayout() {
         </div>
       </header>
 
-      {/* พื้นที่ render หน้าลูกค้า */}
+      {/* เนื้อหาของหน้าที่เปิดอยู่ */}
       <main style={{ flex: 1 }}>
         <Outlet />
       </main>

@@ -120,7 +120,7 @@ export default function RoomListPage() {
   );
   const selectedType = roomTypes.find((t) => t.code === size);
 
-  // ระหว่างโหลดผลค้นหาช่วงเวลาใหม่ ข้อมูลห้องชุดเดิมยังไม่มี is_available → ถือว่า "ยังไม่รู้" ไม่ใช่ "ไม่ว่าง"
+  // ระหว่างรอผลค้นหาเวลาใหม่ ยังไม่รู้ว่าห้องว่างไหม → ถือว่า "ยังไม่รู้" (ไม่ใช่ "ไม่ว่าง")
   const searching = Boolean(range) && (loading || rooms.some((r) => r.is_available === undefined));
   const availableCount = range ? filteredRooms.filter((r) => r.is_available).length : filteredRooms.length;
 

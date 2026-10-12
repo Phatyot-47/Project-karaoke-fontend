@@ -1,10 +1,9 @@
-// ไฟล์กำหนด routing ทั้งหมดของแอป แบ่งเป็น 3 กลุ่มหลัก:
-//   1. ลูกค้า: หน้า auth (ไม่ต้องล็อกอิน)       → /login, /register
-//   2. ลูกค้า: หน้าที่ต้องล็อกอิน (ผ่าน CustomerLayout) → /, /history, /profile
-//      และหน้าที่เข้าถึงได้โดยตรง (ไม่อยู่ใน CustomerLayout) → /book/:id, /pay/:id, /success
-//   3. แอดมิน: ล็อกอิน + ระบบจัดการร้าน (ผ่าน AdminLayout) → /admin/*
-//
-// เส้นทางที่ไม่ตรงกับเส้นใดเลย (*) จะถูก redirect กลับหน้าหลัก (/)
+// "แผนที่" ของเว็บ: URL ไหน → เปิดหน้าไหน แบ่งเป็น 3 กลุ่ม
+//   1. ลูกค้า (ยังไม่ต้องล็อกอิน)  → /login, /register
+//   2. ลูกค้า (ต้องล็อกอิน)       → /, /history, /profile (มีแถบเมนูด้านบน จาก CustomerLayout)
+//                                → /book/:id, /pay/:id, /success (ไม่มีแถบเมนู ให้ลูกค้าโฟกัสการจอง)
+//   3. แอดมิน                     → /admin/login และ /admin/* (มีเมนูด้านซ้าย จาก AdminLayout)
+// URL ที่ไม่มีในรายการ → พากลับหน้าแรก (/)
 import { Routes, Route, Navigate } from 'react-router-dom';
 import CustomerLayout from './layouts/CustomerLayout.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
@@ -34,7 +33,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      {/* ---- ลูกค้า: หน้าที่ต้องล็อกอิน (CustomerLayout จะ redirect ถ้ายังไม่ล็อกอิน) ---- */}
+      {/* ---- ลูกค้า: หน้าที่ต้องล็อกอิน (ถ้ายังไม่ล็อกอิน CustomerLayout จะพาไปหน้าล็อกอินเอง) ---- */}
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<RoomListPage />} />
         <Route path="/history" element={<HistoryPage />} />
@@ -48,7 +47,7 @@ export default function App() {
 
       {/* ---- แอดมิน ---- */}
       <Route path="/admin/login" element={<AdminLoginPage />} />
-      {/* /admin ไม่มีหน้าของตัวเอง — redirect ไปหน้าจัดการจองทันที */}
+      {/* /admin ไม่มีหน้าของตัวเอง — พาไปหน้าอนุมัติการจองเลย */}
       <Route path="/admin" element={<Navigate to="/admin/bookings" replace />} />
       <Route element={<AdminLayout />}>
         <Route path="/admin/bookings" element={<AdminBookingsPage />} />
@@ -60,7 +59,7 @@ export default function App() {
         <Route path="/admin/reports" element={<AdminReportsPage />} />
       </Route>
 
-      {/* เส้นทางที่ไม่ตรงกับใครเลย → กลับหน้าหลัก */}
+      {/* URL ที่ไม่มีในระบบ → กลับหน้าแรก */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

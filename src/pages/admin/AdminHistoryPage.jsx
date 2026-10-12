@@ -84,7 +84,7 @@ export default function AdminHistoryPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  useNowTick(); // บังคับ re-render ทุก 30s ให้ getBookingDisplayStatus() คำนวณสถานะใหม่ตามเวลาจริง
+  useNowTick(); // วาดหน้าใหม่ทุก 30 วินาที ป้ายสถานะ (เช่น "รอ Check-in") จะได้เปลี่ยนตามเวลาจริง
 
   useEffect(() => {
     api

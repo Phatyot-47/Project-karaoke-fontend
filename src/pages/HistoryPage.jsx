@@ -1,4 +1,5 @@
-// หน้า "ประวัติการจอง" ของลูกค้า (/history) — ดูสถานะ, ชำระมัดจำต่อ, แก้ไข และยกเลิกการจอง
+// หน้า "ประวัติการจอง" ของลูกค้า (/history) — ดูการจองทั้งหมดของตัวเอง (ใหม่สุดอยู่บน)
+// แต่ละรายการมีปุ่มตามสถานะ: ชำระมัดจำต่อ / แก้ไข / ยกเลิก
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card.jsx';
@@ -20,7 +21,7 @@ export default function HistoryPage() {
   const [error, setError] = useState('');
   const [cancelingId, setCancelingId] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
-  useNowTick(); // บังคับ re-render ทุก 30s ให้ getBookingDisplayStatus() คำนวณสถานะใหม่ตามเวลาจริง
+  useNowTick(); // วาดหน้าใหม่ทุก 30 วินาที ป้ายสถานะ (เช่น "รอ Check-in") จะได้เปลี่ยนตามเวลาจริง
 
   const load = () => {
     setLoading(true);
@@ -62,12 +63,12 @@ export default function HistoryPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 20 }}>
         {bookings.map((b) => {
           const statusInfo = getBookingDisplayStatus(b);
-          // แก้ไข (เปลี่ยนห้อง/เวลา) ได้เมื่อส่งสลิปมัดจำแล้ว ยังไม่ Check-in — เงื่อนไขเวลาล่วงหน้า backend เป็นคนตรวจ
+          // ปุ่มแก้ไข: ส่งสลิปมัดจำแล้ว + ยังไม่ Check-in (ส่วนเงื่อนไข "ต้องแก้ก่อนเวลาเริ่มกี่ชั่วโมง" backend เป็นคนตรวจ)
           const paidAmount = Number(b.paid_amount || 0);
           const canEdit = isActiveBooking(b) && paidAmount > 0 && !b.session_status;
-          // ยังไม่ได้ส่งสลิป (และยังไม่หมดเวลาชำระ ซึ่ง backend จะยกเลิกให้เอง) → กลับไปหน้าชำระมัดจำต่อได้
+          // ปุ่มชำระมัดจำ: ยังไม่ได้ส่งสลิป (ถ้าหมดเวลา 5 นาที backend จะยกเลิกการจองให้เอง)
           const canPay = b.booking_status === 'pending' && b.deposit_status === 'unpaid';
-          // Check-in แล้ว (มี session_status) ยกเลิกเองไม่ได้ ต้องให้ร้านจัดการ
+          // ปุ่มยกเลิก: Check-in แล้วยกเลิกเองไม่ได้ ต้องให้ร้านจัดการ
           const canCancel = isActiveBooking(b) && !b.session_status;
           const isDone = ['completed', 'cancelled', 'no_show'].includes(b.booking_status);
           const isCanceling = cancelingId === b.booking_id;

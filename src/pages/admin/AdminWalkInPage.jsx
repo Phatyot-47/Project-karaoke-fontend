@@ -41,10 +41,10 @@ export default function AdminWalkInPage() {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  // บังคับ re-render ทุก 30s ให้ "สถานะห้องตอนนี้" และช่วงเวลาที่ผ่านไปแล้วอัปเดตตามเวลาจริง
+  // วาดหน้าใหม่ทุก 30 วินาที "สถานะห้องตอนนี้" และช่องเวลาที่ผ่านไปแล้วจะได้ตรงกับเวลาจริง
   const nowTick = useNowTick();
 
-  // silent: true = รีเฟรชเงียบๆ (โพลลิ่งพื้นหลัง) ไม่โชว์ "กำลังโหลด..." ทับหน้าจอ
+  // silent: true = โหลดใหม่เงียบๆ เบื้องหลัง (ทุก 15 วินาที) ไม่โชว์ "กำลังโหลด..." ทับหน้าจอ
   const load = ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
     Promise.all([api.getTodayBookings(), api.listAdminRooms(), api.getShop()])

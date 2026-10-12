@@ -1,19 +1,19 @@
 /**
- * NavItem component — รายการเมนูใน sidebar ของ AdminLayout
- * รองรับ active state, badge (จำนวนรายการที่รอดำเนินการ), และ icon
+ * ปุ่มเมนู 1 อันในแถบเมนูด้านซ้ายของหน้าแอดมิน (AdminLayout)
+ * มีไอคอน + ชื่อเมนู + ตัวเลขแดง (badge) ได้ และไฮไลต์เมนูของหน้าที่เปิดอยู่
  *
  * @param {string}    label   - ชื่อเมนู
- * @param {ReactNode} icon    - icon ด้านซ้ายของ label
- * @param {boolean}   active  - ถ้า true จะเพิ่ม class .active (highlight เมนูปัจจุบัน)
- * @param {number}    badge   - จำนวนที่แสดงใน badge (แสดงเฉพาะเมื่อ badge > 0)
- * @param {Function}  onClick - callback เมื่อคลิก
+ * @param {ReactNode} icon    - ไอคอนด้านซ้าย
+ * @param {boolean}   active  - true = เป็นหน้าที่เปิดอยู่ (ไฮไลต์เมนูนี้)
+ * @param {number}    badge   - ตัวเลขแดง เช่น จำนวนรายการรออนุมัติ (0 = ไม่แสดง)
+ * @param {Function}  onClick - ฟังก์ชันที่ทำงานเมื่อกด
  */
 export default function NavItem({ label, icon, active, badge, onClick }) {
   return (
     <button type="button" className={`admin-nav-item${active ? ' active' : ''}`} onClick={onClick}>
       {icon}
       <span>{label}</span>
-      {/* แสดง badge เฉพาะเมื่อมีค่า truthy (> 0) — !! แปลงเป็น boolean ก่อน */}
+      {/* แสดงตัวเลขเฉพาะเมื่อมากกว่า 0 */}
       {!!badge && <span className="badge">{badge}</span>}
     </button>
   );

@@ -1,7 +1,7 @@
 // ข้อความ "บันทึกแล้ว" สั้นๆ แสดงหลังกดบันทึกสำเร็จ (ใช้คู่กับ useSavedFlag)
 import { Check } from './Icons.jsx';
 
-/** ข้อความ "✓ บันทึกสำเร็จ" สีเขียวข้างปุ่มบันทึก — ใช้คู่กับ hook useSavedFlag */
+/** ข้อความ "✓ บันทึกสำเร็จ" สีเขียวข้างปุ่มบันทึก — show = true จึงแสดง */
 export default function SavedNotice({ show }) {
   if (!show) return null;
   return (
