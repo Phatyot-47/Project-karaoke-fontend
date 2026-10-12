@@ -7,7 +7,7 @@ import Button from '../../components/Button.jsx';
 import Tag from '../../components/Tag.jsx';
 import Input from '../../components/Input.jsx';
 import Select from '../../components/Select.jsx';
-import { BookingNote, CancelReason, SlipImage } from '../../components/BookingDetails.jsx';
+import { BookingNote, CancelReason, CustomerInfo, SlipImage } from '../../components/BookingDetails.jsx';
 import { Check } from '../../components/Icons.jsx';
 import api from '../../api/client.js';
 import {
@@ -199,6 +199,7 @@ export default function AdminBookingsPage() {
               {money(b.price_total)} บาท
             </span>
           </div>
+          <CustomerInfo booking={b} />
           <div
             style={{
               display: 'flex',
@@ -211,7 +212,6 @@ export default function AdminBookingsPage() {
             }}
           >
             <span>{formatDateTimeRange(b.start_datetime, b.end_datetime)}</span>
-            <span>ลูกค้า: {b.customer_name || 'ไม่ระบุ'}</span>
             <span>จองเมื่อ {formatBookedAt(b.created_at)} น.</span>
             {isWalkIn && (
               <Tag tone="info" size="sm">

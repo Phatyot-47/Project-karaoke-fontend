@@ -3,6 +3,31 @@
  */
 
 import { fileUrl } from '../api/client.js';
+import { formatPhone } from '../utils/format.js';
+
+/**
+ * ข้อมูลลูกค้าของการจอง (หน้าแอดมิน) — ชื่อ + เบอร์โทร กดโทรได้
+ * จองออนไลน์ = ชื่อ/เบอร์ที่ลูกค้าใช้ล็อกอิน / วอล์คอิน = ชื่อ/เบอร์ที่แอดมินกรอก (ไม่กรอกเบอร์ = ไม่ระบุ)
+ */
+export function CustomerInfo({ booking }) {
+  const isWalkIn = booking.booking_source === 'admin_walkin';
+  const kind = isWalkIn ? 'ลูกค้าหน้าร้าน' : 'สมาชิก (จองออนไลน์)';
+  const name = booking.customer_name || 'ไม่ระบุชื่อ';
+  return (
+    <div className="booking-customer">
+      <span className="booking-customer-name">{name}</span>
+      {/* วอล์คอินที่ไม่กรอกชื่อ ระบบตั้งชื่อเป็น "ลูกค้าหน้าร้าน" อยู่แล้ว ไม่ต้องแสดงซ้ำ */}
+      {name !== kind && <span className="booking-customer-kind">{kind}</span>}
+      {booking.customer_phone ? (
+        <a className="booking-customer-phone num" href={`tel:${booking.customer_phone}`}>
+          โทร {formatPhone(booking.customer_phone)}
+        </a>
+      ) : (
+        <span className="booking-customer-kind">ไม่มีเบอร์โทร</span>
+      )}
+    </div>
+  );
+}
 
 /** หมายเหตุของการจอง (รวมบรรทัดประวัติ [ย้ายห้อง ...] ที่ระบบต่อท้ายไว้) */
 export function BookingNote({ note }) {
