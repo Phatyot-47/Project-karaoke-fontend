@@ -1,5 +1,6 @@
-// หน้าแอดมิน "ตั้งค่าร้าน" (/admin/shop-settings) — ข้อมูลร้าน, บัญชีรับโอน/QR, พีคไทม์,
-// เวลาเปิด-ปิด และนโยบายมัดจำ/ยกเลิก
+// หน้าแอดมิน "ตั้งค่าร้าน" (/admin/shop-settings) — ข้อมูลร้าน, แผนผัง, บัญชีรับโอน/QR,
+// ราคาตามช่วงเวลา (พีค/ออฟพีค ใช้ทุกวัน หรือกำหนดเองรายวัน), เวลาเปิด-ปิด และนโยบายมัดจำ/ยกเลิก
+// รูปแผนผัง/QR บันทึกทันทีที่อัปโหลด / ข้อมูลอื่นบันทึกด้วยปุ่ม "บันทึกการตั้งค่า" ด้านล่าง
 import { useEffect, useState } from 'react';
 import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';
@@ -7,6 +8,7 @@ import Select from '../../components/Select.jsx';
 import Button from '../../components/Button.jsx';
 import UploadSlot from '../../components/UploadSlot.jsx';
 import SavedNotice from '../../components/SavedNotice.jsx';
+import RateFields, { toRateForm } from '../../components/RateFields.jsx';
 import useSavedFlag from '../../hooks/useSavedFlag.js';
 import api from '../../api/client.js';
 import { DAY_LABELS } from '../../utils/format.js';
@@ -29,6 +31,10 @@ export default function AdminShopSettingsPage() {
   const [policy, setPolicy] = useState(toPolicyForm(null));
   const [savedPolicy, setSavedPolicy] = useState(toPolicyForm(null));
   const [hours, setHours] = useState([]);
+  // ราคาตามช่วงเวลาที่ใช้ทุกวัน (วันไหนติ๊ก "กำหนดราคาเอง" ใช้ hours[i].rates แทน)
+  const [rates, setRates] = useState(toRateForm(null));
+  // ข้อความ "บันทึกรูปแล้ว" ของแต่ละช่องรูป (บันทึกทันทีที่อัปโหลด)
+  const [imageNotice, setImageNotice] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -39,7 +45,15 @@ export default function AdminShopSettingsPage() {
       .getShop()
       .then((data) => {
         setForm(data);
-        setHours(data.hours || []);
+        setRates(toRateForm(data));
+        // แต่ละวัน: customRates = ใช้ราคาของวันนั้นเอง (ยังไม่ได้กำหนด = ตั้งต้นจากค่าหลัก)
+        setHours(
+          (data.hours || []).map((h) => ({
+            ...h,
+            customRates: Boolean(h.custom_rates),
+            rates: toRateForm(h.custom_rates ? h : data),
+          })),
+        );
         setPolicy(toPolicyForm(data.policy));
         setSavedPolicy(toPolicyForm(data.policy));
       })
@@ -56,6 +70,21 @@ export default function AdminShopSettingsPage() {
     setHours((hrs) => hrs.map((h) => (h.day_of_week === dayOfWeek ? { ...h, [field]: value } : h)));
   };
 
+  const setDayRates = (dayOfWeek, patch) =>
+    setHours((hrs) => hrs.map((h) => (h.day_of_week === dayOfWeek ? { ...h, ...patch } : h)));
+
+  // รูปแผนผัง/QR: อัปโหลดเสร็จบันทึกลงข้อมูลร้านทันที (เดิมต้องเลื่อนไปกดปุ่มล่างสุด เลยมักลืมบันทึก)
+  const saveImage = async (field, apiField, url, label) => {
+    setForm((f) => ({ ...f, [field]: url }));
+    setImageNotice((n) => ({ ...n, [field]: '' }));
+    try {
+      await api.updateShop({ [apiField]: url });
+      setImageNotice((n) => ({ ...n, [field]: `บันทึก${label}แล้ว` }));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setError('');
@@ -69,9 +98,8 @@ export default function AdminShopSettingsPage() {
         bankAccountNo: form.bank_account_no,
         bankAccountName: form.bank_account_name,
         qrCodeUrl: form.qr_code_url,
-        peakStartTime: form.peak_start_time,
-        peakSurcharge: form.peak_surcharge,
         floorPlanUrl: form.floor_plan_url,
+        ...rates,
       });
       if (JSON.stringify(policy) !== JSON.stringify(savedPolicy)) {
         const newPolicy = await api.updatePolicy(policy);
@@ -79,7 +107,13 @@ export default function AdminShopSettingsPage() {
       }
       if (hours.length) {
         await api.updateShopHours(
-          hours.map((h) => ({ dayOfWeek: h.day_of_week, openHour: h.open_hour, closeHour: h.close_hour })),
+          hours.map((h) => ({
+            dayOfWeek: h.day_of_week,
+            openHour: h.open_hour,
+            closeHour: h.close_hour,
+            customRates: h.customRates,
+            ...(h.customRates ? h.rates : {}),
+          })),
         );
       }
       flashSaved();
@@ -117,50 +151,72 @@ export default function AdminShopSettingsPage() {
           <UploadSlot
             placeholder="อัปโหลดรูปแผนผังห้อง"
             value={form.floor_plan_url || null}
-            onChange={(url) => setForm((f) => ({ ...f, floor_plan_url: url }))}
+            onChange={(url) => saveImage('floor_plan_url', 'floorPlanUrl', url, 'รูปแผนผัง')}
             height={240}
           />
         </div>
+        <SavedNotice show={Boolean(imageNotice.floor_plan_url)} />
       </Card>
 
       <Card
         title="เวลาเปิด-ปิดร้าน"
-        subtitle="กำหนดเวลาเปิด-ปิดแยกแต่ละวันในสัปดาห์ — ตั้งเวลาเปิดและปิดเท่ากัน = ปิดทั้งวัน"
+        subtitle='กำหนดเวลาเปิด-ปิดแยกแต่ละวันในสัปดาห์ — ตั้งเวลาเปิดและปิดเท่ากัน = ปิดทั้งวัน / ติ๊ก "กำหนดราคาเอง" ถ้าวันนั้นมีพีค/ออฟพีคต่างจากค่าหลัก'
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {sortedHours.map((d) => (
-            <div key={d.day_of_week} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span
-                style={{
-                  minWidth: 80,
-                  width: 90,
-                  fontSize: 'var(--text-xs)',
-                  fontWeight: 600,
-                  color: 'var(--text-strong)',
-                  flex: 'none',
-                }}
-              >
-                {DAY_LABELS[d.day_of_week] ?? `วันที่ ${d.day_of_week}`}
-              </span>
-              <div style={{ flex: '1 1 110px', minWidth: 90 }}>
-                <Select value={d.open_hour} onChange={setHourField(d.day_of_week, 'open_hour')}>
-                  {HOUR_OPTIONS.map((h) => (
-                    <option key={h} value={h}>
-                      {h}:00
-                    </option>
-                  ))}
-                </Select>
+            <div key={d.day_of_week} className="day-hours">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span
+                  style={{
+                    minWidth: 80,
+                    width: 90,
+                    fontSize: 'var(--text-xs)',
+                    fontWeight: 600,
+                    color: 'var(--text-strong)',
+                    flex: 'none',
+                  }}
+                >
+                  {DAY_LABELS[d.day_of_week] ?? `วันที่ ${d.day_of_week}`}
+                </span>
+                <div style={{ flex: '1 1 110px', minWidth: 90 }}>
+                  <Select value={d.open_hour} onChange={setHourField(d.day_of_week, 'open_hour')}>
+                    {HOUR_OPTIONS.map((h) => (
+                      <option key={h} value={h}>
+                        {h}:00
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <span style={{ color: 'var(--text-muted)' }}>—</span>
+                <div style={{ flex: '1 1 110px', minWidth: 90 }}>
+                  <Select value={d.close_hour} onChange={setHourField(d.day_of_week, 'close_hour')}>
+                    {HOUR_OPTIONS.map((h) => (
+                      <option key={h} value={h}>
+                        {h}:00
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                {/* ติ๊กแล้วกรอกพีค/ออฟพีคของวันนี้เอง (เริ่มจากค่าหลักที่ตั้งไว้ตอนนี้) / ไม่ติ๊ก = ใช้ค่าหลัก */}
+                <label className="day-custom-toggle">
+                  <input
+                    type="checkbox"
+                    checked={d.customRates}
+                    onChange={(e) =>
+                      setDayRates(d.day_of_week, {
+                        customRates: e.target.checked,
+                        ...(e.target.checked && !d.custom_rates && { rates }),
+                      })
+                    }
+                  />
+                  กำหนดราคาเอง
+                </label>
               </div>
-              <span style={{ color: 'var(--text-muted)' }}>—</span>
-              <div style={{ flex: '1 1 110px', minWidth: 90 }}>
-                <Select value={d.close_hour} onChange={setHourField(d.day_of_week, 'close_hour')}>
-                  {HOUR_OPTIONS.map((h) => (
-                    <option key={h} value={h}>
-                      {h}:00
-                    </option>
-                  ))}
-                </Select>
-              </div>
+              {d.customRates && (
+                <div className="day-custom-rates">
+                  <RateFields value={d.rates} onChange={(value) => setDayRates(d.day_of_week, { rates: value })} />
+                </div>
+              )}
             </div>
           ))}
           {!sortedHours.length && (
@@ -210,21 +266,11 @@ export default function AdminShopSettingsPage() {
         </div>
       </Card>
 
-      <Card title="พีคไทม์" subtitle="ช่วงเวลาที่คิดค่าบริการเพิ่ม">
-        <div className="admin-form-2col">
-          <Input
-            label="เริ่มพีคไทม์เวลา (HH:MM)"
-            value={form.peak_start_time || ''}
-            onChange={setField('peak_start_time')}
-            placeholder="18:00"
-          />
-          <Input
-            label="ค่าบริการเพิ่ม (บาท/ชม.)"
-            type="number"
-            value={form.peak_surcharge || ''}
-            onChange={setField('peak_surcharge')}
-          />
-        </div>
+      <Card
+        title="ราคาตามช่วงเวลา (ใช้ทุกวัน)"
+        subtitle='คิดราคาทีละ 30 นาที — วันไหนต้องการราคาต่างออกไป ติ๊ก "กำหนดราคาเอง" ในการ์ดเวลาเปิด-ปิดร้าน'
+      >
+        <RateFields value={rates} onChange={setRates} />
       </Card>
 
       <Card title="บัญชีธนาคารสำหรับรับเงิน" subtitle="ใช้แสดงในหน้าชำระมัดจำของลูกค้า">
@@ -249,14 +295,15 @@ export default function AdminShopSettingsPage() {
             <UploadSlot
               placeholder="อัปโหลดรูป QR Code"
               value={form.qr_code_url || null}
-              onChange={(url) => setForm((f) => ({ ...f, qr_code_url: url }))}
+              onChange={(url) => saveImage('qr_code_url', 'qrCodeUrl', url, 'รูป QR')}
               height={240}
               cropAspectRatio={1}
             />
           </div>
           <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-subtle)' }}>
-            รูปนี้จะไปแสดงในหน้าชำระมัดจำของลูกค้าแทนช่องว่างเปล่า
+            รูปนี้จะไปแสดงในหน้าชำระมัดจำของลูกค้าแทนช่องว่างเปล่า (บันทึกทันทีที่อัปโหลด)
           </span>
+          <SavedNotice show={Boolean(imageNotice.qr_code_url)} />
         </div>
       </Card>
 
