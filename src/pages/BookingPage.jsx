@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight } from '../components/Icons.jsx';
 import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveRoomImage, capacityLabel, ROOM_PHOTO_ASPECT_RATIO } from '../utils/roomImage.js';
-import { calculateBookingPrice, ratesForDay, slotRateKind } from '../utils/pricing.js';
+import { calculateBookingPrice, isPeakSlot, ratesForDay } from '../utils/pricing.js';
 import {
   todayISODate,
   formatThaiDate,
@@ -200,14 +200,14 @@ export default function BookingPage() {
     ? `${selectedStart} - ${rangeEndTime} น. (${durationHours} ชม.)`
     : 'ยังไม่ได้เลือกเวลา — คลิกเลือกเวลาเริ่มและเวลาสิ้นสุด';
 
-  // ราคาตามช่วงเวลา (พีค/ออฟพีค) ของวันนี้ — วันไหนร้านกำหนดราคาเองจะใช้ค่าของวันนั้น
+  // พีคไทม์ของวันนี้ — วันไหนร้านกำหนดราคาเองจะใช้ค่าของวันนั้น
   const rates = useMemo(() => {
     const [y, m, d] = today.split('-').map(Number);
     return ratesForDay(shop, new Date(Date.UTC(y, m - 1, d)).getUTCDay());
   }, [shop, today]);
 
   const pricePreview = useMemo(() => {
-    if (!selectedStart || !room) return { basePrice: 0, peakSurchargeTotal: 0, offPeakDiscountTotal: 0, priceTotal: 0 };
+    if (!selectedStart || !room) return { basePrice: 0, peakSurchargeTotal: 0, priceTotal: 0 };
     const startDatetime = `${today}T${selectedStart}:00`;
     // ใช้จำนวนช่วง (slotCount * 30 นาที) บวกจาก startDatetime โดยตรง แทนการต่อสตริงเวลาที่ wrap ข้ามเที่ยงคืนแล้ว
     // (ถ้าช่วงสุดท้ายของวันคือ 23:30 การบวก 30 นาทีแบบ string จะได้ "00:00" ของวันเดิม ทำให้ end ก่อน start)
@@ -401,21 +401,19 @@ export default function BookingPage() {
                 const isPast = pastTimes.has(t);
                 const disabled = isBooked || isPast;
                 const selected = inRange(t);
-                const kind = slotRateKind(rates, t); // 'peak' | 'offpeak' | null
+                const peak = isPeakSlot(rates, t);
                 const title = isBooked
                   ? 'จองไปแล้ว'
                   : isPast
                     ? 'เวลาผ่านไปแล้ว'
-                    : kind === 'peak'
+                    : peak
                       ? `พีคไทม์ +${money(rates.peakSurcharge)} บาท/ชม.`
-                      : kind === 'offpeak'
-                        ? `ออฟพีค ลด ${money(rates.offPeakDiscount)} บาท/ชม.`
-                        : undefined;
+                      : undefined;
                 return (
                   <button
                     key={t}
                     type="button"
-                    className={`slot-btn${kind ? ` slot-${kind}` : ''}${selected ? ' selected' : ''}`}
+                    className={`slot-btn${peak ? ' slot-peak' : ''}${selected ? ' selected' : ''}`}
                     disabled={disabled}
                     title={title}
                     onClick={() => selectSlot(t, disabled)}
@@ -426,19 +424,12 @@ export default function BookingPage() {
               })}
               {!slotTimes.length && <p style={{ color: 'var(--text-muted)' }}>ร้านปิดให้บริการวันนี้</p>}
             </div>
-            {/* คำอธิบายสีช่องเวลา — แสดงเฉพาะช่วงที่ร้านตั้งไว้วันนี้ */}
-            {slotTimes.some((t) => slotRateKind(rates, t)) && (
+            {/* คำอธิบายสีช่องเวลา — แสดงเฉพาะวันที่มีพีคไทม์ */}
+            {slotTimes.some((t) => isPeakSlot(rates, t)) && (
               <div className="slot-legend">
-                {slotTimes.some((t) => slotRateKind(rates, t) === 'offpeak') && (
-                  <span>
-                    <i className="slot-legend-dot offpeak" /> ออฟพีค ลด {money(rates.offPeakDiscount)} บาท/ชม.
-                  </span>
-                )}
-                {slotTimes.some((t) => slotRateKind(rates, t) === 'peak') && (
-                  <span>
-                    <i className="slot-legend-dot peak" /> พีคไทม์ +{money(rates.peakSurcharge)} บาท/ชม.
-                  </span>
-                )}
+                <span>
+                  <i className="slot-legend-dot peak" /> พีคไทม์ +{money(rates.peakSurcharge)} บาท/ชม.
+                </span>
               </div>
             )}
           </Card>
@@ -471,11 +462,6 @@ export default function BookingPage() {
                   {pricePreview.peakSurchargeTotal > 0 && (
                     <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--amber-600)', marginTop: 2 }}>
                       รวมค่าพีคไทม์ +{money(pricePreview.peakSurchargeTotal)} บาท
-                    </div>
-                  )}
-                  {pricePreview.offPeakDiscountTotal > 0 && (
-                    <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--green-700)', marginTop: 2 }}>
-                      ส่วนลดออฟพีค -{money(pricePreview.offPeakDiscountTotal)} บาท
                     </div>
                   )}
                 </div>

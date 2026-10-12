@@ -1,5 +1,5 @@
 // หน้าแอดมิน "ตั้งค่าร้าน" (/admin/shop-settings) — ข้อมูลร้าน, แผนผัง, บัญชีรับโอน/QR,
-// ราคาตามช่วงเวลา (พีค/ออฟพีค ใช้ทุกวัน หรือกำหนดเองรายวัน), เวลาเปิด-ปิด และนโยบายมัดจำ/ยกเลิก
+// พีคไทม์ (ใช้ทุกวัน หรือกำหนดเองรายวัน), เวลาเปิด-ปิด และนโยบายมัดจำ/ยกเลิก
 // รูปแผนผัง/QR บันทึกทันทีที่อัปโหลด / ข้อมูลอื่นบันทึกด้วยปุ่ม "บันทึกการตั้งค่า" ด้านล่าง
 import { useEffect, useState } from 'react';
 import Card from '../../components/Card.jsx';
@@ -17,10 +17,11 @@ const HOUR_OPTIONS = Array.from({ length: 25 }, (_, i) => i);
 const BANKS = ['กรุงไทย', 'กสิกรไทย', 'ไทยพาณิชย์', 'กรุงเทพ', 'ทหารไทยธนชาต', 'ออมสิน'];
 
 // นโยบายจาก API → ค่าที่ใช้ในฟอร์ม (ช่องตัวเลขเป็นสตริงทั้งหมด ช่องว่าง = ไม่กำหนด)
+// ชั่วโมงเป็น NUMERIC ใน DB (API ส่งมาเป็น "1.5") → Number() ก่อน ให้แสดง 1 แทน 1.0
 const toPolicyForm = (p) => ({
   depositPercent: p ? String(Number(p.deposit_percent)) : '20',
-  cancelHoursBefore: p?.cancel_hours_before == null ? '1' : String(p.cancel_hours_before),
-  allowEditBeforeHours: p?.allow_edit_before_hours == null ? '' : String(p.allow_edit_before_hours),
+  cancelHoursBefore: p?.cancel_hours_before == null ? '1' : String(Number(p.cancel_hours_before)),
+  allowEditBeforeHours: p?.allow_edit_before_hours == null ? '' : String(Number(p.allow_edit_before_hours)),
   refundPolicyDesc: p?.refund_policy_desc || '',
   noShowPolicyDesc: p?.no_show_policy_desc || '',
 });
@@ -31,7 +32,7 @@ export default function AdminShopSettingsPage() {
   const [policy, setPolicy] = useState(toPolicyForm(null));
   const [savedPolicy, setSavedPolicy] = useState(toPolicyForm(null));
   const [hours, setHours] = useState([]);
-  // ราคาตามช่วงเวลาที่ใช้ทุกวัน (วันไหนติ๊ก "กำหนดราคาเอง" ใช้ hours[i].rates แทน)
+  // พีคไทม์ที่ใช้ทุกวัน (วันไหนติ๊ก "กำหนดราคาเอง" ใช้ hours[i].rates แทน)
   const [rates, setRates] = useState(toRateForm(null));
   // ข้อความ "บันทึกรูปแล้ว" ของแต่ละช่องรูป (บันทึกทันทีที่อัปโหลด)
   const [imageNotice, setImageNotice] = useState({});
@@ -160,7 +161,7 @@ export default function AdminShopSettingsPage() {
 
       <Card
         title="เวลาเปิด-ปิดร้าน"
-        subtitle='กำหนดเวลาเปิด-ปิดแยกแต่ละวันในสัปดาห์ — ตั้งเวลาเปิดและปิดเท่ากัน = ปิดทั้งวัน / ติ๊ก "กำหนดราคาเอง" ถ้าวันนั้นมีพีค/ออฟพีคต่างจากค่าหลัก'
+        subtitle='กำหนดเวลาเปิด-ปิดแยกแต่ละวันในสัปดาห์ — ตั้งเวลาเปิดและปิดเท่ากัน = ปิดทั้งวัน / ติ๊ก "กำหนดราคาเอง" ถ้าวันนั้นมีพีคไทม์ต่างจากค่าหลัก'
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {sortedHours.map((d) => (
@@ -197,7 +198,7 @@ export default function AdminShopSettingsPage() {
                     ))}
                   </Select>
                 </div>
-                {/* ติ๊กแล้วกรอกพีค/ออฟพีคของวันนี้เอง (เริ่มจากค่าหลักที่ตั้งไว้ตอนนี้) / ไม่ติ๊ก = ใช้ค่าหลัก */}
+                {/* ติ๊กแล้วกรอกพีคไทม์ของวันนี้เอง (เริ่มจากค่าหลักที่ตั้งไว้ตอนนี้) / ไม่ติ๊ก = ใช้ค่าหลัก */}
                 <label className="day-custom-toggle">
                   <input
                     type="checkbox"
@@ -234,14 +235,18 @@ export default function AdminShopSettingsPage() {
             onChange={setPolicyField('depositPercent')}
           />
           <Input
-            label="ยกเลิกได้ล่วงหน้า (ชั่วโมง)"
+            label="ยกเลิกได้ก่อนเวลาเริ่ม (ชั่วโมง)"
             type="number"
+            min="0"
+            step="0.5"
             value={policy.cancelHoursBefore}
             onChange={setPolicyField('cancelHoursBefore')}
           />
           <Input
-            label="แก้ไขการจองได้ล่วงหน้า (ชั่วโมง)"
+            label="แก้ไขการจองได้ก่อนเวลาเริ่ม (ชั่วโมง)"
             type="number"
+            min="0"
+            step="0.5"
             value={policy.allowEditBeforeHours}
             onChange={setPolicyField('allowEditBeforeHours')}
             hint="เว้นว่าง = ใช้ค่าเดียวกับการยกเลิก"
@@ -267,8 +272,8 @@ export default function AdminShopSettingsPage() {
       </Card>
 
       <Card
-        title="ราคาตามช่วงเวลา (ใช้ทุกวัน)"
-        subtitle='คิดราคาทีละ 30 นาที — วันไหนต้องการราคาต่างออกไป ติ๊ก "กำหนดราคาเอง" ในการ์ดเวลาเปิด-ปิดร้าน'
+        title="พีคไทม์ (ใช้ทุกวัน)"
+        subtitle='คิดค่าบริการเพิ่มทีละ 30 นาที — วันไหนต้องการพีคไทม์ต่างออกไป ติ๊ก "กำหนดราคาเอง" ในการ์ดเวลาเปิด-ปิดร้าน'
       >
         <RateFields value={rates} onChange={setRates} />
       </Card>

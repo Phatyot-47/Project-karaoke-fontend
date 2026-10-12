@@ -12,6 +12,8 @@
  * @param {string}    hint        - ข้อความช่วยเหลือ (แสดงถ้าไม่มี error)
  * @param {boolean}   disabled    - ปิดการใช้งาน input
  * @param {ReactNode} icon        - icon ด้านซ้ายใน input (เช่น Search icon)
+ * @param {string}    min         - ค่าต่ำสุด (ใช้กับ type number)
+ * @param {string}    step        - ช่วงการเพิ่ม/ลดค่า (ใช้กับ type number เช่น "0.5")
  * @param {object}    style       - inline style สำหรับ wrapper div
  */
 export default function Input({
@@ -24,6 +26,8 @@ export default function Input({
   hint,
   disabled = false,
   icon = null,
+  min,
+  step,
   style,
 }) {
   return (
@@ -41,6 +45,8 @@ export default function Input({
             value={value ?? ''} // ?? '' ป้องกัน value=undefined ทำให้ input กลายเป็น uncontrolled
             onChange={onChange}
             disabled={disabled}
+            min={min}
+            step={step}
             aria-invalid={!!error} // บอก screen reader ว่า input มี error
           />
         </div>
@@ -52,6 +58,8 @@ export default function Input({
           value={value ?? ''}
           onChange={onChange}
           disabled={disabled}
+          min={min}
+          step={step}
           aria-invalid={!!error}
         />
       )}
