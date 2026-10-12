@@ -17,10 +17,11 @@ const HOUR_OPTIONS = Array.from({ length: 25 }, (_, i) => i);
 const BANKS = ['กรุงไทย', 'กสิกรไทย', 'ไทยพาณิชย์', 'กรุงเทพ', 'ทหารไทยธนชาต', 'ออมสิน'];
 
 // นโยบายจาก API → ค่าที่ใช้ในฟอร์ม (ช่องตัวเลขเป็นสตริงทั้งหมด ช่องว่าง = ไม่กำหนด)
+// ชั่วโมงเป็น NUMERIC ใน DB (API ส่งมาเป็น "1.5") → Number() ก่อน ให้แสดง 1 แทน 1.0
 const toPolicyForm = (p) => ({
   depositPercent: p ? String(Number(p.deposit_percent)) : '20',
-  cancelHoursBefore: p?.cancel_hours_before == null ? '1' : String(p.cancel_hours_before),
-  allowEditBeforeHours: p?.allow_edit_before_hours == null ? '' : String(p.allow_edit_before_hours),
+  cancelHoursBefore: p?.cancel_hours_before == null ? '1' : String(Number(p.cancel_hours_before)),
+  allowEditBeforeHours: p?.allow_edit_before_hours == null ? '' : String(Number(p.allow_edit_before_hours)),
   refundPolicyDesc: p?.refund_policy_desc || '',
   noShowPolicyDesc: p?.no_show_policy_desc || '',
 });
@@ -234,14 +235,18 @@ export default function AdminShopSettingsPage() {
             onChange={setPolicyField('depositPercent')}
           />
           <Input
-            label="ยกเลิกได้ล่วงหน้า (ชั่วโมง)"
+            label="การยกเลิกได้ก่อนเวลาเริ่ม (ชั่วโมง)"
             type="number"
+            min="0"
+            step="0.5"
             value={policy.cancelHoursBefore}
             onChange={setPolicyField('cancelHoursBefore')}
           />
           <Input
-            label="แก้ไขการจองได้ล่วงหน้า (ชั่วโมง)"
+            label="แก้ไขการจองได้ก่อนเวลาเริ่ม (ชั่วโมง)"
             type="number"
+            min="0"
+            step="0.5"
             value={policy.allowEditBeforeHours}
             onChange={setPolicyField('allowEditBeforeHours')}
             hint="เว้นว่าง = ใช้ค่าเดียวกับการยกเลิก"
