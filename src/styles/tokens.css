@@ -1,5 +1,7 @@
 /* ============================================================
-   Gens Karaoke — Design tokens
+   Gens Karaoke — ค่ากลางของหน้าตาเว็บ (สี, ขนาดตัวอักษร, ความมน, เงา)
+   ตั้งเป็น "ตัวแปร CSS" (ขึ้นต้นด้วย --) แล้วไฟล์อื่นเรียกใช้ด้วย var(--ชื่อ) เช่น color: var(--text-strong)
+   อยากเปลี่ยนสีทั้งเว็บ แก้ที่ไฟล์นี้ที่เดียว / .app-dark ด้านล่าง = ชุดสีโหมดมืด (หน้าจอง/หน้าชำระเงิน)
    ============================================================ */
 
 :root {
@@ -40,7 +42,6 @@
   --neutral-700: #334155;
   --neutral-800: #1e293b;
   --neutral-900: #0f172a;
-  --paper: #faf9f6;
 
   /* ---- Red / Amber -------------------------------------------- */
   --red-50: #fef2f2;
@@ -57,14 +58,11 @@
 
   /* ---- Semantic ------------------------------------------------ */
   --brand: var(--primary-500);
-  --brand-strong: var(--primary-700);
   --accent: var(--green-600);
-  --accent-soft: var(--green-50);
 
   --surface-app: var(--neutral-100);
   --surface-card: var(--neutral-0);
   --surface-sunken: var(--neutral-50);
-  --surface-sidebar: var(--primary-500);
   --surface-overlay: rgba(15, 23, 42, 0.5);
 
   --text-strong: #1e293b;
@@ -111,35 +109,21 @@
   --text-lg: 1.125rem; /* 18px */
   --text-xl: 1.25rem; /* 20px */
   --text-2xl: 1.5rem; /* 24px */
-  --text-3xl: 1.875rem; /* 30px */
-  --text-4xl: 2.25rem; /* 36px */
 
-  --leading-tight: 1.2;
   --leading-snug: 1.35;
   --leading-normal: 1.5;
-  --leading-relaxed: 1.7;
 
   --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
 
   --radius-xs: 6px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 24px;
   --radius-pill: 9999px;
 
   --focus-ring: 0 0 0 3px rgba(71, 96, 147, 0.28);
-  --focus-ring-danger: 0 0 0 3px rgba(217, 52, 43, 0.25);
 
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
   --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.12), 0 4px 10px rgba(15, 23, 42, 0.06);
 }
