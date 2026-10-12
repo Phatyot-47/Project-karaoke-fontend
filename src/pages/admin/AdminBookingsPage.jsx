@@ -1,5 +1,6 @@
-// หน้าแอดมิน "อนุมัติการจอง" (/admin/bookings) — การ์ดสรุปวันนี้ + จัดการแต่ละรายการ
-// (ยืนยัน/ปฏิเสธ, ตรวจสลิป, ย้ายห้อง, Check-in, ต่อเวลา, Check-out, ไม่มาใช้บริการ)
+// หน้าแอดมิน "อนุมัติการจอง" (/admin/bookings) — หน้าหลักที่แอดมินใช้ทำงานทุกวัน
+// ด้านบน: การ์ดสรุปตัวเลขวันนี้ / ด้านล่าง: รายการจองวันนี้ + รายการค้างจากวันก่อน
+// ปุ่มของแต่ละรายการขึ้นกับสถานะ: ตรวจสลิป, รับเงินสด, ยืนยัน/ปฏิเสธ, ย้ายห้อง, Check-in, ต่อเวลา, Check-out, ไม่มาใช้บริการ
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import Card from '../../components/Card.jsx';
@@ -24,7 +25,7 @@ import useNowTick from '../../hooks/useNowTick.js';
 
 export default function AdminBookingsPage() {
   const navigate = useNavigate();
-  // alertsVersion เปลี่ยน = AdminLayout เจอสลิปใหม่ → โหลดรายการใหม่ให้เลย ไม่ต้องกดรีเฟรช
+  // alertsVersion เปลี่ยน = มีสลิปใหม่เข้ามา (AdminLayout เป็นคนเช็ค) → โหลดรายการใหม่ให้เลย ไม่ต้องกดรีเฟรช
   const { updateBadgeFromStats, alertsVersion } = useOutletContext() || {};
   const [stats, setStats] = useState({ pending_count: 0, in_progress_count: 0, completed_count: 0, revenue_today: 0 });
   const [bookings, setBookings] = useState([]);
@@ -42,7 +43,7 @@ export default function AdminBookingsPage() {
   // ต่อเวลา: จำนวนนาทีที่เลือกไว้ของแต่ละ booking (ค่าเริ่มต้น 30 นาที)
   const [extendMinutes, setExtendMinutes] = useState({});
   const [notice, setNotice] = useState('');
-  // บังคับ re-render ทุก 30s ให้สถานะ "รอดำเนินการ"/"กำลังดำเนินการ" ของแต่ละแถวอัปเดตตามเวลาจริง
+  // วาดหน้าใหม่ทุก 30 วินาที ป้ายสถานะและปุ่ม (เช่น "ไม่มาใช้บริการ" ที่ขึ้นเมื่อเลยเวลาเริ่ม) จะได้ตรงกับเวลาจริง
   useNowTick();
 
   const load = () => {
@@ -52,7 +53,7 @@ export default function AdminBookingsPage() {
       .then((today) => {
         setStats(today.stats);
         setBookings(today.bookings);
-        updateBadgeFromStats?.(today.stats); // ให้ badge บนเมนูตรงกับรายการที่เพิ่งโหลด
+        updateBadgeFromStats?.(today.stats); // ให้ตัวเลขแดงบนเมนูตรงกับรายการที่เพิ่งโหลด
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));

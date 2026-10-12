@@ -1,13 +1,12 @@
 /**
- * Select component — dropdown select field ที่ใช้ design system เดียวกับ Input
- * ห่อด้วย .field-wrap เพื่อให้ layout ตรงกัน
+ * ช่องเลือกแบบรายการ (dropdown) หน้าตาเหมือนช่องกรอก Input
  *
  * @param {string}    label    - ป้ายกำกับเหนือ select
- * @param {*}         value    - ค่าที่เลือกอยู่ (controlled)
- * @param {Function}  onChange - callback เมื่อค่าเปลี่ยน
- * @param {ReactNode} children - <option> elements
- * @param {boolean}   disabled - ปิดการใช้งาน select
- * @param {object}    style    - inline style สำหรับ wrapper div
+ * @param {*}         value    - ค่าที่เลือกอยู่ตอนนี้
+ * @param {Function}  onChange - ฟังก์ชันที่ทำงานเมื่อเปลี่ยนตัวเลือก
+ * @param {ReactNode} children - ตัวเลือก <option> ต่างๆ
+ * @param {boolean}   disabled - true = กดเลือกไม่ได้
+ * @param {object}    style    - สไตล์เพิ่มเติมของกล่องด้านนอก
  */
 export default function Select({ label, value, onChange, children, disabled = false, style }) {
   return (

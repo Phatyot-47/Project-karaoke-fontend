@@ -1,10 +1,7 @@
 /**
- * Icons.jsx — re-export icon ทั้งหมดจาก lucide-react ไว้ที่เดียว
- *
- * ทำไมต้อง re-export แทน import ตรงจาก lucide-react?
- * - มี single source ให้แก้ icon ทั้ง app ได้ที่ไฟล์นี้ไฟล์เดียว
- * - ถ้าต้องการเปลี่ยน icon library ในอนาคต แก้แค่ที่นี่โดยไม่กระทบ component อื่น
- * - ชื่อ alias บางตัว (เช่น HistoryIcon) ป้องกัน naming conflict กับ global ของ browser
+ * รวมไอคอนทั้งหมดที่เว็บใช้ไว้ที่ไฟล์เดียว (ไอคอนมาจากไลบรารี lucide-react)
+ * หน้าอื่นๆ import ไอคอนจากไฟล์นี้ ถ้าวันหลังอยากเปลี่ยนไอคอน แก้ที่นี่ที่เดียว
+ * บางตัวตั้งชื่อใหม่ (เช่น History → HistoryIcon) เพราะชื่อเดิมซ้ำกับของที่เบราว์เซอร์มีอยู่แล้ว
  */
 export {
   Search,
@@ -12,7 +9,7 @@ export {
   Check,
   Menu,
   ClipboardCheck,
-  History as HistoryIcon, // alias เพื่อหลีกเลี่ยง conflict กับ browser History API
+  History as HistoryIcon, // ตั้งชื่อใหม่ ไม่ให้ซ้ำกับ History ของเบราว์เซอร์
   DoorOpen,
   LayoutGrid,
   Store,

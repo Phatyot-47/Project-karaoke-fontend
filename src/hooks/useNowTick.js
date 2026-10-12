@@ -1,23 +1,21 @@
 import { useEffect, useState } from 'react';
 
 /**
- * บังคับ re-render ทุก intervalMs — ใช้เมื่อ UI ต้อง refresh ตามเวลาจริงที่ผ่านไป
- * (เช่น สถานะ booking ที่คำนวณจากเวลาปัจจุบัน) โดยไม่มี state อื่นที่เปลี่ยนแปลงให้ re-render เอง
+ * ทำให้หน้าจอ "วาดใหม่" ทุก 30 วินาที — ใช้กับข้อมูลที่เปลี่ยนตามเวลาจริง
+ * เช่น ช่องเวลาที่ผ่านไปแล้ว หรือสถานะ "รอ Check-in" ที่ต้องเปลี่ยนเองเมื่อถึงเวลา
+ * (ปกติ React วาดหน้าใหม่เฉพาะตอนข้อมูลเปลี่ยน แต่ "เวลาที่ผ่านไป" ไม่ได้ทำให้ข้อมูลเปลี่ยน จึงต้องกระตุ้นเอง)
  *
- * ค่าที่ได้ (tick) ไม่มีความหมายอะไรนอกจากเปลี่ยนทุกครั้งเพื่อ trigger re-render
- * — component ที่ใช้ hook นี้จะ re-render ทุก intervalMs โดยอัตโนมัติ
- *
- * @param {number} intervalMs - ความถี่ในการ tick (ms) ค่าเริ่มต้น 30,000 ms (30 วินาที)
- * @returns {number} tick - ตัวเลขที่เพิ่มขึ้นเรื่อยๆ ทุก interval
+ * @param {number} intervalMs - ทุกกี่มิลลิวินาที (ค่าเริ่มต้น 30,000 = 30 วินาที)
+ * @returns {number} ตัวเลขที่เพิ่มขึ้นทุกรอบ (ไม่ได้มีความหมายอะไร แค่ใช้กระตุ้นให้วาดใหม่)
  */
 export default function useNowTick(intervalMs = 30000) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    // ตั้ง interval ที่ intervalMs — cleanup ใน return เพื่อไม่ให้ memory leak
+    // ตั้งนาฬิกาให้นับทุก intervalMs และหยุดนาฬิกาเมื่อออกจากหน้านี้ (ไม่งั้นจะนับค้างไปเรื่อยๆ)
     const id = setInterval(() => setTick((t) => t + 1), intervalMs);
     return () => clearInterval(id);
-  }, [intervalMs]); // reset interval เมื่อ intervalMs เปลี่ยน (ปกติไม่เปลี่ยน)
+  }, [intervalMs]);
 
   return tick;
 }

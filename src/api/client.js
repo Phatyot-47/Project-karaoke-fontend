@@ -1,19 +1,20 @@
-// ไฟล์นี้รวม API call ทั้งหมดของ frontend ไว้ที่เดียว
-// ทุก request ผ่านฟังก์ชัน request() หรือ uploadFile() ซึ่งใช้ parseResponse() จัดการ error ร่วมกัน
+// รวมการเรียก backend (API) ทั้งหมดของหน้าเว็บไว้ที่ไฟล์นี้
+// หน้าอื่นเรียกผ่าน api.xxx() เช่น api.getShop() — ไม่ต้องเขียน fetch เองทุกหน้า
+// ทุกคำขอผ่าน request() (ข้อมูล JSON) หรือ uploadFile() (ไฟล์รูป) และจัดการ error ที่ parseResponse() จุดเดียว
 
-// BASE_URL อ่านจาก environment variable — กำหนดใน .env (VITE_API_BASE_URL)
-// ถ้าไม่ตั้งค่าไว้ จะใช้ localhost:4000/api เป็น fallback สำหรับ development
+// ที่อยู่ของ backend — ตั้งได้ในไฟล์ .env (VITE_API_BASE_URL) ถ้าไม่ตั้งใช้ http://localhost:4000/api
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
-// ไฟล์ที่อัปโหลด (สลิป, QR, แผนผัง, รูปห้อง, รูปโปรไฟล์) backend เก็บเป็น path "/uploads/xxx" ไม่ผูกกับชื่อเครื่อง
-// → เติมที่อยู่ backend ให้ตอนแสดงผล (ลิงก์อื่น เช่น /assets/... ของหน้าเว็บเอง หรือ data:/http: ใช้ตามเดิม)
+// ลิงก์รูปที่อัปโหลด backend เก็บแบบสั้นๆ เช่น "/uploads/abc.jpg" (ไม่มีชื่อเครื่อง)
+// ตอนแสดงรูป ต้องเติมที่อยู่ backend ข้างหน้า เช่น "http://localhost:4000/uploads/abc.jpg"
+// (ลิงก์แบบอื่น เช่น /assets/... ที่เป็นรูปของหน้าเว็บเอง ใช้ตามเดิม)
 const API_ORIGIN = new URL(BASE_URL, window.location.href).origin;
 export function fileUrl(url) {
   return typeof url === 'string' && url.startsWith('/uploads/') ? API_ORIGIN + url : url;
 }
 
-// token เข้าสู่ระบบเก็บอยู่ในข้อมูลผู้ใช้ใน localStorage (ดู AuthContext) — แยกลูกค้า/แอดมิน
-// เลือกตามหน้าที่เปิดอยู่: หน้า /admin/* ใช้ token แอดมิน นอกนั้นใช้ token ลูกค้า
+// token (บัตรผ่าน) เก็บอยู่ใน localStorage แยกลูกค้า/แอดมิน (ดู AuthContext)
+// เลือกใช้ตามหน้าที่เปิดอยู่: หน้า /admin/... ใช้ token แอดมิน / หน้าอื่นใช้ token ลูกค้า
 const SESSIONS = {
   customer: { key: 'gens_karaoke_customer', loginPath: '/login' },
   admin: { key: 'gens_karaoke_admin', loginPath: '/admin/login' },
@@ -25,7 +26,7 @@ function currentSession() {
   try {
     token = JSON.parse(localStorage.getItem(session.key))?.token || null;
   } catch {
-    /* ข้อมูลเสีย = ไม่มี token */
+    /* ข้อมูลเสีย = ถือว่าไม่มี token */
   }
   return { ...session, token };
 }
@@ -36,15 +37,15 @@ function authHeaders() {
 }
 
 /**
- * ฟังก์ชัน HTTP helper ทั่วไป
- * - รองรับ query params ผ่าน options.params (กรองค่าว่าง/null/undefined ออกอัตโนมัติ)
- * - แนบ Content-Type: application/json อัตโนมัติเมื่อมี body
- * - โยน Error พร้อม .status และ .data เมื่อ response ไม่ ok (4xx/5xx)
+ * ส่งคำขอไป backend แล้วคืนข้อมูลที่ได้
+ * - params = ค่าที่ต่อท้าย URL เช่น { date: '2026-10-12' } → ?date=2026-10-12 (ค่าว่างจะถูกข้าม)
+ * - body = ข้อมูลที่ส่งไป (แปลงเป็น JSON ให้)
+ * - backend ตอบ error → โยน Error ที่มีข้อความจาก backend ให้หน้าเว็บเอาไปแสดง
  */
 async function request(path, { method = 'GET', body, params } = {}) {
   let url = `${BASE_URL}${path}`;
 
-  // สร้าง query string จาก params — ข้ามค่าที่เป็น undefined, null, หรือ string ว่าง
+  // ต่อ ?key=value ท้าย URL (ข้ามค่าที่ว่าง)
   if (params) {
     const qs = new URLSearchParams(
       Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''),
@@ -54,7 +55,7 @@ async function request(path, { method = 'GET', body, params } = {}) {
 
   const res = await fetch(url, {
     method,
-    // ตั้ง Content-Type เฉพาะเมื่อมี body — ถ้าไม่ตั้ง browser จะไม่ส่ง header นี้ (ถูกต้องสำหรับ GET)
+    // แนบ token ทุกครั้ง + บอกว่าเป็น JSON (เฉพาะตอนมีข้อมูลส่งไป)
     headers: { ...authHeaders(), ...(body && { 'Content-Type': 'application/json' }) },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -63,13 +64,13 @@ async function request(path, { method = 'GET', body, params } = {}) {
 }
 
 /**
- * อ่าน body เป็น JSON (ถ้ามี) แล้วโยน Error พร้อม .status และ .data เมื่อ response ไม่ ok
- * fallbackMessage ใช้เมื่อ backend ไม่ได้ส่ง { error } กลับมา
+ * อ่านคำตอบจาก backend — สำเร็จคืนข้อมูล / ไม่สำเร็จโยน Error พร้อมข้อความ
+ * fallbackMessage = ข้อความสำรอง ถ้า backend ไม่ได้บอกว่าผิดอะไร
  */
 let redirectingToLogin = false;
 
 async function parseResponse(res, fallbackMessage) {
-  // บาง endpoint อาจตอบกลับมาโดยไม่มี body (เช่น 204 No Content)
+  // บางคำตอบไม่มีข้อมูลแนบมา ก็ไม่เป็นไร
   let data = null;
   try {
     data = await res.json();
@@ -77,9 +78,9 @@ async function parseResponse(res, fallbackMessage) {
     /* ไม่มี body หรือไม่ใช่ JSON */
   }
 
-  // 401 = ยังไม่ล็อกอิน / token หมดอายุ → ล้างเซสชันแล้วพาไปหน้าเข้าสู่ระบบ
-  // (ยกเว้นตอนอยู่หน้าเข้าสู่ระบบเอง ซึ่ง 401 หมายถึงรหัสผ่านผิด)
-  // หลาย request อาจได้ 401 พร้อมกัน → redirect ครั้งเดียวพอ
+  // 401 = ยังไม่ล็อกอิน หรือ token หมดอายุ → ลบข้อมูลล็อกอินแล้วพาไปหน้าเข้าสู่ระบบ
+  // (ยกเว้นตอนอยู่หน้าเข้าสู่ระบบเอง เพราะ 401 ตรงนั้นแปลว่ารหัสผ่านผิด)
+  // ถ้าหลายคำขอได้ 401 พร้อมกัน ให้พาไปหน้าล็อกอินครั้งเดียวพอ
   if (res.status === 401 && !redirectingToLogin) {
     const session = currentSession();
     if (window.location.pathname !== session.loginPath && !window.location.pathname.startsWith('/register')) {
@@ -100,9 +101,8 @@ async function parseResponse(res, fallbackMessage) {
 }
 
 /**
- * อัปโหลดไฟล์จริง (สลิปโอนเงิน / รูปห้อง) ผ่าน multipart/form-data
- * ไม่ผ่าน request() เพราะต้องให้ browser ตั้ง Content-Type พร้อม boundary เอง
- * (ถ้าตั้ง Content-Type: application/json เองจะทำให้ server parse form-data ไม่ได้)
+ * อัปโหลดไฟล์รูป (สลิป / รูปห้อง / รูปโปรไฟล์) — ได้ { url: '/uploads/...' } กลับมา
+ * แยกจาก request() เพราะไฟล์ต้องส่งแบบฟอร์ม (FormData) ไม่ใช่ JSON และให้เบราว์เซอร์ตั้ง header เอง
  */
 async function uploadFile(file) {
   const formData = new FormData();
@@ -112,7 +112,7 @@ async function uploadFile(file) {
   return parseResponse(res, 'อัปโหลดไฟล์ไม่สำเร็จ');
 }
 
-// ออบเจกต์รวม API method ทั้งหมด — import api from './api/client.js'
+// รายการ API ทั้งหมด — ใช้ในหน้าอื่นด้วย import api from '../api/client.js' แล้วเรียก api.ชื่อ(...)
 const api = {
   // ---- อัปโหลดไฟล์ ----
   uploadFile,
@@ -126,12 +126,12 @@ const api = {
     request('/auth/set-password', { method: 'POST', body: { phone, name, password } }),
   loginAdmin: (username, password) => request('/auth/admin-login', { method: 'POST', body: { username, password } }),
 
-  // ---- ข้อมูลส่วนตัวลูกค้า ----
   // ---- แจ้งเตือนของลูกค้า (กระดิ่งบนเมนู) ----
   listNotifications: () => request('/notifications'), // { unreadCount, items }
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
   markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PATCH' }),
 
+  // ---- ข้อมูลส่วนตัวลูกค้า ----
   updateProfile: (userId, name, phone, avatarUrl) =>
     request(`/users/${userId}`, { method: 'PATCH', body: { name, phone, avatarUrl } }),
   changePassword: (userId, currentPassword, newPassword) =>

@@ -1,19 +1,18 @@
 /**
- * Card component — กล่อง card มาตรฐานของ UI
- * โครงสร้าง: card > card-header (ถ้ามี title/actions) + card-body (ถ้า pad=true)
+ * กล่องสีขาวมุมมน (การ์ด) ที่ใช้ทั้งเว็บ: ส่วนหัว (หัวข้อ + ปุ่ม) และส่วนเนื้อหา
  *
- * @param {string}    title     - หัวข้อ card (แสดงใน card-header ด้วยสไตล์ .title)
- * @param {string}    subtitle  - คำอธิบายย่อยใต้ title (สไตล์ .subtitle)
- * @param {ReactNode} actions   - element ด้านขวาของ header เช่น ปุ่ม action
- * @param {boolean}   pad       - ถ้า true จะห่อ children ด้วย .card-body (มี padding) — ค่าเริ่มต้น true
- * @param {ReactNode} children  - เนื้อหาภายใน card
- * @param {object}    style     - inline style เพิ่มเติม
- * @param {string}    className - CSS class เพิ่มเติม
+ * @param {string}    title     - หัวข้อการ์ด
+ * @param {string}    subtitle  - คำอธิบายสั้นๆ ใต้หัวข้อ
+ * @param {ReactNode} actions   - ของที่วางมุมขวาบน เช่น ปุ่ม
+ * @param {boolean}   pad       - true (ค่าเริ่มต้น) = มีระยะห่างรอบเนื้อหา / false = เนื้อหาชิดขอบ (เช่น รายการจอง)
+ * @param {ReactNode} children  - เนื้อหาในการ์ด
+ * @param {object}    style     - สไตล์เพิ่มเติม
+ * @param {string}    className - ชื่อ class CSS เพิ่มเติม
  */
 export default function Card({ title, subtitle, actions, pad = true, children, style, className = '' }) {
   return (
     <div className={`card ${className}`} style={style}>
-      {/* แสดง header เฉพาะเมื่อมี title หรือ actions อย่างน้อยหนึ่งอย่าง */}
+      {/* มีส่วนหัวเฉพาะเมื่อมีหัวข้อหรือปุ่ม */}
       {(title || actions) && (
         <div
           className="card-header"
@@ -26,7 +25,7 @@ export default function Card({ title, subtitle, actions, pad = true, children, s
           {actions}
         </div>
       )}
-      {/* pad=false ใช้เมื่อต้องการให้ children จัดการ padding เอง เช่น booking-row list */}
+      {/* pad=false = เนื้อหาจัดระยะเอง (เช่น รายการจองที่ต้องชิดขอบ) */}
       <div className={pad ? 'card-body' : ''}>{children}</div>
     </div>
   );

@@ -1,3 +1,5 @@
+// หน้า "จองห้อง" (/book/:roomId) — ลูกค้าเลือกช่วงเวลาของวันนี้ ดูราคาโดยประมาณ แล้วกดยืนยันไปหน้าชำระมัดจำ
+// ใช้หน้าเดียวกันตอน "แก้ไขการจอง" ด้วย (/book/:roomId?edit=<เลขการจอง>)
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import Card from '../components/Card.jsx';
@@ -25,18 +27,19 @@ import {
 } from '../utils/format.js';
 import useNowTick from '../hooks/useNowTick.js';
 
-// ช่วงเวลา (สตริงเวลาไทย naive) → ช่องเริ่ม "HH:MM" + จำนวนช่อง 30 นาที
+// เวลาเริ่ม-จบของการจองเดิม → ช่องเริ่ม "HH:MM" + จำนวนช่อง (ช่องละ 30 นาที) ไว้เลือกให้ตอนเปิดโหมดแก้ไข
 function toSelection(startDatetime, endDatetime) {
   const toMin = (dt) => Number(dt.slice(11, 13)) * 60 + Number(dt.slice(14, 16));
   let minutes = toMin(endDatetime) - toMin(startDatetime);
-  if (minutes <= 0) minutes += 24 * 60; // ช่วงสุดท้ายของวันที่จบ 00:00
+  if (minutes <= 0) minutes += 24 * 60; // การจองที่จบตอนเที่ยงคืน (00:00) = นับเป็นวันถัดไป
   return { start: startDatetime.slice(11, 16), durationSlots: minutes / 30 };
 }
 
 /**
  * หน้าจองห้อง — /book/:roomId
- * โหมดแก้ไข /book/:roomId?edit=<bookingId>: ลูกค้าเปลี่ยนห้อง/เวลาของการจองที่ชำระมัดจำแล้ว (ภายในวันเดิม)
- * ใช้มัดจำที่จ่ายแล้วเป็นฐาน ถ้ามัดจำของห้อง/เวลาใหม่สูงกว่าต้องจ่ายส่วนต่าง (ไปหน้าชำระเงินต่อ)
+ * วิธีเลือกเวลา: คลิกช่องแรก = เวลาเริ่ม, คลิกช่องถัดไป = เวลาจบ (คลิกช่องเดิมซ้ำ = ยกเลิกการเลือก)
+ * โหมดแก้ไข (/book/:roomId?edit=<เลขการจอง>): เปลี่ยนห้อง/เวลาของการจองที่จ่ายมัดจำแล้ว (วันเดิมเท่านั้น)
+ *   ถ้ามัดจำใหม่สูงกว่าที่จ่ายไป ต้องจ่ายส่วนต่าง → ไปหน้าชำระเงินต่อ
  */
 export default function BookingPage() {
   const { roomId } = useParams();
@@ -51,7 +54,7 @@ export default function BookingPage() {
   const [availability, setAvailability] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  // ถ้ามาจากการค้นหาห้องว่างในหน้าเลือกห้อง (state.start + state.durationSlots) ให้เลือกช่วงเวลานั้นไว้ให้เลย
+  // ถ้ามาจากปุ่มค้นหาห้องว่างในหน้าแรก จะมีเวลาที่ค้นหาติดมาด้วย → เลือกช่วงเวลานั้นไว้ให้เลย
   const preset = location.state;
   const [selectedStart, setSelectedStart] = useState(preset?.start || null);
   const [selectedEnd, setSelectedEnd] = useState(
@@ -125,7 +128,7 @@ export default function BookingPage() {
 
   const bookedTimes = useMemo(() => {
     const set = new Set();
-    // โหมดแก้ไข: ช่วงเวลาของการจองตัวเองไม่นับว่าถูกจอง (เลือกเวลาเดิมหรือขยับทับเวลาเดิมได้)
+    // ช่องที่ถูกจองแล้ว (สีเทา) — โหมดแก้ไข: เวลาของการจองตัวเองไม่นับ (เลือกเวลาเดิมหรือขยับทับเวลาเดิมได้)
     availability
       .filter((b) => String(b.booking_id) !== editId)
       .forEach((b) => {
@@ -209,8 +212,7 @@ export default function BookingPage() {
   const pricePreview = useMemo(() => {
     if (!selectedStart || !room) return { basePrice: 0, peakSurchargeTotal: 0, priceTotal: 0 };
     const startDatetime = `${today}T${selectedStart}:00`;
-    // ใช้จำนวนช่วง (slotCount * 30 นาที) บวกจาก startDatetime โดยตรง แทนการต่อสตริงเวลาที่ wrap ข้ามเที่ยงคืนแล้ว
-    // (ถ้าช่วงสุดท้ายของวันคือ 23:30 การบวก 30 นาทีแบบ string จะได้ "00:00" ของวันเดิม ทำให้ end ก่อน start)
+    // เวลาจบ = เวลาเริ่ม + (จำนวนช่อง × 30 นาที) ใช้ addMinutesToDateTime เพราะข้ามเที่ยงคืนแล้ววันที่ต้องเปลี่ยนด้วย
     const endDatetime = addMinutesToDateTime(startDatetime, slotCount * 30);
     return calculateBookingPrice({
       pricePerHour: Number(room.price_per_hour),
@@ -220,7 +222,7 @@ export default function BookingPage() {
     });
   }, [selectedStart, slotCount, room, rates, today]);
 
-  // โหมดแก้ไข: มัดจำใหม่ = % ตามนโยบายของราคาใหม่ / จ่ายเพิ่มเฉพาะส่วนที่เกินยอดที่ชำระแล้ว (ไม่คืนเงิน)
+  // โหมดแก้ไข: มัดจำใหม่ = % ตามนโยบาย ของราคาใหม่ / จ่ายเพิ่มเฉพาะส่วนที่เกินยอดที่จ่ายไปแล้ว (ถูกลงไม่คืนเงิน)
   const paidAmount = Number(editing?.paid_amount || 0);
   const newDeposit = editing ? Math.round((pricePreview.priceTotal * Number(editing.deposit_percent)) / 100) : 0;
   const topUp = Math.max(0, newDeposit - paidAmount);
@@ -274,7 +276,7 @@ export default function BookingPage() {
       navigate(`/pay/${booking.booking_id}`, { state: { booking, room } });
     } catch (err) {
       setSubmitError(err.message);
-      // รีเฟรชช่วงเวลาที่ถูกจองแล้ว เผื่อชนกับรายการใหม่ (exclusion constraint)
+      // โหลดช่องที่ถูกจองใหม่ เผื่อเพิ่งมีคนอื่นจองเวลานี้ตัดหน้าไป
       api
         .getRoomAvailability(roomId, today)
         .then(setAvailability)

@@ -1,14 +1,14 @@
 /**
- * Button component — ปุ่มกดทั่วไปที่ใช้ทั่ว app
+ * ปุ่มกดมาตรฐานของทั้งเว็บ (สีและขนาดเหมือนกันทุกหน้า)
  *
  * @param {'primary'|'accent'|'outline'|'danger'|'subtle'} variant - สไตล์ปุ่ม
  * @param {'sm'|'md'|'lg'} size - ขนาดปุ่ม
- * @param {boolean} block - ถ้า true จะยืดเต็มความกว้างของ container
- * @param {ReactNode} iconLeft  - icon ด้านซ้ายของ label
- * @param {ReactNode} iconRight - icon ด้านขวาของ label
+ * @param {boolean} block - true = ปุ่มยืดเต็มความกว้าง
+ * @param {ReactNode} iconLeft  - ไอคอนด้านซ้ายของข้อความ
+ * @param {ReactNode} iconRight - ไอคอนด้านขวาของข้อความ
  * @param {boolean} disabled - ปิดการใช้งานปุ่ม
- * @param {Function} onClick - callback เมื่อคลิก
- * @param {'button'|'submit'|'reset'} type - ประเภท button (default: 'button' ป้องกัน submit form โดยไม่ตั้งใจ)
+ * @param {Function} onClick - ฟังก์ชันที่ทำงานเมื่อกดปุ่ม
+ * @param {'button'|'submit'|'reset'} type - ค่าเริ่มต้น 'button' (กันกดแล้วฟอร์มถูกส่งโดยไม่ตั้งใจ)
  */
 export default function Button({
   variant = 'primary',
@@ -22,7 +22,7 @@ export default function Button({
   children,
   style,
 }) {
-  // สร้าง className จาก variant, size, block — filter Boolean กำจัด string ว่างออก
+  // ประกอบชื่อ class CSS เช่น "btn btn-primary btn-sm" (ตัดค่าว่างออกก่อนต่อกัน)
   const classes = [
     'btn',
     `btn-${variant}`,

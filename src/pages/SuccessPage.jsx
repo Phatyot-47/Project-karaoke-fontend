@@ -1,4 +1,4 @@
-// หน้าแจ้งผลหลังส่งสลิปมัดจำสำเร็จ (/success)
+// หน้าแจ้งผลหลังส่งสลิปมัดจำสำเร็จ (/success) — บอกลูกค้าว่ารอร้านตรวจสลิปและยืนยัน
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client.js';

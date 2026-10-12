@@ -1,21 +1,21 @@
 import { createContext, useContext, useState } from 'react';
 
-// Context สำหรับเก็บข้อมูลผู้ใช้ที่ล็อกอินอยู่ (ลูกค้าหรือแอดมิน)
-// ค่าเริ่มต้น null เพื่อให้ useAuth() ตรวจจับได้ว่าถูกเรียกนอก Provider
+// เก็บว่า "ใครล็อกอินอยู่" (ลูกค้า และ/หรือ แอดมิน) ให้ทุกหน้าใช้ร่วมกัน
+// หน้าไหนอยากรู้ เรียก const { customer, admin, loginCustomer, ... } = useAuth()
+// (Context = ที่เก็บข้อมูลกลางของ React ที่ทุกหน้าเข้าถึงได้ โดยไม่ต้องส่งต่อกันทีละชั้น)
 const AuthContext = createContext(null);
 
-// key ที่ใช้เก็บข้อมูลใน localStorage — แยกกันระหว่างลูกค้าและแอดมิน
-// เพื่อให้ยังคงล็อกอินอยู่แม้รีเฟรชหน้า
+// ชื่อที่ใช้เก็บข้อมูลผู้ใช้ใน localStorage (ที่เก็บข้อมูลในเบราว์เซอร์ ปิดเว็บแล้วก็ยังอยู่)
+// เก็บแยกลูกค้ากับแอดมิน — รีเฟรชหน้าแล้วยังล็อกอินอยู่
 const CUSTOMER_KEY = 'gens_karaoke_customer';
 const ADMIN_KEY = 'gens_karaoke_admin';
 
 /**
- * Provider หลัก — ห่อ App ทั้งหมดไว้ใน main.jsx
- * จัดการ state และเก็บลง localStorage ทุกครั้งที่ login/logout
+ * ตัวเก็บข้อมูลผู้ใช้ — ห่อทั้งแอปไว้ใน main.jsx
+ * ล็อกอิน/ออกจากระบบเมื่อไหร่ ก็บันทึกลง localStorage ไปด้วย
  */
 export function AuthProvider({ children }) {
-  // อ่านข้อมูลจาก localStorage ตอน mount ครั้งแรก (lazy initializer)
-  // ใช้ try/catch ป้องกัน JSON.parse crash กรณีข้อมูลใน storage เสียหาย
+  // เปิดเว็บครั้งแรก: อ่านข้อมูลผู้ใช้ที่เคยเก็บไว้ (ถ้าข้อมูลเสีย ถือว่ายังไม่ล็อกอิน)
   const [customer, setCustomer] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(CUSTOMER_KEY)) || null;
@@ -31,16 +31,16 @@ export function AuthProvider({ children }) {
     }
   });
 
-  // เขียน localStorage ทันทีตอน login/logout (ไม่รอ useEffect) — token ต้องพร้อมก่อนหน้าถัดไปเริ่มเรียก API
-  // (effect ของหน้าลูกจะรันก่อน effect ของ Provider ถ้า sync ผ่าน useEffect หน้าแรกหลัง login จะยิง request โดยไม่มี token)
-  // logout (user = null) → ลบ key ออกจาก storage เลย ไม่เก็บ "null" เป็นสตริง
+  // สร้างฟังก์ชันล็อกอิน/ออกจากระบบ: บันทึกลง localStorage "ทันที" แล้วค่อยอัปเดตหน้าจอ
+  // (ต้องบันทึกทันที เพราะหน้าถัดไปจะเรียก API เลย ถ้า token ยังไม่ถูกบันทึก คำขอแรกจะไม่มี token)
+  // user = null หมายถึงออกจากระบบ → ลบข้อมูลทิ้ง
   const persist = (key, setter) => (user) => {
     if (user) localStorage.setItem(key, JSON.stringify(user));
     else localStorage.removeItem(key);
     setter(user);
   };
 
-  // เมธอดที่ส่งให้ component ลูก — ใช้ผ่าน useAuth()
+  // ฟังก์ชันที่หน้าอื่นเรียกใช้ได้ผ่าน useAuth()
   const loginCustomer = persist(CUSTOMER_KEY, setCustomer);
   const logoutCustomer = () => loginCustomer(null);
   const loginAdmin = persist(ADMIN_KEY, setAdmin);
@@ -54,8 +54,8 @@ export function AuthProvider({ children }) {
 }
 
 /**
- * Hook สำหรับเข้าถึง auth context — ใช้ใน component ใดก็ได้ที่อยู่ภายใน AuthProvider
- * โยน Error ทันทีถ้าเรียกนอก Provider เพื่อป้องกัน bug ที่หาสาเหตุยาก
+ * ดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่ — เรียกได้จากทุกหน้า
+ * (ถ้าเผลอเรียกนอก AuthProvider จะแจ้ง error ทันที จะได้รู้ว่าลืมห่อ)
  */
 export function useAuth() {
   const ctx = useContext(AuthContext);
