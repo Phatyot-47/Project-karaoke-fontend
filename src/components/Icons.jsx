@@ -19,6 +19,4 @@ export {
   Plus,
   LogOut,
   X,
-  Volume2,
-  VolumeX,
 } from 'lucide-react';

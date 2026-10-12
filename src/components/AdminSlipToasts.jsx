@@ -40,27 +40,3 @@ export default function AdminSlipToasts({ slips, onDismiss, onDismissAll }) {
     </div>
   );
 }
-
-/**
- * เสียงเตือนสั้นๆ 2 จังหวะ (สร้างด้วย Web Audio ไม่ต้องมีไฟล์เสียง)
- * เบราว์เซอร์อาจไม่ยอมเล่นเสียงถ้ายังไม่เคยคลิกหน้าเว็บเลย — เล่นไม่ได้ก็ข้ามไป (ยังมีกล่องแจ้งเตือนอยู่)
- */
-export function playAlertSound() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioCtx();
-    [0, 0.18].forEach((delay, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = i === 0 ? 880 : 1175;
-      gain.gain.setValueAtTime(0.15, ctx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.15);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(ctx.currentTime + delay);
-      osc.stop(ctx.currentTime + delay + 0.16);
-    });
-    setTimeout(() => ctx.close(), 600);
-  } catch {
-    /* เล่นเสียงไม่ได้ ไม่เป็นไร */
-  }
-}

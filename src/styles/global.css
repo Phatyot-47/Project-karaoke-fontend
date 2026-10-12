@@ -1475,7 +1475,7 @@ button {
   }
 }
 
-/* ---- แจ้งเตือนฝั่งแอดมิน: ปุ่มเสียง + กล่องสลิปใหม่มุมขวาล่าง (AdminSlipToasts) ---- */
+/* ---- แจ้งเตือนฝั่งแอดมิน: กล่องสลิปใหม่มุมขวาล่าง (AdminSlipToasts) ---- */
 .admin-header-actions {
   display: flex;
   align-items: center;

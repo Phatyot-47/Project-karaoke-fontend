@@ -5,7 +5,7 @@ import NavItem from '../components/NavItem.jsx';
 import Avatar from '../components/Avatar.jsx';
 import IconButton from '../components/IconButton.jsx';
 import api from '../api/client.js';
-import AdminSlipToasts, { playAlertSound } from '../components/AdminSlipToasts.jsx';
+import AdminSlipToasts from '../components/AdminSlipToasts.jsx';
 import {
   Menu,
   ClipboardCheck,
@@ -17,14 +17,11 @@ import {
   LogOut,
   Plus,
   X,
-  Volume2,
-  VolumeX,
 } from '../components/Icons.jsx';
 
-// แจ้งเตือนแอดมิน: เช็คสลิปใหม่ทุก 15 วินาที / เก็บค่าเปิด-ปิดเสียงไว้ใน localStorage
+// แจ้งเตือนแอดมิน: เช็คสลิปใหม่ทุก 15 วินาที
 const ALERT_POLL_MS = 15000;
 const MAX_TOASTS = 5;
-const SOUND_KEY = 'gens_karaoke_admin_sound';
 // จำกล่องแจ้งเตือน + เลขสลิปล่าสุดไว้ในแท็บนี้ (sessionStorage = หายเมื่อปิดแท็บ) — กดรีเฟรชแล้วกล่องไม่หาย และไม่เด้งซ้ำ
 const ALERTS_KEY = 'gens_karaoke_admin_alerts';
 
@@ -53,10 +50,10 @@ const PAGE_TITLES = {
  * "โครง" ของทุกหน้าแอดมิน:
  * 1. ยังไม่ล็อกอิน → พาไปหน้าล็อกอินแอดมิน
  * 2. เมนูด้านซ้าย: บนคอมย่อ/ขยายได้ / บนมือถือเป็นเมนูเลื่อนออกมา
- * 3. แถบด้านบน: ชื่อหน้าปัจจุบัน + ปุ่มเปิด/ปิดเสียงแจ้งเตือน + ปุ่มออกจากระบบ
+ * 3. แถบด้านบน: ชื่อหน้าปัจจุบัน + ปุ่มออกจากระบบ
  * 4. ตรงกลาง <Outlet />: เนื้อหาของหน้าที่เปิดอยู่
  * 5. แจ้งเตือน: ถาม backend ทุก 15 วินาที → อัปเดตตัวเลขแดงบนเมนูและบนแท็บเบราว์เซอร์
- *    ถ้ามีสลิปใหม่ → เด้งกล่องแจ้งเตือนมุมขวาล่าง + มีเสียง
+ *    ถ้ามีสลิปใหม่ → เด้งกล่องแจ้งเตือนมุมขวาล่าง
  */
 export default function AdminLayout() {
   const { admin, logoutAdmin } = useAuth();
@@ -78,15 +75,6 @@ export default function AdminLayout() {
   const [savedAlerts] = useState(loadSavedAlerts);
   const [slipToasts, setSlipToasts] = useState(savedAlerts.toasts);
   const [alertsVersion, setAlertsVersion] = useState(0);
-  const [soundOn, setSoundOn] = useState(() => {
-    try {
-      return localStorage.getItem(SOUND_KEY) !== 'off';
-    } catch {
-      return true;
-    }
-  });
-  const soundOnRef = useRef(soundOn);
-  soundOnRef.current = soundOn;
   // เลขสลิปล่าสุดที่เห็นแล้ว — null = ยังไม่เคยถาม (ครั้งแรกแค่จำเลขไว้ ไม่เด้งสลิปเก่าที่ค้างอยู่ก่อนเปิดหน้า)
   const lastPaymentIdRef = useRef(savedAlerts.lastPaymentId);
 
@@ -113,7 +101,6 @@ export default function AdminLayout() {
         if (!first && a.newSlips.length) {
           setSlipToasts((list) => [...list, ...a.newSlips].slice(-MAX_TOASTS));
           setAlertsVersion((v) => v + 1);
-          if (soundOnRef.current) playAlertSound();
         }
         lastPaymentIdRef.current = Math.max(a.latestPaymentId, lastPaymentIdRef.current ?? 0);
         saveAlerts();
@@ -148,17 +135,6 @@ export default function AdminLayout() {
     }
     document.title = baseTitleRef.current; // เอาตัวเลขออกจากชื่อแท็บทันที
     logoutAdmin();
-  };
-
-  const toggleSound = () => {
-    const next = !soundOn;
-    setSoundOn(next);
-    try {
-      localStorage.setItem(SOUND_KEY, next ? 'on' : 'off');
-    } catch {
-      /* เก็บค่าไม่ได้ก็ใช้แค่รอบนี้ */
-    }
-    if (next) playAlertSound(); // เปิดเสียงแล้วเล่นให้ฟังหนึ่งครั้ง
   };
 
   // บนมือถือ: เปลี่ยนหน้าแล้วปิดเมนูให้อัตโนมัติ
@@ -285,10 +261,6 @@ export default function AdminLayout() {
           </IconButton>
           <h1>{title}</h1>
           <div className="admin-header-actions">
-            {/* เปิด/ปิดเสียงแจ้งเตือนสลิปใหม่ */}
-            <IconButton label={soundOn ? 'ปิดเสียงแจ้งเตือน' : 'เปิดเสียงแจ้งเตือน'} onClick={toggleSound}>
-              {soundOn ? <Volume2 /> : <VolumeX />}
-            </IconButton>
             {/* ปุ่มออกจากระบบ (โชว์ชื่อแอดมินที่ล็อกอินอยู่) */}
             <button type="button" className="user-pill" onClick={handleLogout} title="ออกจากระบบ">
               <Avatar name={admin.name || admin.username} size="sm" />
