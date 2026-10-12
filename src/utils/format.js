@@ -135,6 +135,11 @@ function bangkokNowParts() {
   return bangkokParts(Date.now());
 }
 
+/** วันที่ "YYYY-MM-DD" ตามเวลาไทย ย้อนหลัง count วัน (วันนี้ก่อน) เช่น count = 7 → [วันนี้, เมื่อวาน, ...] */
+export function recentBangkokDates(count) {
+  return Array.from({ length: count }, (_, i) => bangkokParts(Date.now() - i * 24 * 60 * 60 * 1000).dateISO);
+}
+
 /**
  * ตรวจสอบว่าช่วงเวลา (date + time) ผ่านไปแล้วตามเวลาไทยหรือไม่
  *

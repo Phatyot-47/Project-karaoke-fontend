@@ -688,6 +688,21 @@ button {
   background: var(--amber-400);
 }
 
+/* ประวัติการจองของแอดมิน — การ์ดรายวัน: หัววันมีแถบสีด้านซ้าย + เส้นคั่นก่อนรายการจอง */
+.history-day .card-header {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.history-day .card-header .title {
+  padding-left: 10px;
+  border-left: 4px solid var(--primary-500);
+}
+
+.history-day .card-header .subtitle {
+  padding-left: 14px;
+}
+
 /* ---------------- Admin layout ---------------- */
 .admin-shell {
   display: flex;
