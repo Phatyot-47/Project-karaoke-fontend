@@ -13,6 +13,7 @@ export default function SuccessPage() {
   const { booking, room, payment } = location.state || {};
   const [policy, setPolicy] = useState(null);
 
+  // โหลดนโยบายร้าน ไว้แสดงเงื่อนไขการยกเลิก
   useEffect(() => {
     api
       .getShop()

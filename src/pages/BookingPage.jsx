@@ -70,6 +70,8 @@ export default function BookingPage() {
 
   const today = todayISODate();
 
+  // โหลดห้อง + ข้อมูลร้าน + ช่องที่ถูกจองวันนี้ พร้อมกัน (Promise.all) — โหมดแก้ไขโหลดการจองเดิม + รายชื่อห้องเพิ่ม
+  // alive = กันเอาข้อมูลไปใส่หลังผู้ใช้ออกจากหน้าไปแล้ว (ตอนออกจากหน้า React เรียกฟังก์ชันที่ return ไว้ → alive = false)
   useEffect(() => {
     if (!customer) {
       navigate('/login');
@@ -117,15 +119,20 @@ export default function BookingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, editId]);
 
+  // useMemo = คำนวณแล้วจำผลไว้ คิดใหม่เฉพาะเมื่อค่าใน [...] เปลี่ยน
+  // เวลาเปิด-ปิดของวันนี้ (ไม่มีข้อมูล = ถือว่าเปิด 24 ชม.)
   const todayHours = useMemo(() => findTodayHours(shop?.hours) || { open_hour: 0, close_hour: 24 }, [shop]);
 
+  // ช่องเวลาทั้งวัน ช่องละ 30 นาที เช่น ["18:00", "18:30", ...]
   const slotTimes = useMemo(
     () => buildHalfHourSlots(Number(todayHours.open_hour ?? 0), Number(todayHours.close_hour ?? 24)),
     [todayHours],
   );
 
+  // ลำดับของแต่ละช่อง เช่น "18:00" → 0, "18:30" → 1 — ใช้เทียบก่อน/หลัง (ถูกต้องแม้ร้านเปิดข้ามเที่ยงคืน)
   const order = useMemo(() => new Map(slotTimes.map((t, i) => [t, i])), [slotTimes]);
 
+  // ช่องที่ถูกจองแล้ว (Set = รายการไม่ซ้ำ เช็กด้วย .has() ได้เร็ว) — ไล่ทุกการจองว่าทับช่องไหนบ้าง
   const bookedTimes = useMemo(() => {
     const set = new Set();
     // ช่องที่ถูกจองแล้ว (สีเทา) — โหมดแก้ไข: เวลาของการจองตัวเองไม่นับ (เลือกเวลาเดิมหรือขยับทับเวลาเดิมได้)
@@ -144,6 +151,7 @@ export default function BookingPage() {
     return set;
   }, [availability, slotTimes, editId]);
 
+  // ช่องที่เวลาผ่านไปแล้ว (กดไม่ได้) — คิดใหม่ทุก 30 วิ ผ่าน nowTick
   const pastTimes = useMemo(
     () => new Set(slotTimes.filter((t) => isSlotPastBangkok(today, t))),
     [slotTimes, today, nowTick], // eslint-disable-line react-hooks/exhaustive-deps -- nowTick: บังคับคำนวณใหม่ทุก 30 วิ ตามเวลาจริง
@@ -151,6 +159,7 @@ export default function BookingPage() {
 
   const startOrder = selectedStart ? order.get(selectedStart) : null;
   const endOrder = selectedEnd ? order.get(selectedEnd) : null;
+  // ช่องเวลานี้อยู่ในช่วงที่เลือกไหม (ไว้ระบายสี) — เทียบด้วยลำดับช่อง (order) ไม่ใช่ข้อความเวลา
   const inRange = (t) => {
     if (startOrder == null) return false;
     const o = order.get(t);
@@ -158,6 +167,8 @@ export default function BookingPage() {
     return o === startOrder;
   };
 
+  // กดช่องเวลา: ยังไม่เลือก/เลือกครบแล้ว → เริ่มใหม่ที่ช่องนี้ / กดช่องเริ่มซ้ำ → ยกเลิก
+  // กดช่องหลังเวลาเริ่ม → เป็นช่องสุดท้าย (ถ้าระหว่างทางมีช่องที่ถูกจอง → เริ่มใหม่ที่ช่องนี้แทน) / กดช่องก่อนเวลาเริ่ม → เริ่มใหม่
   const selectSlot = (time, disabled) => {
     if (disabled) return;
     setSubmitError('');
@@ -209,6 +220,7 @@ export default function BookingPage() {
     return ratesForDay(shop, new Date(Date.UTC(y, m - 1, d)).getUTCDay());
   }, [shop, today]);
 
+  // ราคาโดยประมาณของช่วงที่เลือก (โชว์อย่างเดียว ราคาจริง backend คิดเองตอนบันทึก)
   const pricePreview = useMemo(() => {
     if (!selectedStart || !room) return { basePrice: 0, peakSurchargeTotal: 0, priceTotal: 0 };
     const startDatetime = `${today}T${selectedStart}:00`;
@@ -229,6 +241,7 @@ export default function BookingPage() {
 
   const confirmDisabled = !selectedStart || rangeHasBooked || rangeHasPast || submitting;
 
+  // โหมดแก้ไข: เปลี่ยนห้อง = เปิดหน้านี้ใหม่ด้วยเลขห้องใหม่ พร้อมส่งช่วงเวลาที่เลือกไว้ติดไปใน state
   const changeRoom = (newRoomId) => {
     navigate(`/book/${newRoomId}?edit=${editId}`, {
       replace: true,
@@ -236,6 +249,8 @@ export default function BookingPage() {
     });
   };
 
+  // บันทึกการแก้ไข → ต้องจ่ายส่วนต่าง (topup_due > 0) ไปหน้าชำระเงิน / ไม่ต้องจ่าย กลับหน้าประวัติ
+  // ถ้า error โหลดช่องที่ถูกจองใหม่ เผื่อมีคนจองตัดหน้า
   const handleSaveEdit = async () => {
     if (confirmDisabled) return;
     setSubmitting(true);
@@ -259,6 +274,7 @@ export default function BookingPage() {
     }
   };
 
+  // สร้างการจองใหม่ (สถานะ pending) แล้วไปหน้าแนบสลิป — ส่ง booking + room ไปใน state หน้าชำระเงินจะได้ไม่ต้องโหลดซ้ำ
   const handleConfirm = async () => {
     if (confirmDisabled) return;
     setSubmitting(true);

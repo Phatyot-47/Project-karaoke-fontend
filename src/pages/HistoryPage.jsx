@@ -23,6 +23,7 @@ export default function HistoryPage() {
   const [cancelReason, setCancelReason] = useState('');
   useNowTick(); // วาดหน้าใหม่ทุก 30 วินาที ป้ายสถานะ (เช่น "รอ Check-in") จะได้เปลี่ยนตามเวลาจริง
 
+  // โหลดรายการจองของลูกค้าคนนี้ — ใช้ตอนเปิดหน้า และหลังยกเลิกสำเร็จ
   const load = () => {
     setLoading(true);
     api
@@ -32,8 +33,10 @@ export default function HistoryPage() {
       .finally(() => setLoading(false));
   };
 
+  // โหลดตอนเปิดหน้า
   useEffect(load, [customer.user_id]);
 
+  // ยืนยันยกเลิก — backend ตรวจเงื่อนไขเวลา (ยกเลิกก่อนเวลาเริ่มกี่ชม.) ไม่ผ่านจะตอบ error กลับมา
   const submitCancel = async (id) => {
     try {
       await api.cancelBooking(id, cancelReason.trim() || 'ลูกค้ายกเลิกเอง');

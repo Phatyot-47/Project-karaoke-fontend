@@ -46,6 +46,7 @@ export default function AdminBookingsPage() {
   // วาดหน้าใหม่ทุก 30 วินาที ป้ายสถานะและปุ่ม (เช่น "ไม่มาใช้บริการ" ที่ขึ้นเมื่อเลยเวลาเริ่ม) จะได้ตรงกับเวลาจริง
   useNowTick();
 
+  // โหลดตัวเลขสรุป + รายการจองวันนี้ — ทุกปุ่มที่ทำสำเร็จเรียก load() ซ้ำ ให้หน้าตรงกับฐานข้อมูลเสมอ
   const load = () => {
     setLoading(true);
     api
@@ -61,6 +62,7 @@ export default function AdminBookingsPage() {
 
   useEffect(load, [alertsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // โหลดรายชื่อห้องครั้งเดียว ไว้ใช้ในเมนู "ย้ายห้อง"
   useEffect(() => {
     api
       .listAdminRooms()
@@ -82,6 +84,7 @@ export default function AdminBookingsPage() {
     }
   };
 
+  // ยืนยันการจอง (pending → confirmed) — กดได้เมื่อได้รับมัดจำครบแล้ว
   const handleConfirm = async (id) => {
     try {
       await api.confirmBooking(id);
@@ -91,6 +94,7 @@ export default function AdminBookingsPage() {
     }
   };
 
+  // ตรวจสลิป: approve = true อนุมัติ / false ปฏิเสธพร้อมเหตุผล (ปฏิเสธแล้วการจองถูกยกเลิก)
   const handleVerifyPayment = async (paymentId, approve, reason) => {
     try {
       await api.verifyPayment(paymentId, approve, reason);
@@ -102,6 +106,7 @@ export default function AdminBookingsPage() {
     }
   };
 
+  // ย้ายห้อง: startMove เปิดเมนูเลือกห้องของรายการนั้น → submitMove ส่งไปบันทึก (เวลาและราคาเดิม)
   const startMove = (b) => {
     setMovingId(b.booking_id);
     setMoveRoomId('');
@@ -137,12 +142,14 @@ export default function AdminBookingsPage() {
     }
   };
 
+  // ปุ่ม 4 ตัวนี้ใช้ runSessionAction: บอกว่าเรียก API อะไร + ข้อความที่จะแสดงเมื่อสำเร็จ
   const handleCheckIn = (b) =>
     runSessionAction(
       () => api.checkIn(b.booking_id),
       () => `Check-in ${b.room_name} แล้ว`,
     );
 
+  // ต่อเวลาตามนาทีที่เลือกไว้ของห้องนั้น (ไม่ได้เลือก = 30 นาที) — backend คิดเงินเพิ่มให้
   const handleExtend = (b) => {
     const minutes = extendMinutes[b.booking_id] || 30;
     return runSessionAction(
@@ -152,6 +159,7 @@ export default function AdminBookingsPage() {
     );
   };
 
+  // Check-out — ออกช้ากว่าเวลาจบ backend คิดค่าเกินเวลาให้
   const handleCheckOut = (b) =>
     runSessionAction(
       () => api.checkOut(b.booking_id),
@@ -161,12 +169,14 @@ export default function AdminBookingsPage() {
           : `Check-out ${b.room_name} แล้ว`,
     );
 
+  // ลูกค้าไม่มาตามเวลา → ปล่อยห้องว่าง มัดจำไม่คืน
   const handleNoShow = (b) =>
     runSessionAction(
       () => api.markNoShow(b.booking_id),
       () => `บันทึก ${b.room_name} เป็น "ไม่มาใช้บริการ" แล้ว — ปล่อยช่วงเวลาคืน มัดจำไม่คืนตามนโยบาย`,
     );
 
+  // ร้านปฏิเสธ/ยกเลิกการจอง (ไม่กรอกเหตุผล = ใช้ "ร้านยกเลิกการจอง")
   const submitReject = async (id) => {
     try {
       await api.rejectBooking(id, rejectReason.trim() || 'ร้านยกเลิกการจอง');
@@ -178,6 +188,8 @@ export default function AdminBookingsPage() {
     }
   };
 
+  // วาดการจอง 1 แถว: รูปห้อง | ข้อมูล (ลูกค้า เวลา ป้าย สลิป ฟอร์มย้ายห้อง/ยกเลิก) | ปุ่มตามสถานะ
+  // สถานะ: pending → (ตรวจสลิป/รับเงินสด) → confirmed → Check-in → Check-out = completed / หรือ cancelled, no_show
   const renderRow = (b) => {
     const isWalkIn = b.booking_source === 'admin_walkin';
     const inSession = b.session_status === 'in_progress';

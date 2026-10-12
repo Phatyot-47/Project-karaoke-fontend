@@ -8,6 +8,7 @@ export default function AdminSlipToasts({ slips, onDismiss, onDismissAll }) {
   const navigate = useNavigate();
   if (!slips.length) return null;
 
+  // กด "ไปตรวจสลิป" = ปิดกล่องแจ้งเตือนทั้งหมด แล้วไปหน้าอนุมัติการจอง
   const goVerify = () => {
     onDismissAll();
     navigate('/admin/bookings');

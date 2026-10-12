@@ -42,6 +42,7 @@ export default function RoomListPage() {
 
   const today = todayISODate();
 
+  // โหลดข้อมูลร้าน (เวลาเปิด-ปิด, แผนผัง) + ประเภทห้อง ครั้งเดียวตอนเปิดหน้า
   useEffect(() => {
     api
       .getShop()
@@ -66,20 +67,24 @@ export default function RoomListPage() {
   // ระยะเวลาสูงสุดที่เลือกได้ = ไม่เกินเวลาปิดร้าน
   const maxSlots = startOptions.find((s) => s.time === searchStart)?.slotsLeft ?? 0;
 
+  // เวลาเริ่มที่เลือกไว้เพิ่งผ่านไป (เปิดหน้าทิ้งไว้นาน) → ล้างกลับเป็น "ทุกเวลา"
   useEffect(() => {
     if (searchStart && !startOptions.some((s) => s.time === searchStart)) setSearchStart('');
   }, [startOptions, searchStart]);
 
+  // ระยะเวลาที่เลือกเกินเวลาปิดร้าน → ลดลงเหลือเท่าที่จองได้
   useEffect(() => {
     if (maxSlots && durationSlots > maxSlots) setDurationSlots(maxSlots);
   }, [maxSlots, durationSlots]);
 
+  // ช่วงเวลาที่ค้นหาแบบเต็ม { start, end } เช่น "2026-10-12T19:00:00" (ไม่ได้เลือกเวลา = null)
   const range = useMemo(() => {
     if (!searchStart) return null;
     const start = `${today}T${searchStart}:00`;
     return { start, end: addMinutesToDateTime(start, durationSlots * 30) };
   }, [searchStart, durationSlots, today]);
 
+  // โหลดรายการห้องใหม่ทุกครั้งที่เปลี่ยนประเภทหรือช่วงเวลา — ส่งช่วงเวลาไปด้วย backend จะตอบ is_available ของแต่ละห้อง
   useEffect(() => {
     let alive = true;
     setLoading(true);
@@ -100,6 +105,7 @@ export default function RoomListPage() {
     };
   }, [size, range]);
 
+  // กรองต่อในหน้าเว็บ: ชื่อห้องมีคำที่ค้นหา (ไม่สนตัวพิมพ์เล็ก/ใหญ่) + ห้องธรรมดา/ห้องธีม
   const filteredRooms = useMemo(
     () =>
       rooms.filter(
@@ -124,6 +130,7 @@ export default function RoomListPage() {
   const searching = Boolean(range) && (loading || rooms.some((r) => r.is_available === undefined));
   const availableCount = range ? filteredRooms.filter((r) => r.is_available).length : filteredRooms.length;
 
+  // ไปหน้าจอง — ถ้าค้นหาตามเวลาอยู่ ส่งเวลานั้นไปด้วย หน้าจองจะเลือกช่วงเวลาไว้ให้เลย
   const bookRoom = (room) => {
     navigate(`/book/${room.room_id}`, range ? { state: { start: searchStart, durationSlots } } : undefined);
   };

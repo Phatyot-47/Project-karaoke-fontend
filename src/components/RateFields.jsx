@@ -13,6 +13,7 @@ export function toRateForm(row) {
 }
 
 export default function RateFields({ value, onChange }) {
+  // แก้ช่องเดียว แล้วส่งค่าทั้งชุด (ค่าเดิม + ช่องที่แก้) กลับไปให้หน้าที่ใช้ผ่าน onChange
   const set = (field) => (e) => onChange({ ...value, [field]: e.target.value });
   return (
     <div className="rate-fields">

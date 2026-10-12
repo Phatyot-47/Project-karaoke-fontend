@@ -13,6 +13,7 @@ const TABS = [
 
 const RANGE_LABEL = { day: '7 วันล่าสุด', week: '4 สัปดาห์ล่าสุด', month: '6 เดือนล่าสุด' };
 
+// ป้ายแกนกราฟตามแบบรายงาน เช่น เดือน "ต.ค. 69" / สัปดาห์ "สัปดาห์ 5 ต.ค." / วัน "12 ต.ค."
 function formatPeriodLabel(iso, period) {
   const d = new Date(iso);
   if (period === 'month') return d.toLocaleDateString('th-TH', { month: 'short', year: '2-digit' });
@@ -26,6 +27,7 @@ export default function AdminReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // โหลดรายงานใหม่ทุกครั้งที่เปลี่ยนแท็บ รายวัน/สัปดาห์/เดือน
   useEffect(() => {
     setLoading(true);
     api
@@ -35,6 +37,7 @@ export default function AdminReportsPage() {
       .finally(() => setLoading(false));
   }, [period]);
 
+  // ค่าสูงสุดของกราฟ — แท่งแต่ละแท่งยาวตามสัดส่วนเทียบกับค่านี้ (แท่งที่สูงสุด = เต็มความสูง)
   const maxTrendValue = useMemo(() => {
     if (!report?.trend?.length) return 0;
     return Math.max(...report.trend.map((t) => Number(t.revenue) || 0));

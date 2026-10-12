@@ -36,6 +36,7 @@ export default function AdminRoomTypesPage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { saved, flashSaved, clearSaved } = useSavedFlag();
 
+  // เลือกประเภท (หรือกด "เพิ่มประเภท" = NEW_TYPE) → ก๊อปลงฉบับร่าง + ล้างการติ๊กห้องและข้อความเดิม
   const selectType = (type) => {
     setDraft({ ...type, description: type.description ?? '' });
     setApplyIds(new Set());
@@ -57,6 +58,7 @@ export default function AdminRoomTypesPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
 
+  // โหลดตอนเปิดหน้า
   useEffect(() => {
     load();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -74,6 +76,7 @@ export default function AdminRoomTypesPage() {
     if (!priceChanged) setApplyIds(new Set(normalRooms.map((r) => r.room_id)));
   };
 
+  // ติ๊ก/เอาติ๊กออก 1 ห้อง — สร้าง Set ใหม่ทุกครั้ง (แก้ Set เดิมตรงๆ React จะไม่รู้ว่าค่าเปลี่ยน หน้าไม่อัปเดต)
   const toggleRoom = (roomId) =>
     setApplyIds((ids) => {
       const next = new Set(ids);
@@ -82,8 +85,10 @@ export default function AdminRoomTypesPage() {
       return next;
     });
 
+  // ตัวช่วยสร้าง onChange: แก้เฉพาะ field นั้นในฉบับร่าง
   const setField = (field) => (e) => setDraft((d) => ({ ...d, [field]: e.target.value }));
 
+  // มี type_id = แก้ประเภทเดิม (ราคาเปลี่ยน → ส่งรายการห้องที่ติ๊กไปเปลี่ยนราคาด้วย) / ไม่มี = สร้างประเภทใหม่
   const handleSave = async () => {
     setSaving(true);
     setError('');
@@ -116,6 +121,7 @@ export default function AdminRoomTypesPage() {
     }
   };
 
+  // ลบประเภท — ยังมีห้องอยู่ในประเภทนี้ backend ไม่ยอมลบ
   const handleDelete = async () => {
     setError('');
     try {

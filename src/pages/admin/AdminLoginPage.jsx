@@ -16,6 +16,7 @@ export default function AdminLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // เข้าสู่ระบบแอดมิน → จำแอดมินไว้ใน AuthContext → ไปหน้าที่ถูกเด้งมา หรือหน้าอนุมัติการจอง
   const handleSubmit = async () => {
     if (!username.trim() || !password) {
       setError('กรุณากรอก username และ password');

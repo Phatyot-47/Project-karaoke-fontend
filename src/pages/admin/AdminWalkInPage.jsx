@@ -76,8 +76,10 @@ export default function AdminWalkInPage() {
     return buildHalfHourSlots(Number(todayHours.open_hour ?? 0), Number(todayHours.close_hour ?? 24));
   }, [todayHours]);
 
+  // เวลาจบที่เป็นไปได้ = ทุกช่อง + 30 นาที
   const endOptions = useMemo(() => slotTimes.map((t) => addMinutesToTime(t, 30)), [slotTimes]);
 
+  // ช่องที่เวลาผ่านไปแล้ว (เลือกเป็นเวลาเริ่มไม่ได้)
   const lockedStartTimes = useMemo(
     () => new Set(slotTimes.filter((t) => isSlotPastBangkok(todayISODate(), t))),
     [slotTimes, nowTick], // eslint-disable-line react-hooks/exhaustive-deps -- nowTick: บังคับคำนวณใหม่ทุก 30 วิ ตามเวลาจริง
@@ -98,6 +100,8 @@ export default function AdminWalkInPage() {
     setEnd('');
   }, [roomId]);
 
+  // ลำดับช่อง + เช็กว่าช่องอยู่ในช่วงที่เลือก (หลักการเดียวกับ BookingPage)
+  // ⚠️ ต่างกันตรงที่ end ในหน้านี้ = เวลาจบจริง จึงต้องลบ 30 นาทีก่อนถึงจะได้ช่องสุดท้าย
   const order = useMemo(() => new Map(slotTimes.map((t, i) => [t, i])), [slotTimes]);
   const startOrder = start ? order.get(start) : null;
   const selectedEndSlot = end ? addMinutesToTime(end, -30) : null;
@@ -127,6 +131,8 @@ export default function AdminWalkInPage() {
     setEnd(addMinutesToTime(t, WALKIN_MIN_SLOTS * 30));
   };
 
+  // กดช่องเวลา: ยังไม่เลือก → เลือกขั้นต่ำ 1 ชม. จากช่องนี้ / กดช่องเริ่มซ้ำ → ยกเลิก
+  // กดช่องหลังช่วงขั้นต่ำ → ขยายช่วงถึงช่องนั้น (ระหว่างทางติดช่องจองแล้ว/ผ่านไปแล้ว → เริ่มใหม่ที่ช่องนั้น)
   const selectSlot = (time, disabled) => {
     if (disabled) return;
     setFormError('');
@@ -218,6 +224,8 @@ export default function AdminWalkInPage() {
     return map;
   }, [rooms, bookings, roomDaySchedule, nowTick]); // eslint-disable-line react-hooks/exhaustive-deps -- nowTick: บังคับคำนวณใหม่ทุก 30 วิ ตามเวลาจริง
 
+  // เพิ่มการจองวอล์คอิน — ตรวจในหน้าเว็บก่อน (ห้อง เวลา ขั้นต่ำ 1 ชม. ห้องว่าง) แล้วส่งไปบันทึก
+  // backend บันทึกเป็น confirmed + มัดจำ paid ทันที เพราะลูกค้าจ่ายที่หน้าร้าน
   const submit = async () => {
     setSuccessMsg('');
     if (!roomId) {
@@ -232,6 +240,7 @@ export default function AdminWalkInPage() {
       setFormError('เวลาที่เลือกผ่านไปแล้ว กรุณาเลือกเวลาใหม่');
       return;
     }
+    // ระยะเวลาเป็นนาที รองรับข้ามเที่ยงคืน (1440 = นาทีใน 1 วัน) เช่น 23:00–00:00 → 60 นาที
     const durationMinutes = (((timeToMinutes(end) - timeToMinutes(start)) % 1440) + 1440) % 1440 || 1440;
     if (durationMinutes < WALKIN_MIN_SLOTS * 30) {
       setFormError('วอล์คอินต้องจองอย่างน้อย 1 ชั่วโมง');

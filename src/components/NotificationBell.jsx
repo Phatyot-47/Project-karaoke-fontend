@@ -19,6 +19,7 @@ export default function NotificationBell() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // โหลดแจ้งเตือน + จำนวนที่ยังไม่อ่าน — useCallback = สร้างฟังก์ชันครั้งเดียวแล้วใช้ตัวเดิม (useEffect ด้านล่างจะได้ไม่รันซ้ำโดยไม่จำเป็น)
   const load = useCallback(
     () =>
       api
@@ -28,10 +29,12 @@ export default function NotificationBell() {
     [],
   );
 
+  // โหลดใหม่ทุกครั้งที่เปลี่ยนหน้า
   useEffect(() => {
     load();
   }, [load, location.pathname]);
 
+  // และโหลดซ้ำทุก 30 วินาที (หยุดเมื่อกระดิ่งหายไปจากหน้าจอ)
   useEffect(() => {
     const id = setInterval(load, POLL_MS);
     return () => clearInterval(id);
@@ -55,6 +58,7 @@ export default function NotificationBell() {
     navigate('/history');
   };
 
+  // ปุ่ม "อ่านทั้งหมด" — ทำเครื่องหมายอ่านแล้วทุกรายการ แล้วโหลดใหม่ให้ตัวเลขแดงหายไป
   const readAll = async () => {
     await api.markAllNotificationsRead().catch(() => {});
     load();
