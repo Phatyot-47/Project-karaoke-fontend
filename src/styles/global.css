@@ -654,13 +654,9 @@ button {
   opacity: 0.6;
 }
 
-/* ช่องเวลาพีค/ออฟพีค (หน้าจอง) — ขีดสีด้านล่าง ไม่ทับสีของช่องที่เลือก */
+/* ช่องเวลาพีคไทม์ (หน้าจอง) — ขีดสีด้านล่าง ไม่ทับสีของช่องที่เลือก */
 .slot-btn.slot-peak:not(:disabled) {
   box-shadow: inset 0 -3px 0 var(--amber-400);
-}
-
-.slot-btn.slot-offpeak:not(:disabled) {
-  box-shadow: inset 0 -3px 0 var(--primary-400);
 }
 
 .slot-btn.selected {
@@ -690,10 +686,6 @@ button {
 
 .slot-legend-dot.peak {
   background: var(--amber-400);
-}
-
-.slot-legend-dot.offpeak {
-  background: var(--primary-400);
 }
 
 /* ---------------- Admin layout ---------------- */
@@ -1502,7 +1494,7 @@ button {
   }
 }
 
-/* ---- ราคาตามช่วงเวลา (หน้าตั้งค่าร้าน: RateFields) ---- */
+/* ---- พีคไทม์ (หน้าตั้งค่าร้าน: RateFields) ---- */
 .rate-fields {
   display: flex;
   flex-direction: column;
@@ -1520,10 +1512,6 @@ button {
 
 .rate-group-title.peak {
   border-left-color: var(--amber-400);
-}
-
-.rate-group-title.offpeak {
-  border-left-color: var(--primary-400);
 }
 
 .rate-group-row {
