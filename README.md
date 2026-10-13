@@ -29,7 +29,7 @@ npm run format         # จัดรูปแบบโค้ดด้วย Pre
 - `/profile` — ข้อมูลส่วนตัว รูปโปรไฟล์ และเปลี่ยนรหัสผ่าน
 - กระดิ่งบนเมนู — แจ้งเตือนเมื่อร้านยืนยัน/ยกเลิก/สลิปไม่ผ่าน/ย้ายห้อง ฯลฯ
 
-**ฝั่งแอดมิน** (ทุกหน้าเช็คสลิปใหม่ทุก 15 วินาที — มีกล่องแจ้งเตือน + เสียง + ตัวเลขบนเมนูและชื่อแท็บ)
+**ฝั่งแอดมิน** (ทุกหน้าเช็คสลิปใหม่ทุก 15 วินาที — มีกล่องแจ้งเตือน + ตัวเลขบนเมนูและชื่อแท็บ)
 
 - `/admin/login`
 - `/admin/bookings` — อนุมัติการจอง: ตรวจสลิป, ยืนยัน/ยกเลิก, ย้ายห้อง, Check-in, ต่อเวลา, Check-out, ไม่มาใช้บริการ
@@ -52,6 +52,50 @@ npm run format         # จัดรูปแบบโค้ดด้วย Pre
 | `utils/`                  | ฟังก์ชันช่วย: เวลาไทย/รูปแบบตัวเลข/สถานะการจอง (`format.js`), ราคาพรีวิว (`pricing.js`), รูปห้อง (`roomImage.js`) |
 | `hooks/`                  | `useNowTick` (รีเฟรชตามเวลาจริง), `useSavedFlag` (ข้อความ "บันทึกแล้ว")                                           |
 | `styles/`                 | `tokens.css` (สี/ฟอนต์/ระยะห่างจากดีไซน์) และ `global.css`                                                        |
+
+## อ่านโค้ดเริ่มตรงไหน — ข้อมูลวิ่งผ่านไฟล์ไหนบ้าง
+
+ระบบมี 2 ส่วนที่คุยกันผ่าน API: **หน้าเว็บ** (repo นี้) ส่งคำขอ → **backend** (`Project-karaoke-backend`)
+ตรวจสิทธิ์ อ่าน/เขียนฐานข้อมูล แล้วตอบเป็น JSON กลับมา
+
+### ทุกคำขอเดินแบบเดียวกัน
+
+```
+หน้าเว็บ (pages/*.jsx)                   เช่น ลูกค้ากดปุ่ม "ยืนยันและชำระมัดจำ"
+  └─ api/client.js                       api.createBooking(...) → แนบ token แล้วส่ง POST /api/bookings
+       │  ─────────── อินเทอร์เน็ต ───────────
+       └─ backend: src/app.js            ดู URL ขึ้นต้น /api/bookings → ส่งไป routes/bookings.routes.js
+            └─ utils/auth.js             ตรวจ token: ไม่มี/หมดอายุ → 401, ผิดบทบาท → 403
+                 └─ routes/*.routes.js   ตรวจข้อมูล + คิดราคา (utils/) + สั่ง SQL ผ่าน db.js
+                      └─ PostgreSQL      บันทึกจริง (เวลาซ้อนกับการจองอื่น ฐานข้อมูลไม่ยอมบันทึก)
+       ← ตอบ JSON กลับมา (ผิดพลาด = { error: "ข้อความ" } พร้อมรหัส 400/401/403/404/409)
+  └─ api/client.js                       สำเร็จ → คืนข้อมูล / ผิดพลาด → โยน Error ที่มีข้อความจาก backend
+หน้าเว็บ                                 setState → React วาดหน้าใหม่ / หรือ navigate ไปหน้าถัดไป
+```
+
+### ตัวอย่างเต็ม: ลูกค้าจองห้อง 1 ครั้ง
+
+| ขั้น | ผู้ใช้ทำอะไร                     | หน้าเว็บ (ไฟล์ → API)                                                    | backend (ไฟล์)                                       | ผลในฐานข้อมูล                                         |
+| ---- | -------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- | ----------------------------------------------------- |
+| 1    | เข้าสู่ระบบ                      | `LoginPage` → `POST /api/auth/login`                                     | `auth.routes.js` ตรวจรหัสผ่าน แล้วออก token          | —                                                     |
+|      |                                  | `AuthContext` เก็บข้อมูลผู้ใช้ + token ไว้ใน localStorage                |                                                      |                                                       |
+| 2    | เลือกห้อง                        | `RoomListPage` → `GET /api/rooms`                                        | `rooms.routes.js`                                    | อ่านอย่างเดียว                                        |
+| 3    | เลือกช่วงเวลา                    | `BookingPage` → `GET /api/rooms/:id/availability` (ทำช่องสีเทา)          | `rooms.routes.js`                                    | อ่านอย่างเดียว                                        |
+|      |                                  | ราคาที่เห็นคิดในหน้าเว็บ (`utils/pricing.js`) เป็นแค่พรีวิว              |                                                      |                                                       |
+| 4    | กด "ยืนยันและชำระมัดจำ"          | `BookingPage` → `POST /api/bookings`                                     | `bookings.routes.js` คิดราคาจริงเอง (`quoteBooking`) | `booking` ใหม่ สถานะ `pending` มัดจำ `unpaid`         |
+| 5    | สแกน QR + แนบสลิป (ภายใน 5 นาที) | `PaymentPage` → `POST /api/uploads` (ได้ลิงก์รูป) → `POST /api/payments` | `uploads.routes.js`, `payments.routes.js`            | `payment` ใหม่ `pending` / มัดจำเป็น `pending_verify` |
+| 6    | แอดมินอนุมัติสลิป                | `AdminBookingsPage` → `PATCH /api/admin/payments/:id/verify`             | `admin.routes.js`                                    | มัดจำเป็น `paid`                                      |
+| 7    | แอดมินกดยืนยัน                   | `AdminBookingsPage` → `PATCH /api/admin/bookings/:id/confirm`            | `admin.routes.js` + สร้างแจ้งเตือนให้ลูกค้า          | การจองเป็น `confirmed`                                |
+| 8    | ลูกค้ามา → Check-in / Check-out  | `AdminBookingsPage` → `PATCH .../check-in`, `.../check-out`              | `admin.routes.js`                                    | `service_session` / การจองเป็น `completed`            |
+
+ถ้าไม่ส่งสลิปภายใน 5 นาที backend จะเปลี่ยนการจองเป็นยกเลิกให้เอง (`utils/expireBookings.js`) ช่วงเวลานั้นกลับมาว่าง
+
+### แนะนำลำดับการเปิดอ่าน
+
+1. `src/App.jsx` — ดูว่า URL ไหนเปิดหน้าไหน
+2. `src/api/client.js` — ทุกการคุยกับ backend อยู่ที่นี่ (ชื่อฟังก์ชัน ↔ URL ของ API)
+3. `src/pages/BookingPage.jsx` — อธิบายพื้นฐาน React (useState / useEffect / useMemo) ไว้ละเอียดที่สุด หน้าอื่นใช้แบบเดียวกัน
+4. ฝั่ง backend: `src/app.js` → `src/routes/bookings.routes.js` (อธิบายพื้นฐาน SQL ไว้ละเอียดที่สุด) → `src/db.js`
 
 ## หมายเหตุ
 
