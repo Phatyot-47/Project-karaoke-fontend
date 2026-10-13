@@ -6,10 +6,9 @@ export function pad2(n) {
   return String(n).padStart(2, '0');
 }
 
-/** วันที่วันนี้ "YYYY-MM-DD" ตามนาฬิกาของเครื่องผู้ใช้ */
+/** วันที่วันนี้ "YYYY-MM-DD" ตามเวลาไทย (ตรงกับ backend แม้เครื่องผู้ใช้ตั้งเขตเวลาอื่น) */
 export function todayISODate() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  return bangkokNowParts().dateISO;
 }
 
 // ชื่อเดือนภาษาไทย — ช่องที่ 0 = มกราคม
@@ -250,10 +249,11 @@ export function cancellationNote(policy) {
 // ชื่อวันภาษาไทย — ช่องที่ 0 = อาทิตย์ ... 6 = เสาร์ (ตรงกับ new Date().getDay())
 export const DAY_LABELS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
-/** เวลาเปิด-ปิดร้านของ "วันนี้" (ไม่เจอวันนี้ใช้วันแรกแทน / ไม่มีข้อมูลเลยได้ null) */
+/** เวลาเปิด-ปิดร้านของ "วันนี้" ตามเวลาไทย (ไม่เจอวันนี้ใช้วันแรกแทน / ไม่มีข้อมูลเลยได้ null) */
 export function findTodayHours(hours) {
   if (!hours?.length) return null;
-  const dow = new Date().getDay();
+  const [y, m, d] = todayISODate().split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
   return hours.find((h) => Number(h.day_of_week) === dow) || hours[0];
 }
 
