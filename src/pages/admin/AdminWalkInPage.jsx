@@ -202,7 +202,7 @@ export default function AdminWalkInPage() {
   }, [rooms, bookings, slotTimes, lockedStartTimes]);
 
   // สถานะห้อง ณ เวลานี้จริงๆ (ไม่ผูกกับช่วงเวลาที่เลือกในฟอร์ม) — ใช้กับการ์ดสรุปด้านบนสุด
-  // เขียว = ว่างตอนนี้ / ส้ม = ไม่ว่างตอนนี้แต่ยังมีช่วงว่างเหลือวันนี้ / แดง = จองเต็มวัน ไม่มีช่วงว่างเหลือแล้ว
+  // เขียว = ว่างตลอดที่เหลือของวัน / เหลือง = ว่างเป็นช่วง (มีการจองอยู่ แต่ยังมีช่วงว่างเหลือ) / แดง = จองเต็มวัน
   const roomCurrentStatus = useMemo(() => {
     const now = new Date();
     const map = new Map();
@@ -219,7 +219,8 @@ export default function AdminWalkInPage() {
       const next = roomBookings
         .filter((b) => new Date(b.start_datetime) > now)
         .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))[0];
-      map.set(r.room_id, { busy: false, fullyBooked: false, nextStart: next ? next.start_datetime : null });
+      // ตอนนี้ยังไม่มีคนใช้ห้อง แต่ช่องที่เหลือของวันอาจถูกจองหมดแล้ว (เช่น จองไว้ตั้งแต่ช่องถัดไปจนร้านปิด) → ยังนับเป็นจองเต็มวัน
+      map.set(r.room_id, { busy: false, fullyBooked, nextStart: next ? next.start_datetime : null });
     });
     return map;
   }, [rooms, bookings, roomDaySchedule, nowTick]); // eslint-disable-line react-hooks/exhaustive-deps -- nowTick: บังคับคำนวณใหม่ทุก 30 วิ ตามเวลาจริง
@@ -282,13 +283,21 @@ export default function AdminWalkInPage() {
           {rooms.map((r) => {
             const status = roomCurrentStatus.get(r.room_id) || {};
             const { busy: isBusy, fullyBooked } = status;
-            const tone = fullyBooked ? 'red' : isBusy ? 'amber' : 'green';
+            // ว่างเป็นช่วง = ยังไม่เต็มวัน แต่มีการจองอยู่ (ใช้ห้องอยู่ตอนนี้ หรือมีคนจองช่วงหลังจากนี้)
+            const partlyFree = !fullyBooked && (isBusy || Boolean(status.nextStart));
+            const tone = fullyBooked ? 'red' : partlyFree ? 'amber' : 'green';
             const palette = {
               red: { bg: 'var(--red-50)', border: 'var(--red-500)', text: 'var(--red-600)' },
               amber: { bg: 'var(--amber-50)', border: 'var(--amber-400)', text: 'var(--amber-600)' },
               green: { bg: 'var(--green-50)', border: 'var(--green-500)', text: 'var(--green-700)' },
             }[tone];
-            const label = fullyBooked ? 'จองเต็มวัน' : isBusy ? 'ไม่ว่างตอนนี้' : 'ว่างตอนนี้';
+            const label = fullyBooked
+              ? 'จองเต็มวัน'
+              : isBusy
+                ? 'ไม่ว่างตอนนี้'
+                : partlyFree
+                  ? 'ว่างเป็นช่วง'
+                  : 'ว่างตลอดวัน';
             const detail = fullyBooked
               ? 'ไม่มีช่วงว่างเหลือวันนี้'
               : isBusy
